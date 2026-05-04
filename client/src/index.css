@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e8f0fe 50%, #f0fdfa 100%);
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-600 to-primary-500 text-white px-5 py-2.5 rounded-2xl hover:from-primary-700 hover:to-primary-600 transition-all font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white text-gray-700 px-5 py-2.5 rounded-2xl hover:bg-surface-50 transition-all font-medium border border-surface-200 shadow-sm hover:shadow-md;
+  }
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-600 to-red-500 text-white px-5 py-2.5 rounded-2xl hover:from-red-700 hover:to-red-600 transition-all font-semibold shadow-md;
+  }
+  .btn-success {
+    @apply bg-gradient-to-r from-dental-600 to-dental-500 text-white px-5 py-2.5 rounded-2xl hover:from-dental-700 hover:to-dental-600 transition-all font-semibold shadow-md;
+  }
+  .input-field {
+    @apply w-full px-4 py-2.5 border border-surface-200 rounded-2xl focus:ring-2 focus:ring-primary-300 focus:border-primary-400 outline-none transition-all bg-white/80 backdrop-blur-sm;
+  }
+  .card {
+    @apply bg-white/90 backdrop-blur-sm rounded-3xl shadow-card border border-white/60 p-6 transition-all hover:shadow-card-hover animate-fade-in;
+  }
+  .card-flat {
+    @apply bg-white/70 backdrop-blur-sm rounded-2xl border border-surface-200 p-4;
+  }
+  .card-gradient {
+    @apply rounded-3xl shadow-card p-6 text-white;
+  }
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide;
+  }
+  .stat-card {
+    @apply bg-white/90 backdrop-blur-sm rounded-3xl shadow-card border border-white/60 p-5 flex items-center gap-4 transition-all hover:shadow-card-hover hover:-translate-y-0.5;
+  }
+  .gauge-container {
+    @apply relative flex items-center justify-center;
+  }
+
+  /* Table styles */
+  .table-modern {
+    @apply w-full text-sm;
+  }
+  .table-modern thead tr {
+    @apply bg-gradient-to-r from-surface-50 to-surface-100 text-surface-500;
+  }
+  .table-modern thead th {
+    @apply px-5 py-3.5 font-semibold text-left text-xs uppercase tracking-wider;
+  }
+  .table-modern tbody tr {
+    @apply border-t border-surface-100 hover:bg-primary-50/30 transition-colors;
+  }
+  .table-modern tbody td {
+    @apply px-5 py-3.5;
+  }
+
+  /* Sidebar nav items */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer w-full;
+  }
+  .nav-item-active {
+    @apply bg-white/20 text-white shadow-md backdrop-blur-sm;
+  }
+  .nav-item-inactive {
+    @apply text-white/65 hover:bg-white/10 hover:text-white;
+  }
+}
