@@ -7,7 +7,9 @@ const { sequelize, Usuario } = require('./models');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
 app.use(express.json());
 
 // Rutas
@@ -38,7 +40,9 @@ async function iniciar() {
     await sequelize.authenticate();
     console.log('Conexión a MySQL establecida.');
 
-    await sequelize.sync();
+    if (process.env.NODE_ENV !== 'production') {
+  await sequelize.sync();
+}
     console.log('Tablas sincronizadas.');
 
     // Crear usuario admin por defecto si no existe
@@ -55,7 +59,7 @@ async function iniciar() {
     }
 
     app.listen(PORT, () => {
-      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+      console.log(`Servidor corriendo en puerto ${PORT}`);
     });
   } catch (error) {
     console.error('Error al iniciar:', error);
