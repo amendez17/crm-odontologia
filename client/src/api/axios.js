@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: "https://crm-odontologia.onrender.com/api",
+  baseURL: "https://crm-odontologia.onrender.com/",
   headers: { 'Content-Type': 'application/json' }
 });
 
