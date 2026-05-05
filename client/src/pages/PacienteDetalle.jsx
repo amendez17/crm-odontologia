@@ -99,111 +99,112 @@ export default function PacienteDetalle() {
     } catch { toast.error('Error al firmar'); }
   };
 
-  const imprimirConsentimiento = (c) => {
-  const win = window.open('', '_blank', 'width=800,height=900');
+ const imprimirConsentimiento = (c, paciente = {}) => {
+  const win = window.open('', '_blank', 'width=850,height=950');
+
+  const contenidoSeguro = (c.contenido || '').replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   win.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
-<title>Consentimiento - ${c.tipo}</title>
+<title>Consentimiento - ${c.tipo || ''}</title>
 
 <style>
   body{
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
     padding: 40px;
-    max-width: 700px;
-    margin: 0 auto;
-    color: #333;
-    background: #fff;
+    max-width: 800px;
+    margin: auto;
+    color: #2c2c2c;
+    background: #ffffff;
   }
 
   .header{
     text-align:center;
-    border-bottom:2px solid #c8a24a;
-    padding-bottom:15px;
+    border-bottom:3px solid #d4af37;
+    padding-bottom:18px;
     margin-bottom:25px;
   }
 
   .logo{
-    width:85px;
-    height:85px;
+    width:90px;
+    height:90px;
     object-fit:contain;
     margin-bottom:10px;
   }
 
-  .header h1{
+  h1{
     margin:0;
-    font-size:22px;
-    color:#c8a24a;
+    font-size:24px;
+    color:#b8860b;
     letter-spacing:1px;
   }
 
-  .header h2{
+  h2{
     margin:5px 0;
-    font-size:15px;
+    font-size:14px;
     color:#6b7280;
     font-weight:normal;
   }
 
   .badge{
     display:inline-block;
-    margin-top:8px;
-    padding:4px 12px;
+    margin-top:10px;
+    padding:5px 14px;
     font-size:11px;
-    background:#f5e6b3;
-    color:#7a5c1b;
+    background: linear-gradient(90deg,#f5e6b3,#d4af37);
+    color:#5c4500;
     border-radius:20px;
     font-weight:bold;
   }
 
   .info{
     font-size:13px;
-    margin:15px 0;
+    margin:20px 0;
     background:#fffaf0;
-    border-left:4px solid #c8a24a;
-    padding:12px;
-    border-radius:8px;
+    border-left:5px solid #d4af37;
+    padding:14px;
+    border-radius:10px;
   }
 
   .info strong{
-    color:#c8a24a;
+    color:#b8860b;
   }
 
   .content{
-    white-space:pre-wrap;
     font-size:13px;
+    line-height:1.7;
     margin:25px 0;
-    line-height:1.6;
     color:#374151;
+    white-space:pre-wrap;
   }
 
   .estado{
-    font-size:13px;
-    margin:10px 0;
-    padding:10px;
+    margin-top:15px;
+    padding:12px;
     background:#fef9c3;
-    border-left:4px solid #c8a24a;
-    border-radius:6px;
-    color:#7a5c1b;
+    border-left:5px solid #d4af37;
+    border-radius:8px;
     font-weight:bold;
+    color:#7a5c1b;
+    font-size:13px;
   }
 
-  .firma-section{
-    margin-top:60px;
+  .firma{
+    margin-top:70px;
     display:flex;
-    justify-content:space-around;
+    justify-content:space-between;
   }
 
-  .firma-section div{
+  .firma div{
+    width:45%;
     text-align:center;
-    width:200px;
   }
 
   .linea{
-    border-top:1px solid #c8a24a;
-    margin-top:60px;
-    padding-top:5px;
+    border-top:1px solid #b8860b;
+    margin-top:70px;
     font-size:12px;
     color:#6b7280;
   }
@@ -216,7 +217,7 @@ export default function PacienteDetalle() {
   }
 
   @media print{
-    body{padding:20px}
+    body{ padding:20px; }
   }
 </style>
 
@@ -227,39 +228,37 @@ export default function PacienteDetalle() {
   <div class="header">
 
     <img 
-      src="/logo_clinica-removebg-preview.png"
+      src="https://crm-odontologia.vercel.app/logo.png"
       class="logo"
-      alt="Clinica Dental Almar"
+      alt="Clínica"
     />
 
     <h1>Clínica Dental Almar</h1>
     <h2>Consentimiento Informado</h2>
 
-    <div class="badge">${c.tipo}</div>
+    <div class="badge">${c.tipo || ''}</div>
   </div>
 
   <div class="info">
-  <strong>Paciente:</strong> ${paciente.nombre|| ''} ${paciente.apellido|| ''} <br>
-   <strong>DNI:</strong> ${paciente.dni || ''}<br>
-   
-
+    <strong>Paciente:</strong> ${paciente.nombre || ''} ${paciente.apellido || ''}<br>
+    <strong>DNI:</strong> ${paciente.dni || ''}<br>
     <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}<br>
-    <strong>Fecha:</strong> ${c.createdAt?.split('T')[0] || ''}
+    <strong>Fecha:</strong> ${c.createdAt ? c.createdAt.split('T')[0] : ''}
   </div>
 
   <div class="content">
-    ${c.contenido}
+    ${contenidoSeguro}
   </div>
 
   ${
     c.firmado
       ? `<div class="estado">
-          ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-AR')}
+          ✔ Consentimiento firmado el ${new Date(c.fecha_firma).toLocaleDateString('es-MX')}
         </div>`
       : ''
   }
 
-  <div class="firma-section">
+  <div class="firma">
     <div>
       <div class="linea">Firma del Profesional</div>
     </div>
@@ -270,7 +269,7 @@ export default function PacienteDetalle() {
   </div>
 
   <div class="footer">
-    Clínica Dental Almar · Consentimiento Oficial
+    Clínica Dental Almar · Documento oficial confidencial
   </div>
 
   <script>
@@ -283,6 +282,7 @@ export default function PacienteDetalle() {
 
   win.document.close();
 };
+  
   const imprimirHistoria = () => {
     const win = window.open('', '_blank', 'width=700,height=900');
     const registros = historias.map(h => `
