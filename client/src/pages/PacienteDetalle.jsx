@@ -63,7 +63,7 @@ export default function PacienteDetalle() {
       toast.error('Error al actualizar odontograma');
     }
   };*/
- /* const handleOdontograma = async (pieza, estado) => {
+  const handleOdontograma = async (pieza, estado) => {
 
   // 🔥 UI INMEDIATA (esto arregla tu problema visual)
   setOdontograma(prev => {
@@ -88,8 +88,9 @@ export default function PacienteDetalle() {
   } catch (error) {
     console.error('Error guardando odontograma:', error);
   }
-};*/
-  const handleOdontograma = async (pieza, estado, cara = null) => {
+    obtenerOdontograma(); // refresca
+};
+/*  const handleOdontograma = async (pieza, estado, cara = null) => {
   await axios.post('/api/odontograma', {
     pieza_dental: pieza,
     estado,
@@ -97,7 +98,7 @@ export default function PacienteDetalle() {
   });
 
   obtenerOdontograma(); // refresca
-};
+};*/
 
   const guardarHistoria = async (e) => {
     e.preventDefault();
