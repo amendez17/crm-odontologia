@@ -111,22 +111,23 @@ const imprimirConsentimiento = (c) => {
 <style>
 @page {
   size: Letter;
-  margin: 15mm;}
-  body{
-    font-family: Arial, sans-serif;
-    padding: 40px;
-    max-width: 700px;
-    margin: 0 auto;
-    color: #333;
-    background: #fff;
-  }
+  margin: 10mm 12mm 12mm 12mm;
+}
 
-  .header{
-    text-align:center;
-    border-bottom:2px solid #c8a24a;
-    padding-bottom:15px;
-    margin-bottom:25px;
-  }
+body{
+  font-family: Arial, sans-serif;
+  margin:0;
+  padding:10px 0 0 0;
+  background:#fff;
+}
+
+ .header{
+  text-align:center;
+  border-bottom:2px solid #c8a24a;
+  padding-bottom:6px;
+  margin-bottom:10px;
+}
+
 
   .logo{
     width:85px;
@@ -135,19 +136,18 @@ const imprimirConsentimiento = (c) => {
     margin-bottom:10px;
   }
 
-  .header h1{
-    margin:0;
-    font-size:22px;
-    color:#c8a24a;
-    letter-spacing:1px;
-  }
+}
 
-  .header h2{
-    margin:5px 0;
-    font-size:15px;
-    color:#6b7280;
-    font-weight:normal;
-  }
+.header h1{
+  margin:0;
+  font-size:16px;
+  color:#c8a24a;
+}
+
+.header h2{
+  margin:2px 0;
+  font-size:13px;
+}
 
   .badge{
     display:inline-block;
@@ -178,13 +178,11 @@ const imprimirConsentimiento = (c) => {
     color:#333;
   }
 
-  .content{
-    white-space:pre-wrap;
-    font-size:13px;
-    margin:25px 0;
-    line-height:1.6;
-    color:#374151;
-  }
+ .container{
+  max-width:650px;
+  margin:0 auto;
+  padding:10px 15px 15px 15px;
+}
 
   .estado{
     font-size:13px;
