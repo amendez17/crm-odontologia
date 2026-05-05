@@ -99,7 +99,7 @@ export default function PacienteDetalle() {
     } catch { toast.error('Error al firmar'); }
   };
 
-const imprimirConsentimiento = (c) => {
+/*const imprimirConsentimiento = (c) => {
   const win = window.open('', '_blank', 'width=800,height=900');
 
   win.document.write(`
@@ -284,6 +284,206 @@ body{
   `);
 
   win.document.close();
+};*/
+  const imprimirConsentimiento = (c) => {
+  const win = window.open('', '_blank', 'width=700,height=900');
+
+  const pacienteData = paciente || c.paciente || {};
+
+  win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Consentimiento - ${c.tipo}</title>
+
+<style>
+
+/* FORMATO CARTA */
+@page {
+  size: Letter;
+  margin: 10mm 12mm 12mm 12mm;
+}
+
+body{
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin:0;
+  padding:5px 10px 10px 10px;
+  max-width:650px;
+  margin:auto;
+  color:#2c2c2c;
+  background:#ffffff;
+}
+
+/* CONTENEDOR */
+.container{
+  border:1px solid #f0e6c8;
+  border-radius:12px;
+  padding:20px;
+  position:relative;
+}
+
+/* MARCA DE AGUA */
+.watermark{
+  position:absolute;
+  top:40%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  font-size:70px;
+  color:rgba(200,162,74,0.08);
+  font-weight:bold;
+  pointer-events:none;
+}
+
+/* HEADER PREMIUM */
+.header{
+  text-align:center;
+  border-bottom:2px solid #c8a24a;
+  padding-bottom:8px;
+  margin-bottom:12px;
+}
+
+.logo{
+  width:70px;
+  margin-bottom:5px;
+}
+
+.header h1{
+  margin:0;
+  color:#b8962e;
+  font-size:18px;
+  letter-spacing:1px;
+}
+
+.header h2{
+  margin:2px 0;
+  font-size:13px;
+  color:#6b7280;
+}
+
+.tipo{
+  font-size:11px;
+  color:#a68b2c;
+  margin-top:3px;
+}
+
+/* INFO CARDS */
+.info{
+  font-size:12px;
+  margin:10px 0;
+  padding:10px;
+  background:#fffaf0;
+  border-left:4px solid #c8a24a;
+  border-radius:6px;
+}
+
+/* CONTENIDO */
+.content{
+  white-space:pre-wrap;
+  font-size:12px;
+  margin:12px 0;
+  line-height:1.6;
+}
+
+/* ESTADO */
+.estado{
+  font-size:12px;
+  margin:8px 0;
+  padding:8px;
+  background:#fef9e7;
+  border-left:4px solid #c8a24a;
+  border-radius:5px;
+  color:#7a5c1b;
+  font-weight:bold;
+}
+
+/* FIRMAS */
+.firma-section{
+  margin-top:35px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.linea{
+  border-top:1px solid #c8a24a;
+  margin-top:50px;
+  width:200px;
+  text-align:center;
+  font-size:11px;
+  color:#6b7280;
+}
+
+/* FOOTER */
+.footer{
+  margin-top:20px;
+  text-align:center;
+  font-size:10px;
+  color:#9ca3af;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="watermark">ALMAR</div>
+
+  <div class="header">
+
+    <img src="/logo_clinica-removebg-preview.png" class="logo"/>
+
+    <h1>Clínica Dental Almar</h1>
+    <h2>Consentimiento Informado</h2>
+
+    <div class="tipo">${c.tipo || ''}</div>
+  </div>
+
+  <div class="info">
+    <strong>Paciente:</strong> ${pacienteData.nombre || '---'} ${pacienteData.apellido || ''}<br>
+    <strong>DNI:</strong> ${pacienteData.dni || '---'}<br>
+    <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}<br>
+    <strong>Fecha:</strong> ${c.createdAt?.split('T')[0] || ''}
+  </div>
+
+  <div class="content">
+    ${c.contenido || 'Sin contenido'}
+  </div>
+
+  ${
+    c.firmado
+      ? `<div class="estado">
+          ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-MX')}
+        </div>`
+      : ''
+  }
+
+  <div class="firma-section">
+    <div>
+      <div class="linea">Firma del profesional</div>
+    </div>
+
+    <div>
+      <div class="linea">Firma del paciente</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Clínica Dental Almar · Documento confidencial
+  </div>
+
+</div>
+
+</body>
+</html>`);
+
+  win.document.close();
+
+  setTimeout(() => {
+    win.focus();
+    win.print();
+  }, 300);
 };
   const imprimirHistoria = () => {
     const win = window.open('', '_blank', 'width=700,height=900');
