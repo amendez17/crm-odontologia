@@ -4,18 +4,17 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL + '/api',
   headers: { 'Content-Type': 'application/json' }
 });
-// 🔐 Agregar token automáticamente a cada request
+
+// Interceptor request (SE QUEDA)
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
-// 🚨 Manejo global de errores (401 = sesión expirada)
+// Interceptor response (SE QUEDA)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -24,7 +23,6 @@ api.interceptors.response.use(
       localStorage.removeItem('usuario');
       window.location.href = '/login';
     }
-
     return Promise.reject(error);
   }
 );
