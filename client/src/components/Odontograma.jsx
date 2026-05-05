@@ -1,5 +1,7 @@
-import { useState } from 'react';
-const [registrosLocal, setRegistrosLocal] = useState(registros);
+//import { useState } from 'react';
+import { useState, useEffect } from 'react';
+const [registrosLocal, setRegistrosLocal] = useState(registros || []);
+//const [registrosLocal, setRegistrosLocal] = useState(registros);
 useEffect(() => {
   setRegistrosLocal(registros);
 }, [registros]);
