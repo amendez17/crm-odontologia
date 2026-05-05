@@ -486,51 +486,184 @@ body{
   }, 300);
 };
   const imprimirHistoria = () => {
-    const win = window.open('', '_blank', 'width=700,height=900');
-    const registros = historias.map(h => `
-      <div class="registro">
-        <div class="registro-header">${h.fecha} - Dr. ${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}</div>
-        ${h.diagnostico ? `<p><strong>Diagnóstico:</strong> ${h.diagnostico}</p>` : ''}
-        ${h.tratamiento_realizado ? `<p><strong>Tratamiento:</strong> ${h.tratamiento_realizado}</p>` : ''}
-        ${h.piezas_tratadas ? `<p><strong>Piezas:</strong> ${h.piezas_tratadas}</p>` : ''}
-        ${h.receta ? `<p><strong>Receta:</strong> ${h.receta}</p>` : ''}
-        ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
-      </div>
-    `).join('');
-    win.document.write(`<!DOCTYPE html><html><head> <img 
-  src="https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
-  alt="Clinica Dental Almar"
-  className="w-20 h-20 object-contain mx-auto mb-4"
-/><title>Historia Clínica - ${paciente.apellido}, ${paciente.nombre}</title>
-    <style>
-      body{font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#333;line-height:1.5}
-      .header{text-align:center;border-bottom:3px solid #fcf0be;padding-bottom:15px;margin-bottom:20px}
-      .header h1{margin:0;color:#fcf0be;font-size:22px}.header h2{margin:5px 0;font-size:16px;color:#333}
-      .paciente-info{display:flex;justify-content:space-between;background:#f8fafc;padding:12px 16px;border-radius:8px;margin-bottom:20px;font-size:13px}
-      .registro{border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;page-break-inside:avoid}
-      .registro-header{font-weight:bold;color:#fcf0be;margin-bottom:8px;font-size:13px;border-bottom:1px solid #f1f5f9;padding-bottom:6px}
-      .registro p{margin:4px 0;font-size:12px}.notas{color:#666;font-style:italic}
-      .footer{text-align:center;margin-top:30px;font-size:11px;color:#999;border-top:1px solid #ddd;padding-top:10px}
-      @media print{body{padding:20px}}
-    </style></head><body>
-    <div class="header"> <img 
-  src="/https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
-  alt="Clinica Dental Almar"
-  className="w-20 h-20 object-contain mx-auto mb-4"
-/><h1>Clinica Dental Almar</h1><h2>Historia Clínica</h2></div>
-    <div class="paciente-info">
-      <div><strong>Paciente:</strong> ${paciente.apellido}, ${paciente.nombre}</div>
-      <div><strong>DNI:</strong> ${paciente.dni}</div>
-      <div><strong>Edad:</strong> ${edad !== null ? edad + ' años' : '-'}</div>
-    </div>
-    ${paciente.alergias ? `<p style="font-size:12px;color:red;margin-bottom:15px"><strong>⚠ Alergias:</strong> ${paciente.alergias}</p>` : ''}
-    ${paciente.antecedentes_medicos ? `<p style="font-size:12px;margin-bottom:15px"><strong>Antecedentes:</strong> ${paciente.antecedentes_medicos}</p>` : ''}
-    ${registros || '<p style="text-align:center;color:#999">Sin registros</p>'}
-    <div class="footer">Total: ${historias.length} registros | Impreso: ${new Date().toLocaleDateString('es-AR')}</div>
-    <script>window.onload=function(){window.print()}</script></body></html>`);
-    win.document.close();
-  };
+  const win = window.open('', '_blank', 'width=700,height=900');
 
+  const registros = historias.map(h => `
+    <div class="registro">
+      <div class="registro-header">
+        ${h.fecha} - Dr. ${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}
+      </div>
+
+      ${h.diagnostico ? `<p><strong>Diagnóstico:</strong> ${h.diagnostico}</p>` : ''}
+      ${h.tratamiento_realizado ? `<p><strong>Tratamiento:</strong> ${h.tratamiento_realizado}</p>` : ''}
+      ${h.piezas_tratadas ? `<p><strong>Piezas:</strong> ${h.piezas_tratadas}</p>` : ''}
+      ${h.receta ? `<p><strong>Receta:</strong> ${h.receta}</p>` : ''}
+      ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
+    </div>
+  `).join('');
+
+  win.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Historia Clínica - ${paciente.apellido}, ${paciente.nombre}</title>
+
+<style>
+
+/* 📄 FORMATO CARTA */
+@page {
+  size: Letter;
+  margin: 10mm 12mm 12mm 12mm;
+}
+
+body{
+  font-family: 'Segoe UI', Arial, sans-serif;
+  padding:10px;
+  max-width:700px;
+  margin:auto;
+  color:#2c2c2c;
+  background:#fff;
+}
+
+/* HEADER PREMIUM */
+.header{
+  text-align:center;
+  border-bottom:2px solid #c8a24a;
+  padding-bottom:10px;
+  margin-bottom:15px;
+}
+
+.logo{
+  width:70px;
+  margin-bottom:5px;
+}
+
+.header h1{
+  margin:0;
+  color:#c8a24a;
+  font-size:20px;
+}
+
+.header h2{
+  margin:3px 0;
+  font-size:14px;
+  color:#6b7280;
+}
+
+/* INFO PACIENTE */
+.paciente-info{
+  display:flex;
+  justify-content:space-between;
+  background:#fffaf0;
+  padding:10px 12px;
+  border-radius:8px;
+  margin-bottom:15px;
+  font-size:12px;
+  border-left:4px solid #c8a24a;
+}
+
+/* ALERTAS */
+.alerta{
+  font-size:12px;
+  margin-bottom:10px;
+}
+
+.alerta.alergia{
+  color:#b91c1c;
+}
+
+.alerta.normal{
+  color:#333;
+}
+
+/* REGISTROS */
+.registro{
+  border:1px solid #f0e6c8;
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:10px;
+  page-break-inside:avoid;
+  background:#fff;
+}
+
+.registro-header{
+  font-weight:bold;
+  color:#c8a24a;
+  margin-bottom:6px;
+  font-size:12px;
+  border-bottom:1px solid #f5e6b3;
+  padding-bottom:4px;
+}
+
+.registro p{
+  margin:3px 0;
+  font-size:12px;
+}
+
+.notas{
+  color:#6b7280;
+  font-style:italic;
+}
+
+/* FOOTER */
+.footer{
+  text-align:center;
+  margin-top:20px;
+  font-size:10px;
+  color:#9ca3af;
+  border-top:1px solid #eee;
+  padding-top:8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+  <img src="https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" class="logo"/>
+  <h1>Clínica Dental Almar</h1>
+  <h2>Historia Clínica</h2>
+</div>
+
+<div class="paciente-info">
+  <div><strong>Paciente:</strong> ${paciente.apellido}, ${paciente.nombre}</div>
+  <div><strong>DNI:</strong> ${paciente.dni}</div>
+  <div><strong>Edad:</strong> ${edad !== null ? edad + ' años' : '-'}</div>
+</div>
+
+${paciente.alergias ? `
+  <div class="alerta alergia">
+    <strong>⚠ Alergias:</strong> ${paciente.alergias}
+  </div>
+` : ''}
+
+${paciente.antecedentes_medicos ? `
+  <div class="alerta normal">
+    <strong>Antecedentes:</strong> ${paciente.antecedentes_medicos}
+  </div>
+` : ''}
+
+${registros || '<p style="text-align:center;color:#999">Sin registros</p>'}
+
+<div class="footer">
+  Total: ${historias.length} registros |
+  Impreso: ${new Date().toLocaleDateString('es-MX')}
+</div>
+
+</body>
+</html>
+  `);
+
+  win.document.close();
+
+  setTimeout(() => {
+    win.focus();
+    win.print();
+  }, 300);
+};
   const crearCita = async (e) => {
     e.preventDefault();
     try {
