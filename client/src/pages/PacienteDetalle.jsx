@@ -99,7 +99,7 @@ export default function PacienteDetalle() {
     } catch { toast.error('Error al firmar'); }
   };
 
- const imprimirConsentimiento = (c, paciente = {}) => {
+const imprimirConsentimiento = (c, paciente = {}) => {
   const win = window.open('', '_blank', 'width=850,height=950');
 
   const contenidoSeguro = (c.contenido || '').replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -222,6 +222,7 @@ export default function PacienteDetalle() {
 </style>
 
 </head>
+
 <body>
 
   <div class="header">
@@ -229,37 +230,35 @@ export default function PacienteDetalle() {
     <img 
       src="/logo_clinica-removebg-preview.png"
       class="logo"
-      alt="Clinica Dental Almar"
+      alt="Clínica"
     />
 
     <h1>Clínica Dental Almar</h1>
     <h2>Consentimiento Informado</h2>
 
-    <div class="badge">${c.tipo}</div>
+    <div class="badge">${c.tipo || ''}</div>
   </div>
 
   <div class="info">
-  <strong>Paciente:</strong> ${paciente.nombre|| ''} ${paciente.apellido|| ''} <br>
-   <strong>DNI:</strong> ${paciente.dni || ''}<br>
-   
-
+    <strong>Paciente:</strong> ${paciente.nombre|| ''} ${paciente.apellido|| ''} <br> 
+    <strong>DNI:</strong> ${paciente.dni || ''}<br>
     <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}<br>
-    <strong>Fecha:</strong> ${c.createdAt?.split('T')[0] || ''}
+    <strong>Fecha:</strong> ${c.createdAt ? c.createdAt.split('T')[0] : ''}
   </div>
 
   <div class="content">
-    ${c.contenido}
+    ${contenidoSeguro}
   </div>
 
   ${
     c.firmado
-      ? <div class="estado">
-          ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-AR')}
-        </div>
+      ? `<div class="estado">
+          ✔ Consentimiento firmado el ${new Date(c.fecha_firma).toLocaleDateString('es-MX')}
+        </div>`
       : ''
   }
 
-  <div class="firma-section">
+  <div class="firma">
     <div>
       <div class="linea">Firma del Profesional</div>
     </div>
@@ -270,7 +269,7 @@ export default function PacienteDetalle() {
   </div>
 
   <div class="footer">
-    Clínica Dental Almar · Consentimiento Oficial
+    Clínica Dental Almar · Documento oficial confidencial
   </div>
 
   <script>
@@ -279,10 +278,10 @@ export default function PacienteDetalle() {
 
 </body>
 </html>
-  );
+  `);
 
   win.document.close();
-};  
+};
   const imprimirHistoria = () => {
     const win = window.open('', '_blank', 'width=700,height=900');
     const registros = historias.map(h => `
