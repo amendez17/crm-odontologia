@@ -101,7 +101,7 @@ export default function PacienteDetalle() {
 
   const imprimirConsentimiento = (c) => {
     const win = window.open('', '_blank', 'width=700,height=900');
-    win.document.write(`<!DOCTYPE html><html><head><img src="/logo.png" style="width:80px;margin-bottom:10px;" /><title>Consentimiento - ${c.tipo}</title>
+    win.document.write(`<!DOCTYPE html><html><head><img src="/logo_clinica-removebg-preview.png.png" style="width:80px;margin-bottom:10px;" /><title>Consentimiento - ${c.tipo}</title>
     <style>body{font-family:Arial,sans-serif;padding:40px;max-width:650px;margin:0 auto;color:#333;line-height:1.6}
     .header{text-align:center;border-bottom:2px solid #fcf0be;padding-bottom:15px;margin-bottom:25px}
     .header h1{margin:0;color:#fcf0be;font-size:20px}.header h2{margin:5px 0;font-size:16px;color:#333}
@@ -132,7 +132,7 @@ export default function PacienteDetalle() {
         ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
       </div>
     `).join('');
-    win.document.write(`<!DOCTYPE html><html><head><img src="/logo.png" style="width:80px;margin-bottom:10px;" /><title>Historia Clínica - ${paciente.apellido}, ${paciente.nombre}</title>
+    win.document.write(`<!DOCTYPE html><html><head><img src="/logo_clinica-removebg-preview.png.png" style="width:80px;margin-bottom:10px;" /><title>Historia Clínica - ${paciente.apellido}, ${paciente.nombre}</title>
     <style>
       body{font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#333;line-height:1.5}
       .header{text-align:center;border-bottom:3px solid #fcf0be;padding-bottom:15px;margin-bottom:20px}
@@ -144,7 +144,7 @@ export default function PacienteDetalle() {
       .footer{text-align:center;margin-top:30px;font-size:11px;color:#999;border-top:1px solid #ddd;padding-top:10px}
       @media print{body{padding:20px}}
     </style></head><body>
-    <div class="header"><h1>Clinica Dental Almar</h1><h2>Historia Clínica</h2></div>
+    <div class="header"><img src="/logo_clinica-removebg-preview.png.png" style="width:80px;margin-bottom:10px;" /><h1>Clinica Dental Almar</h1><h2>Historia Clínica</h2></div>
     <div class="paciente-info">
       <div><strong>Paciente:</strong> ${paciente.apellido}, ${paciente.nombre}</div>
       <div><strong>DNI:</strong> ${paciente.dni}</div>
@@ -195,7 +195,7 @@ export default function PacienteDetalle() {
   const imprimirRecibo = (pago) => {
     const recibo = window.open('', '_blank', 'width=400,height=600');
     recibo.document.write(`
-      <!DOCTYPE html><html><head><img src="/logo.png" style="width:80px;margin-bottom:10px;" /><title>Recibo de Pago</title>
+      <!DOCTYPE html><html><head><img src="/logo_clinica-removebg-preview.png.png" style="width:80px;margin-bottom:10px;" /><title>Recibo de Pago</title>
       <style>
         body { font-family: Arial, sans-serif; padding: 30px; max-width: 380px; margin: 0 auto; color: #333; }
         .header { text-align: center; border-bottom: 2px solid #fcf0be; padding-bottom: 15px; margin-bottom: 20px; }
@@ -211,7 +211,7 @@ export default function PacienteDetalle() {
         .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 11px; color: #999; }
         @media print { body { padding: 15px; } }
       </style></head><body>
-        <div class="header"><img src="/logo.png" style="width:80px;margin-bottom:10px;" />
+        <div class="header"><img src="/logo_clinica-removebg-preview.png.png" style="width:80px;margin-bottom:10px;" />
           <h1>Clinica Dental Almar</h1>
           <p>Clínica Odontológica</p>
           <p>Recibo de Pago</p>
