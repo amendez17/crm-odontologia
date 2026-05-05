@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 const COLORES = {
   sano: { fill: '#e8f5e9', stroke: '#4caf50', label: '#2e7d32' },
@@ -244,41 +244,41 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
 
 export default function Odontograma({ registros = [], onPiezaClick, readOnly = false }) {
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('caries');
-  const [carasPorDiente, setCarasPorDiente] = useState({});
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
 
+  // Hidrata caras por diente desde registros del backend (cara !== 'completa')
+  const carasPorDiente = useMemo(() => {
+    const map = {};
+    registros.forEach(r => {
+      const cara = r.cara || 'completa';
+      if (cara === 'completa') return;
+      if (!map[r.pieza_dental]) map[r.pieza_dental] = {};
+      map[r.pieza_dental][cara] = r.estado;
+    });
+    return map;
+  }, [registros]);
+
   const getEstadoPieza = (pieza) => {
-    const reg = registros.find(r => r.pieza_dental === pieza);
+    // Solo el estado del registro "completa" define el color global del diente
+    const reg = registros.find(
+      r => r.pieza_dental === pieza && (r.cara || 'completa') === 'completa'
+    );
     return reg ? reg.estado : 'sano';
   };
 
-  const handleDienteClick = (numero, estado) => {
+  const handleDienteClick = (numero) => {
     if (readOnly) return;
     if (modoAplicacion === 'diente') {
-      onPiezaClick?.(numero, estado);
+      onPiezaClick?.(numero, { estado: estadoSeleccionado, cara: 'completa' });
     }
   };
 
   const handleCaraClick = (numero, cara, estado) => {
     if (readOnly || modoAplicacion !== 'cara') return;
-    setCarasPorDiente(prev => {
-  const diente = prev[numero] || {};
-  const currentEstado = diente[cara];
-  const nuevoEstado = currentEstado === estado ? 'sano' : estado;
-
-  const actualizado = {
-    ...prev,
-    [numero]: { ...diente, [cara]: nuevoEstado }
-  };
-
-  // 🔥 ENVÍA AL PADRE (BACKEND)
-  onPiezaClick?.(numero, {
-    estado: 'por_cara',
-    caras: actualizado[numero]
-  });
-
-  return actualizado;
-});
+    const actual = carasPorDiente[numero]?.[cara];
+    const nuevoEstado = actual === estado ? 'sano' : estado;
+    // Envía un registro por (pieza + cara) — coincide con el modelo Sequelize
+    onPiezaClick?.(numero, { estado: nuevoEstado, cara });
   };
 
   return (
