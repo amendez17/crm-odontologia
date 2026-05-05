@@ -163,7 +163,7 @@ export default function Presupuestos() {
     top:30%;
     left:50%;
     transform:translate(-50%,-50%);
-    opacity:0.05;
+    opacity:0.5;
     font-size:80px;
     font-weight:bold;
     color:#c8a24a;
