@@ -6,10 +6,13 @@ const { sequelize, Usuario } = require('./models');
 
 const app = express();
 
+// Middlewares
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Rutas
+// =======================
+// RUTAS
+// =======================
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/usuarios', require('./routes/usuarios.routes'));
 app.use('/api/pacientes', require('./routes/pacientes.routes'));
@@ -27,25 +30,38 @@ app.use('/api/consentimiento', require('./routes/consentimiento.routes'));
 app.use('/api/actividad', require('./routes/actividad.routes'));
 app.use('/api/mantenimiento', require('./routes/mantenimiento.routes'));
 
-// Health
-app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
+// =======================
+// HEALTH CHECK
+// =======================
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK' });
+});
 
+// =======================
+// PUERTO
+// =======================
 const PORT = process.env.PORT || 4000;
 
+// =======================
+// INICIO SEGURO DEL SERVIDOR
+// =======================
 async function iniciar() {
-
-  sequelize.authenticate()
-    .then(() => console.log('DB conectada'))
-    .catch(err => console.error('Error DB:', err));
-
-  if (process.env.NODE_ENV !== 'production') {
-    sequelize.sync()
-      .then(() => console.log('Tablas sincronizadas'))
-      .catch(err => console.error('Sync error:', err));
-  }
-
-  // crear admin dentro del async (CORRECTO)
   try {
+    console.log('🚀 Iniciando servidor...');
+
+    // Verificar variables críticas
+    console.log('DB_HOST:', process.env.DB_HOST);
+    console.log('DB_NAME:', process.env.DB_NAME);
+    console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'OK' : 'MISSING');
+
+    // Conexión a BD
+    await sequelize.authenticate();
+    console.log('✅ DB conectada');
+
+    await sequelize.sync();
+    console.log('📦 Tablas sincronizadas');
+
+    // Crear admin si no existe
     const adminExiste = await Usuario.findOne({
       where: { email: 'admin@clinica.com' }
     });
@@ -59,15 +75,21 @@ async function iniciar() {
         rol: 'administrador'
       });
 
-      console.log('Usuario admin creado');
+      console.log('👤 Usuario admin creado');
     }
-  } catch (err) {
-    console.error('Error creando admin:', err);
-  }
 
-  app.listen(process.env.PORT || 4000, () => {
-    console.log('Servidor corriendo');
-  });
+    // Levantar servidor SOLO si todo está bien
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    });
+
+  } catch (error) {
+    console.error('❌ ERROR CRÍTICO AL INICIAR SERVIDOR:');
+    console.error(error);
+
+    // IMPORTANTE para Render
+    process.exit(1);
+  }
 }
 
 iniciar();
