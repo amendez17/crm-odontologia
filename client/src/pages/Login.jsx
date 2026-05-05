@@ -58,7 +58,7 @@ return (
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-dental-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
              <img 
-  src="/logo.png" 
+  src="/logo_clinica-removebg-preview.png" 
   alt="Clinica Dental Almar"
   className="w-20 h-20 object-contain mx-auto mb-4"
 />
