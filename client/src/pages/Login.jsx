@@ -19,8 +19,9 @@ export default function Login() {
       login(data.token, data.usuario);
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Error al iniciar sesión');
-    } finally {
+  console.log('ERROR LOGIN:', err.response?.data || err.message);
+  toast.error(err.response?.data?.message || err.response?.data?.error || 'Error al iniciar sesión');
+} finally {
       setLoading(false);
     }
   };
