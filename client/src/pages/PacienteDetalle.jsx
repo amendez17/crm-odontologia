@@ -67,6 +67,11 @@ export default function PacienteDetalle() {
     }
   };*/
 const handleOdontograma = async (pieza, data) => {
+  await api.put(`/odontograma/${pieza}`, data, {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`
+  }
+});
   try {
     if (data.estado === 'por_cara') {
       // 🔥 GUARDAR CARAS
