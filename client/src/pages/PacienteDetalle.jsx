@@ -228,9 +228,9 @@ export default function PacienteDetalle() {
   <div class="header">
 
     <img 
-      src="https://crm-odontologia.vercel.app/logo.png"
+      src="/logo_clinica-removebg-preview.png"
       class="logo"
-      alt="Clínica"
+      alt="Clínica Dental Almar"
     />
 
     <h1>Clínica Dental Almar</h1>
