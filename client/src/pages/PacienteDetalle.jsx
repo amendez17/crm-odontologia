@@ -222,7 +222,6 @@ export default function PacienteDetalle() {
 </style>
 
 </head>
-
 <body>
 
   <div class="header">
@@ -283,8 +282,7 @@ export default function PacienteDetalle() {
   );
 
   win.document.close();
-};
-  
+};  
   const imprimirHistoria = () => {
     const win = window.open('', '_blank', 'width=700,height=900');
     const registros = historias.map(h => `
