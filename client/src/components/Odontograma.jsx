@@ -262,12 +262,23 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const handleCaraClick = (numero, cara, estado) => {
     if (readOnly || modoAplicacion !== 'cara') return;
     setCarasPorDiente(prev => {
-      const diente = prev[numero] || {};
-      const currentEstado = diente[cara];
-      // Toggle: if same estado, go back to sano
-      const nuevoEstado = currentEstado === estado ? 'sano' : estado;
-      return { ...prev, [numero]: { ...diente, [cara]: nuevoEstado } };
-    });
+  const diente = prev[numero] || {};
+  const currentEstado = diente[cara];
+  const nuevoEstado = currentEstado === estado ? 'sano' : estado;
+
+  const actualizado = {
+    ...prev,
+    [numero]: { ...diente, [cara]: nuevoEstado }
+  };
+
+  // 🔥 ENVÍA AL PADRE (BACKEND)
+  onPiezaClick?.(numero, {
+    estado: 'por_cara',
+    caras: actualizado[numero]
+  });
+
+  return actualizado;
+});
   };
 
   return (
