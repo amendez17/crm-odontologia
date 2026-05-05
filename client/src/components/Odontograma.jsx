@@ -1,10 +1,4 @@
-//import { useState } from 'react';
-import { useState, useEffect } from 'react';
-const [registrosLocal, setRegistrosLocal] = useState(registros || []);
-//const [registrosLocal, setRegistrosLocal] = useState(registros);
-useEffect(() => {
-  setRegistrosLocal(registros);
-}, [registros]);
+import { useState } from 'react';
 
 const COLORES = {
   sano: { fill: '#e8f5e9', stroke: '#4caf50', label: '#2e7d32' },
@@ -61,27 +55,10 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     onCaraClick?.(numero, cara, estadoSeleccionado);
   };
 
-const handleDienteClick = (numero, estado) => {
-  if (readOnly || modoAplicacion !== 'diente') return;
-
-  // 🔥 ACTUALIZACIÓN INMEDIATA (UI)
-  setRegistrosLocal(prev => {
-    const existe = prev.find(p => p.pieza_dental === numero);
-
-    if (existe) {
-      return prev.map(p =>
-        p.pieza_dental === numero
-          ? { ...p, estado }
-          : p
-      );
-    }
-
-    return [...prev, { pieza_dental: numero, estado }];
-  });
-
-  // 🔥 BACKEND (async)
-  onPiezaClick?.(numero, estado);
-};
+  const handleDienteClick = () => {
+    if (readOnly) return;
+    onDienteClick?.(numero, estadoSeleccionado);
+  };
 
   // Render tooth shape based on type
   const renderRaiz = () => {
@@ -271,9 +248,9 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
 
   const getEstadoPieza = (pieza) => {
-  const reg = registrosLocal.find(r => r.pieza_dental === pieza);
-  return reg ? reg.estado : 'sano';
-};
+    const reg = registros.find(r => r.pieza_dental === pieza);
+    return reg ? reg.estado : 'sano';
+  };
 
   const handleDienteClick = (numero, estado) => {
     if (readOnly) return;
@@ -282,25 +259,17 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     }
   };
 
- const handleCaraClick = (numero, cara, estado) => {
-  if (readOnly || modoAplicacion !== 'cara') return;
+  const handleCaraClick = (numero, cara, estado) => {
+    if (readOnly || modoAplicacion !== 'cara') return;
+    setCarasPorDiente(prev => {
+      const diente = prev[numero] || {};
+      const currentEstado = diente[cara];
+      // Toggle: if same estado, go back to sano
+      const nuevoEstado = currentEstado === estado ? 'sano' : estado;
+      return { ...prev, [numero]: { ...diente, [cara]: nuevoEstado } };
+    });
+  };
 
-  setCarasPorDiente(prev => {
-    const diente = prev[numero] || {};
-    const currentEstado = diente[cara];
-    const nuevoEstado = currentEstado === estado ? 'sano' : estado;
-
-    const updated = {
-      ...prev,
-      [numero]: { ...diente, [cara]: nuevoEstado }
-    };
-
-    // 🔥 Guardar en backend
-    onPiezaClick?.(numero, estado, cara);
-
-    return updated;
-  });
-};
   return (
     <div className="space-y-5">
       {!readOnly && (
