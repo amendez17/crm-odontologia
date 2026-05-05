@@ -102,7 +102,7 @@ export default function PacienteDetalle() {
   const imprimirConsentimiento = (c) => {
     const win = window.open('', '_blank', 'width=700,height=900');
     win.document.write(`<!DOCTYPE html><html><head> <img 
-  src="/logo_clinica-removebg-preview.png" 
+  src="/https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
   alt="Clinica Dental Almar"
   className="w-20 h-20 object-contain mx-auto mb-4"
 /><title>Consentimiento - ${c.tipo}</title>
@@ -114,7 +114,11 @@ export default function PacienteDetalle() {
     .firma-section div{text-align:center;width:200px}.firma-section .linea{border-top:1px solid #333;margin-top:60px;padding-top:5px;font-size:12px}
     .info{font-size:12px;color:#666;margin:10px 0}.estado{font-size:13px;margin:10px 0}
     @media print{body{padding:20px}}</style></head><body>
-    <div class="header"><h1>Clinica Dental Almar</h1><h2>Consentimiento Informado</h2><p style="font-size:12px;color:#666">${c.tipo}</p></div>
+    <div class="header"><img 
+  src="/https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
+  alt="Clinica Dental Almar"
+  className="w-20 h-20 object-contain mx-auto mb-4"
+/><h1>Clinica Dental Almar</h1><h2>Consentimiento Informado</h2><p style="font-size:12px;color:#666">${c.tipo}</p></div>
     <div class="info"><strong>Paciente:</strong> ${paciente.nombre} ${paciente.apellido} | <strong>DNI:</strong> ${paciente.dni}<br>
     <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''} | <strong>Fecha:</strong> ${c.createdAt?.split('T')[0]}</div>
     <div class="content">${c.contenido}</div>
@@ -137,7 +141,7 @@ export default function PacienteDetalle() {
       </div>
     `).join('');
     win.document.write(`<!DOCTYPE html><html><head> <img 
-  src="/logo_clinica-removebg-preview.png" 
+  src="https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
   alt="Clinica Dental Almar"
   className="w-20 h-20 object-contain mx-auto mb-4"
 /><title>Historia Clínica - ${paciente.apellido}, ${paciente.nombre}</title>
@@ -153,7 +157,7 @@ export default function PacienteDetalle() {
       @media print{body{padding:20px}}
     </style></head><body>
     <div class="header"> <img 
-  src="/logo_clinica-removebg-preview.png" 
+  src="/https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
   alt="Clinica Dental Almar"
   className="w-20 h-20 object-contain mx-auto mb-4"
 /><h1>Clinica Dental Almar</h1><h2>Historia Clínica</h2></div>
@@ -224,7 +228,7 @@ export default function PacienteDetalle() {
         @media print { body { padding: 15px; } }
       </style></head><body>
         <div class="header"> <img 
-  src="/logo_clinica-removebg-preview.png" 
+  src="/https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
   alt="Clinica Dental Almar"
   className="w-20 h-20 object-contain mx-auto mb-4"
 />
