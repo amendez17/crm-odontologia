@@ -240,7 +240,7 @@ const imprimirConsentimiento = (c, paciente = {}) => {
   </div>
 
   <div class="info">
-    <strong>Paciente:</strong> ${paciente.nombre|| ''} ${paciente.apellido|| ''} <br>
+    <strong>Paciente:</strong> ${paciente.nombre} ${paciente.apellido} <br>
     <strong>DNI:</strong> ${paciente.dni|| ''}<br> 
     <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}<br>
     <strong>Fecha:</strong> ${c.createdAt ? c.createdAt.split('T')[0] : ''}
