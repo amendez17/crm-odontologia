@@ -36,13 +36,23 @@ app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 const PORT = process.env.PORT || 4000;
 
 async function iniciar() {
-  try {
-    await sequelize.authenticate();
-    console.log('Conexión a MySQL establecida.');
 
-    if (process.env.NODE_ENV !== 'production') {
-  await sequelize.sync();
+  sequelize.authenticate()
+    .then(() => console.log('DB conectada'))
+    .catch(err => console.error('Error DB:', err));
+
+  if (process.env.NODE_ENV !== 'production') {
+    sequelize.sync()
+      .then(() => console.log('Tablas sincronizadas'))
+      .catch(err => console.error('Sync error:', err));
+  }
+
+  app.listen(process.env.PORT || 4000, () => {
+    console.log('Servidor corriendo');
+  });
 }
+
+iniciar();
     console.log('Tablas sincronizadas.');
 
     // Crear usuario admin por defecto si no existe
