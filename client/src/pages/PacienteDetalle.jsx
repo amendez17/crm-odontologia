@@ -102,7 +102,7 @@ export default function PacienteDetalle() {
 const imprimirConsentimiento = (c) => {
   const win = window.open('', '_blank', 'width=800,height=900');
 
-  win.document.write(
+  win.document.write('
 <!DOCTYPE html>
 <html>
 <head>
