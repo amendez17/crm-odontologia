@@ -197,50 +197,7 @@ const imprimirConsentimiento = (c) => {
     color:#111827;
     margin-top:4px;
   }
-
-  /* TABLE LUXURY */
-  table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:10px;
-  }
-
-  th{
-    background:linear-gradient(90deg,#c8a24a,#e2c275);
-    color:white;
-    padding:12px;
-    font-size:12px;
-    text-transform:uppercase;
-  }
-
-  td{
-    padding:12px;
-    border-bottom:1px solid #eee;
-    font-size:13px;
-  }
-
-  /* TOTALS */
-  .totales{
-    margin-top:25px;
-    text-align:right;
-  }
-
-  .totales div{
-    margin:6px 0;
-    font-size:14px;
-    color:#374151;
-  }
-
-  .total-final{
-    font-size:22px;
-    font-weight:bold;
-    color:#c8a24a;
-    border-top:3px solid #c8a24a;
-    padding-top:10px;
-    margin-top:10px;
-  }
-
-  /* SIGNATURES */
+ /* SIGNATURES */
   .firma{
     margin-top:70px;
     display:flex;
@@ -267,8 +224,7 @@ const imprimirConsentimiento = (c) => {
   @media print{
     body{background:white}
     .container{box-shadow:none}
-  }
-  </style>
+  }  </style>
 
 </head>
 
