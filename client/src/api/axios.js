@@ -7,15 +7,18 @@ const api = axios.create({
   }
 });
 
-
+// 🔐 Interceptor: agregar token automáticamente
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
+// 🚨 Interceptor: manejar errores globales
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -24,6 +27,7 @@ api.interceptors.response.use(
       localStorage.removeItem('usuario');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );
