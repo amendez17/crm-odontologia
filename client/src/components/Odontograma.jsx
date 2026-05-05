@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const COLORES = {
   sano: { fill: '#e8f5e9', stroke: '#4caf50', label: '#2e7d32' },
@@ -119,7 +119,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
 
     // Surface paths using diamond/cross pattern
     const topColor = getCaraColor('vestibular');
-    const bottomColor = getCaraColor(esInferior ? 'palatino' : 'lingual');
+    const bottomColor = getCaraColor('lingual');
     const leftColor = getCaraColor('mesial');
     const rightColor = getCaraColor('distal');
     const centerColor = getCaraColor('oclusal');
@@ -146,7 +146,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
           stroke={bottomColor ? bottomColor.stroke : baseStroke}
           strokeWidth={bottomColor ? '1.5' : '0.5'}
           className={!readOnly && !esAusente ? 'cursor-pointer hover:opacity-75' : ''}
-          onClick={(e) => handleCaraClick(esInferior ? 'palatino' : 'lingual', e)}
+          onClick={(e) => handleCaraClick('lingual', e)}
         />
 
         {/* Left surface (mesial) */}
@@ -247,8 +247,19 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const [carasPorDiente, setCarasPorDiente] = useState({});
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
 
+  useEffect(() => {
+    const caras = {};
+    registros.forEach(r => {
+      if (r.cara && r.cara !== 'completa') {
+        if (!caras[r.pieza_dental]) caras[r.pieza_dental] = {};
+        caras[r.pieza_dental][r.cara] = r.estado;
+      }
+    });
+    setCarasPorDiente(caras);
+  }, [registros]);
+
   const getEstadoPieza = (pieza) => {
-    const reg = registros.find(r => r.pieza_dental === pieza);
+    const reg = registros.find(r => r.pieza_dental === pieza && (!r.cara || r.cara === 'completa'));
     return reg ? reg.estado : 'sano';
   };
 
@@ -262,23 +273,19 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const handleCaraClick = (numero, cara, estado) => {
     if (readOnly || modoAplicacion !== 'cara') return;
     setCarasPorDiente(prev => {
-  const diente = prev[numero] || {};
-  const currentEstado = diente[cara];
-  const nuevoEstado = currentEstado === estado ? 'sano' : estado;
+      const diente = prev[numero] || {};
+      const currentEstado = diente[cara];
+      const nuevoEstado = currentEstado === estado ? 'sano' : estado;
 
-  const actualizado = {
-    ...prev,
-    [numero]: { ...diente, [cara]: nuevoEstado }
-  };
+      const actualizado = {
+        ...prev,
+        [numero]: { ...diente, [cara]: nuevoEstado }
+      };
 
-  // 🔥 ENVÍA AL PADRE (BACKEND)
-  onPiezaClick?.(numero, {
-    estado: 'por_cara',
-    caras: actualizado[numero]
-  });
+      onPiezaClick?.(numero, { cara, estado: nuevoEstado });
 
-  return actualizado;
-});
+      return actualizado;
+    });
   };
 
   return (
@@ -398,10 +405,10 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
         <div className="bg-primary-50/50 rounded-xl p-3 border border-primary-100">
           <p className="text-[11px] text-primary-700 font-medium mb-2">Caras del diente:</p>
           <div className="flex flex-wrap gap-3 text-[10px] text-primary-600">
-            <span><b>Superior:</b> Vestibular - Palatino</span>
+            <span><b>Superior:</b> Vestibular - Palatina (lingual)</span>
             <span><b>Inferior:</b> Vestibular - Lingual</span>
             <span><b>Laterales:</b> Mesial - Distal</span>
-            <span><b>Centro:</b> Oclusal</span>
+            <span><b>Centro:</b> Oclusal / Incisal</span>
           </div>
         </div>
       )}

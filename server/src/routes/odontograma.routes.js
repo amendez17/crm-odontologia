@@ -17,14 +17,28 @@ router.get('/:pacienteId', auth, async (req, res) => {
   }
 });
 
-// POST /api/odontograma
+// POST /api/odontograma (upsert por paciente_id + pieza_dental + cara)
 router.post('/', auth, esDoctor, async (req, res) => {
   try {
-    const registro = await Odontograma.create({
-      ...req.body,
-      doctor_id: req.usuario.id
+    const { paciente_id, pieza_dental, cara, estado, observacion, fecha } = req.body;
+
+    if (!paciente_id || !pieza_dental) {
+      return res.status(400).json({ error: 'paciente_id y pieza_dental son requeridos.' });
+    }
+
+    const caraVal = cara || 'completa';
+    const fechaVal = fecha || new Date().toISOString().split('T')[0];
+
+    const [registro, created] = await Odontograma.findOrCreate({
+      where: { paciente_id, pieza_dental, cara: caraVal },
+      defaults: { estado, observacion, fecha: fechaVal, doctor_id: req.usuario.id }
     });
-    res.status(201).json(registro);
+
+    if (!created) {
+      await registro.update({ estado, observacion, fecha: fechaVal, doctor_id: req.usuario.id });
+    }
+
+    res.status(created ? 201 : 200).json(registro);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -35,7 +49,14 @@ router.put('/:id', auth, esDoctor, async (req, res) => {
   try {
     const registro = await Odontograma.findByPk(req.params.id);
     if (!registro) return res.status(404).json({ error: 'Registro no encontrado.' });
-    await registro.update(req.body);
+    const { estado, observacion, fecha, cara } = req.body;
+    await registro.update({
+      ...(estado !== undefined && { estado }),
+      ...(observacion !== undefined && { observacion }),
+      ...(fecha !== undefined && { fecha }),
+      ...(cara !== undefined && { cara }),
+      doctor_id: req.usuario.id
+    });
     res.json(registro);
   } catch (error) {
     res.status(400).json({ error: error.message });
