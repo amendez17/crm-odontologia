@@ -248,9 +248,13 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
 
   const getEstadoPieza = (pieza) => {
-    const reg = registros.find(r => r.pieza_dental === pieza);
-    return reg ? reg.estado : 'sano';
-  };
+  const reg = registros.find(r => {
+    const piezaDB = r.pieza_dental ?? r.pieza;
+    return Number(piezaDB) === Number(pieza);
+  });
+
+  return reg?.estado || 'sano';
+};
 
   const handleDienteClick = (numero, estado) => {
     if (readOnly) return;
