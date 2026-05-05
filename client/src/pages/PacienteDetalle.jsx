@@ -102,11 +102,11 @@ export default function PacienteDetalle() {
 const imprimirConsentimiento = (c) => {
   const win = window.open('', '_blank', 'width=800,height=900');
 
-  win.document.write(
+  win.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
-<title>Consentimiento - ${c.tipo}</title>
+<title>Consentimiento - ${c.tipo || ''}</title>
 
 <style>
   body{
@@ -157,17 +157,22 @@ const imprimirConsentimiento = (c) => {
     font-weight:bold;
   }
 
-  .info{
-    font-size:13px;
-    margin:15px 0;
-    background:#fffaf0;
+  .card{
+    margin:10px 0;
+    padding:10px;
     border-left:4px solid #c8a24a;
-    padding:12px;
-    border-radius:8px;
+    background:#fffaf0;
   }
 
-  .info strong{
-    color:#c8a24a;
+  .label{
+    font-size:11px;
+    color:#6b7280;
+  }
+
+  .value{
+    font-size:14px;
+    font-weight:bold;
+    color:#333;
   }
 
   .content{
@@ -195,11 +200,6 @@ const imprimirConsentimiento = (c) => {
     justify-content:space-around;
   }
 
-  .firma-section div{
-    text-align:center;
-    width:200px;
-  }
-
   .linea{
     border-top:1px solid #c8a24a;
     margin-top:60px;
@@ -214,10 +214,6 @@ const imprimirConsentimiento = (c) => {
     font-size:11px;
     color:#9ca3af;
   }
-
-  @media print{
-    body{padding:20px}
-  }
 </style>
 
 </head>
@@ -226,37 +222,38 @@ const imprimirConsentimiento = (c) => {
 
   <div class="header">
 
-    <img 
-      src="/logo_clinica-removebg-preview.png"
-      class="logo"
-      alt="Clinica Dental Almar"
-    />
+    <img src="/logo_clinica-removebg-preview.png" class="logo" />
 
     <h1>Clínica Dental Almar</h1>
     <h2>Consentimiento Informado</h2>
 
-    <div class="badge">${c.tipo}</div>
+    <div class="badge">${c.tipo || ''}</div>
   </div>
 
- <div class="card">
-      <div class="label">Paciente</div>
-      <div class="value">${c.paciente?.nombre} ${c.paciente?.apellido}</div>
-      <div style="font-size:12px;color:#6b7280">DNI: ${p.paciente?.dni || ''}</div>
+  <div class="card">
+    <div class="label">Paciente</div>
+    <div class="value">
+      ${c.paciente?.nombre || ''} ${c.paciente?.apellido || ''}
     </div>
+    <div class="label">DNI: ${c.paciente?.dni || ''}</div>
+  </div>
 
-    <div class="card">
-      <div class="label">Doctor</div>
-      <div class="value">Dr. ${p.doctor?.nombre} ${p.doctor?.apellido}</div>
+  <div class="card">
+    <div class="label">Doctor</div>
+    <div class="value">
+      Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}
     </div>
+  </div>
+
   <div class="content">
-    ${c.contenido}
+    ${c.contenido || ''}
   </div>
 
   ${
     c.firmado
-      ? <div class="estado">
+      ? `<div class="estado">
           ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-AR')}
-        </div>
+        </div>`
       : ''
   }
 
@@ -280,11 +277,11 @@ const imprimirConsentimiento = (c) => {
 
 </body>
 </html>
-  );
+  `);
 
   win.document.close();
 };
-    const imprimirHistoria = () => {
+  const imprimirHistoria = () => {
     const win = window.open('', '_blank', 'width=700,height=900');
     const registros = historias.map(h => `
       <div class="registro">
