@@ -438,8 +438,8 @@ body{
       alt="Clinica Dental Almar"
     />
     <h1>Clínica Dental Almar</h1>
-     <p>🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</p>
-    <p>📞 669 113 0990</p>
+     <h2>🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
+    <h2>📞 669 113 0990</h2>
     <h2>Consentimiento Informado</h2>
 
     <div class="tipo">${c.tipo || ''}</div>
@@ -634,8 +634,8 @@ body{
       alt="Clinica Dental Almar"
     />
   <h1>Clínica Dental Almar</h1>
-   <p>🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</p>
-    <p>📞 669 113 0990</p>
+   <h2>🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
+    <h2>📞 669 113 0990</h2>
   <h2>Historia Clínica</h2>
 </div>
 
