@@ -239,8 +239,9 @@ export default function PacienteDetalle() {
   </div>
 
   <div class="info">
-    <strong>Paciente:</strong> ${c.paciente?.nombre || ''} ${c.paciente?.apellido || ''}<br>
-    <strong>DNI:</strong> ${c.paciente?.dni || ''}<br><br>
+  </strong> ${paciente.nombre} ${paciente.apellido} <br>
+   <strong>DNI:</strong> ${paciente.dni}<br>
+   
 
     <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}<br>
     <strong>Fecha:</strong> ${c.createdAt?.split('T')[0] || ''}
