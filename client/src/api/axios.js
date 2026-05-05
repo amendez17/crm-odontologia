@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL + '/api',
+  baseURL: import.meta.env.VITE_API_URL, // 👈 SOLO la URL base del backend
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// 🔐 Agregar token automáticamente en cada request
+// 🔐 Interceptor: agregar token automáticamente
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
 
@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// 🚨 Manejo global de errores (ej: sesión expirada)
+// 🚨 Interceptor: manejar errores globales
 api.interceptors.response.use(
   (response) => response,
   (error) => {
