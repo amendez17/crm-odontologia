@@ -53,7 +53,7 @@ export default function PacienteDetalle() {
     api.get('/consentimiento/plantillas').then(res => setPlantillas(res.data)).catch(() => {});
   }, []);
 
-  const handleOdontograma = async (pieza, estado) => {
+ /* const handleOdontograma = async (pieza, estado) => {
     try {
       await api.post('/odontograma', { paciente_id: parseInt(id), pieza_dental: pieza, estado, fecha: new Date().toISOString().split('T')[0] });
       const { data } = await api.get(`/odontograma/${id}`);
@@ -62,7 +62,33 @@ export default function PacienteDetalle() {
     } catch {
       toast.error('Error al actualizar odontograma');
     }
-  };
+  };*/
+  const handleOdontograma = async (pieza, estado) => {
+
+  // 🔥 UI INMEDIATA (esto arregla tu problema visual)
+  setOdontograma(prev => {
+    const existe = prev.find(p => p.pieza_dental === pieza);
+
+    if (existe) {
+      return prev.map(p =>
+        p.pieza_dental === pieza ? { ...p, estado } : p
+      );
+    }
+
+    return [...prev, { pieza_dental: pieza, estado }];
+  });
+
+  // 💾 GUARDAR EN BACKEND
+  try {
+    await axios.post('/api/odontograma', {
+      paciente_id: paciente.id,
+      pieza_dental: pieza,
+      estado
+    });
+  } catch (error) {
+    console.error('Error guardando odontograma:', error);
+  }
+};
 
   const guardarHistoria = async (e) => {
     e.preventDefault();
