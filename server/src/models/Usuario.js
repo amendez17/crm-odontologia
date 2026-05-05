@@ -1,24 +1,44 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const bcrypt = require('bcryptjs');
+
 const Usuario = sequelize.define('Usuario', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  nombre: DataTypes.STRING(100),
-  apellido: DataTypes.STRING(100),
+  nombre: {
+    type: DataTypes.STRING(100),
+    allowNull: false
+  },
+  apellido: {
+    type: DataTypes.STRING(100),
+    allowNull: false
+  },
   email: {
     type: DataTypes.STRING(150),
     allowNull: false,
     unique: true,
     validate: { isEmail: true }
   },
-  password: DataTypes.STRING(255),
+  password: {
+    type: DataTypes.STRING(255),
+    allowNull: false
+  },
   rol: {
     type: DataTypes.ENUM('administrador', 'doctor', 'recepcionista'),
+    allowNull: false,
     defaultValue: 'recepcionista'
   },
-  especialidad: DataTypes.STRING(100),
-  telefono: DataTypes.STRING(20),
+  especialidad: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  telefono: {
+    type: DataTypes.STRING(20),
+    allowNull: true
+  },
   activo: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
@@ -41,5 +61,7 @@ const Usuario = sequelize.define('Usuario', {
 });
 
 Usuario.prototype.validarPassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
+  return bcrypt.compare(password, this.password);
 };
+
+module.exports = Usuario;
