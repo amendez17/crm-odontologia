@@ -128,8 +128,8 @@ export default function Presupuestos() {
     }
   };
 
-  const imprimirPresupuesto = (p) => {
-  const win = window.open('', '_blank', 'width=800,height=900');
+ const imprimirPresupuesto = (p) => {
+  const win = window.open('', '_blank', 'width=850,height=950');
 
   const filas = (p.detalles || []).map(d => `
     <tr>
@@ -139,81 +139,107 @@ export default function Presupuestos() {
     </tr>
   `).join('');
 
+  const totalPagado = (p.pagos || []).reduce((s, pa) => s + parseFloat(pa.monto), 0);
+  const descuento = parseFloat(p.descuento || 0);
+  const totalFinal = parseFloat(p.total) - totalPagado - descuento;
+
   win.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
-<title>Presupuesto #${p.id}</title>
+<title>Presupuesto Premium #${p.id}</title>
 
 <style>
   body{
-    font-family: Arial, sans-serif;
+    font-family: "Arial", sans-serif;
     margin:0;
     padding:0;
-    background:#f4f7fb;
+    background:#f8fafc;
+  }
+
+  /* WATERMARK */
+  .watermark{
+    position:fixed;
+    top:30%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    opacity:0.05;
+    font-size:80px;
+    font-weight:bold;
+    color:#c8a24a;
+    z-index:0;
+    pointer-events:none;
   }
 
   .container{
-    max-width:800px;
+    position:relative;
+    z-index:1;
+    max-width:850px;
     margin:20px auto;
-    background:white;
-    padding:30px;
-    border-radius:12px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    background:#fff;
+    padding:35px;
+    border-radius:14px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.08);
   }
 
+  /* HEADER LUXURY */
   .header{
     text-align:center;
-    border-bottom:2px solid #e6eef7;
-    padding-bottom:15px;
-    margin-bottom:20px;
+    border-bottom:3px solid #c8a24a;
+    padding-bottom:20px;
+    margin-bottom:25px;
   }
 
   .logo{
-    width:90px;
-    height:90px;
+    width:95px;
+    height:95px;
     object-fit:contain;
     margin-bottom:10px;
   }
 
   .header h1{
     margin:0;
-    font-size:20px;
-    color:#0f172a;
+    font-size:24px;
+    color:#c8a24a;
+    letter-spacing:2px;
   }
 
   .header p{
-    margin:5px 0;
-    color:#64748b;
+    margin:4px 0;
+    color:#6b7280;
     font-size:12px;
   }
 
+  /* INFO */
   .info{
     display:grid;
     grid-template-columns:1fr 1fr 1fr;
-    gap:15px;
+    gap:12px;
     margin-bottom:20px;
-    font-size:13px;
   }
 
   .card{
-    background:#f8fafc;
-    padding:10px;
-    border-radius:8px;
+    background:#fffaf0;
+    border-left:4px solid #c8a24a;
+    padding:12px;
+    border-radius:10px;
   }
 
   .label{
-    font-size:11px;
-    color:#64748b;
+    font-size:10px;
     text-transform:uppercase;
+    color:#6b7280;
+    letter-spacing:1px;
   }
 
   .value{
+    font-size:14px;
     font-weight:bold;
-    margin-top:3px;
-    color:#0f172a;
+    color:#111827;
+    margin-top:4px;
   }
 
+  /* TABLE LUXURY */
   table{
     width:100%;
     border-collapse:collapse;
@@ -221,55 +247,62 @@ export default function Presupuestos() {
   }
 
   th{
-    background:#0ea5e9;
+    background:linear-gradient(90deg,#c8a24a,#e2c275);
     color:white;
-    padding:10px;
+    padding:12px;
     font-size:12px;
+    text-transform:uppercase;
   }
 
   td{
-    padding:10px;
+    padding:12px;
     border-bottom:1px solid #eee;
     font-size:13px;
   }
 
+  /* TOTALS */
   .totales{
-    margin-top:20px;
+    margin-top:25px;
     text-align:right;
   }
 
   .totales div{
-    margin:5px 0;
+    margin:6px 0;
+    font-size:14px;
+    color:#374151;
   }
 
   .total-final{
-    font-size:18px;
+    font-size:22px;
     font-weight:bold;
-    color:#0ea5e9;
-    border-top:2px solid #0ea5e9;
+    color:#c8a24a;
+    border-top:3px solid #c8a24a;
     padding-top:10px;
     margin-top:10px;
   }
 
+  /* SIGNATURES */
   .firma{
-    margin-top:60px;
+    margin-top:70px;
     display:flex;
     justify-content:space-around;
   }
 
   .linea{
-    border-top:1px solid #333;
-    width:180px;
+    border-top:1px solid #c8a24a;
+    width:200px;
     text-align:center;
-    padding-top:5px;
+    padding-top:6px;
     font-size:12px;
+    color:#6b7280;
   }
 
+  /* FOOTER */
   .footer{
-    margin-top:30px;
+    margin-top:35px;
     text-align:center;
     font-size:11px;
-    color:#94a3b8;
+    color:#9ca3af;
   }
 
   @media print{
@@ -282,21 +315,29 @@ export default function Presupuestos() {
 
 <body>
 
+<div class="watermark">ALMAR</div>
+
 <div class="container">
 
   <!-- HEADER -->
   <div class="header">
-    <img src="/logo_clinica-removebg-preview.png" class="logo" />
-    <h1>Clínica Dental Almar</h1>
+    <img 
+      src="/logo_clinica-removebg-preview.png"
+      class="logo"
+      alt="Clinica Dental Almar"
+    />
+
+    <h1>CLÍNICA DENTAL ALMAR</h1>
     <p>Presupuesto Odontológico Profesional</p>
   </div>
 
   <!-- INFO -->
   <div class="info">
+
     <div class="card">
       <div class="label">Paciente</div>
       <div class="value">${p.paciente?.nombre} ${p.paciente?.apellido}</div>
-      <div>DNI: ${p.paciente?.dni || ''}</div>
+      <div style="font-size:12px;color:#6b7280">DNI: ${p.paciente?.dni || ''}</div>
     </div>
 
     <div class="card">
@@ -307,16 +348,17 @@ export default function Presupuestos() {
     <div class="card">
       <div class="label">Fecha</div>
       <div class="value">${p.createdAt?.split('T')[0]}</div>
-      <div>Presupuesto #${p.id}</div>
+      <div style="font-size:12px;color:#6b7280">#${p.id}</div>
     </div>
+
   </div>
 
-  <!-- TABLA -->
+  <!-- TABLE -->
   <table>
     <thead>
       <tr>
         <th>Tratamiento</th>
-        <th>Pieza</th>
+        <th>Pieza Dental</th>
         <th>Precio</th>
       </tr>
     </thead>
@@ -325,16 +367,20 @@ export default function Presupuestos() {
     </tbody>
   </table>
 
-  <!-- TOTALES -->
+  <!-- TOTALS -->
   <div class="totales">
     <div>Subtotal: $${Number(p.total).toLocaleString()}</div>
-    ${p.descuento ? `<div>Descuento: -$${Number(p.descuento).toLocaleString()}</div>` : ''}
+
+    ${descuento ? `<div>Descuento: -$${Number(descuento).toLocaleString()}</div>` : ''}
+
+    ${totalPagado ? `<div>Pagado: -$${Number(totalPagado).toLocaleString()}</div>` : ''}
+
     <div class="total-final">
-      TOTAL: $${Number(p.total - (p.descuento || 0)).toLocaleString()}
+      TOTAL: $${Number(Math.max(0, totalFinal)).toLocaleString()}
     </div>
   </div>
 
-  <!-- FIRMAS -->
+  <!-- SIGNATURES -->
   <div class="firma">
     <div class="linea">Firma del Profesional</div>
     <div class="linea">Firma del Paciente</div>
@@ -342,7 +388,7 @@ export default function Presupuestos() {
 
   <!-- FOOTER -->
   <div class="footer">
-    Clínica Dental Almar · Todos los derechos reservados
+    Documento oficial · Clínica Dental Almar · Todos los derechos reservados
   </div>
 
 </div>
@@ -356,8 +402,7 @@ export default function Presupuestos() {
   `);
 
   win.document.close();
-};
-  const total = detalles.reduce((s, d) => s + (parseFloat(d.precio) || 0), 0);
+};  const total = detalles.reduce((s, d) => s + (parseFloat(d.precio) || 0), 0);
 
   return (
     <div className="space-y-6">
