@@ -485,7 +485,7 @@ body{
     win.print();
   }, 300);
 };
-  const imprimirHistoria = () => {
+ const imprimirHistoria = () => {
   const win = window.open('', '_blank', 'width=700,height=900');
 
   const registros = historias.map(h => `
