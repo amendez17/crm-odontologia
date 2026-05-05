@@ -230,35 +230,37 @@ export default function PacienteDetalle() {
     <img 
       src="/logo_clinica-removebg-preview.png"
       class="logo"
-      alt="Clínica Dental Almar"
+      alt="Clinica Dental Almar"
     />
 
     <h1>Clínica Dental Almar</h1>
     <h2>Consentimiento Informado</h2>
 
-    <div class="badge">${c.tipo || ''}</div>
+    <div class="badge">${c.tipo}</div>
   </div>
 
   <div class="info">
-    <strong>Paciente:</strong> ${paciente.nombre || ''} ${paciente.apellido || ''}<br>
-    <strong>DNI:</strong> ${paciente.dni || ''}<br>
+  <strong>Paciente:</strong> ${paciente.nombre|| ''} ${paciente.apellido|| ''} <br>
+   <strong>DNI:</strong> ${paciente.dni || ''}<br>
+   
+
     <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}<br>
-    <strong>Fecha:</strong> ${c.createdAt ? c.createdAt.split('T')[0] : ''}
+    <strong>Fecha:</strong> ${c.createdAt?.split('T')[0] || ''}
   </div>
 
   <div class="content">
-    ${contenidoSeguro}
+    ${c.contenido}
   </div>
 
   ${
     c.firmado
-      ? `<div class="estado">
-          ✔ Consentimiento firmado el ${new Date(c.fecha_firma).toLocaleDateString('es-MX')}
-        </div>`
+      ? <div class="estado">
+          ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-AR')}
+        </div>
       : ''
   }
 
-  <div class="firma">
+  <div class="firma-section">
     <div>
       <div class="linea">Firma del Profesional</div>
     </div>
@@ -269,7 +271,7 @@ export default function PacienteDetalle() {
   </div>
 
   <div class="footer">
-    Clínica Dental Almar · Documento oficial confidencial
+    Clínica Dental Almar · Consentimiento Oficial
   </div>
 
   <script>
@@ -278,7 +280,7 @@ export default function PacienteDetalle() {
 
 </body>
 </html>
-  `);
+  );
 
   win.document.close();
 };
