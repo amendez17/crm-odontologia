@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react';
 
 /* ================= COLORES ================= */
 const COLORES = {
-  sano: { fill: '#e8f5e9', stroke: '#4caf50' },
-  caries: { fill: '#ffcdd2', stroke: '#e53935' },
-  obturacion: { fill: '#bbdefb', stroke: '#1e88e5' },
-  corona: { fill: '#fff3e0', stroke: '#fb8c00' },
-  extraccion: { fill: '#cfd8dc', stroke: '#546e7a' },
-  endodoncia: { fill: '#e1bee7', stroke: '#8e24aa' },
-  implante: { fill: '#b2ebf2', stroke: '#00acc1' },
-  protesis: { fill: '#f8bbd0', stroke: '#d81b60' },
-  ausente: { fill: '#f5f5f5', stroke: '#bdbdbd' },
-  fractura: { fill: '#ffe0b2', stroke: '#f4511e' }
+  sano: { fill: '#e8f5e9', stroke: '#4caf50', label: '#2e7d32' },
+  caries: { fill: '#ffcdd2', stroke: '#e53935', label: '#b71c1c' },
+  obturacion: { fill: '#bbdefb', stroke: '#1e88e5', label: '#0d47a1' },
+  corona: { fill: '#fff3e0', stroke: '#fb8c00', label: '#e65100' },
+  extraccion: { fill: '#cfd8dc', stroke: '#546e7a', label: '#37474f' },
+  endodoncia: { fill: '#e1bee7', stroke: '#8e24aa', label: '#4a148c' },
+  implante: { fill: '#b2ebf2', stroke: '#00acc1', label: '#006064' },
+  protesis: { fill: '#f8bbd0', stroke: '#d81b60', label: '#880e4f' },
+  ausente: { fill: '#f5f5f5', stroke: '#bdbdbd', label: '#757575' },
+  fractura: { fill: '#ffe0b2', stroke: '#f4511e', label: '#bf360c' }
 };
 
 const LABELS = {
@@ -24,11 +24,7 @@ const DIENTES_SUP = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const DIENTES_INF = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 
 /* ================= COMPONENTE ================= */
-export default function Odontograma({
-  registros = [],
-  onPiezaClick,
-  readOnly = false
-}) {
+export default function Odontograma({ registros = [], onPiezaClick, readOnly = false }) {
 
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('caries');
   const [modo, setModo] = useState('diente');
@@ -77,7 +73,7 @@ export default function Odontograma({
     });
   };
 
-  /* ===== DIENTE SVG ===== */
+  /* ===== DIENTE SVG PRO ===== */
   const Diente = ({ num }) => {
     const estado = getEstado(num);
     const color = COLORES[estado];
@@ -110,21 +106,19 @@ export default function Odontograma({
           />
 
           {/* CARAS */}
-          {['top','bottom','left','right','center'].map((c,i)=>{
-            const col = getCara(c);
+          {[
+            { key:'vestibular', pos:[10,5,22,10] },
+            { key:'palatino', pos:[10,35,22,10] },
+            { key:'mesial', pos:[5,15,10,20] },
+            { key:'distal', pos:[27,15,10,20] },
+            { key:'oclusal', pos:[15,18,12,12] }
+          ].map(({key,pos})=>{
+            const col = getCara(key);
             if(!col) return null;
-
-            const pos = {
-              top:[10,5,22,10],
-              bottom:[10,35,22,10],
-              left:[5,15,10,20],
-              right:[27,15,10,20],
-              center:[15,18,12,12]
-            }[c];
 
             return (
               <rect
-                key={c}
+                key={key}
                 x={pos[0]}
                 y={pos[1]}
                 width={pos[2]}
@@ -132,10 +126,10 @@ export default function Odontograma({
                 fill={col.fill}
                 stroke={col.stroke}
                 strokeWidth="1.5"
-                className="cursor-pointer"
+                className="cursor-pointer transition-all hover:opacity-80"
                 onClick={(e)=>{
                   e.stopPropagation();
-                  handleCara(num, c);
+                  handleCara(num, key);
                 }}
               />
             );
@@ -154,9 +148,22 @@ export default function Odontograma({
       {!readOnly && (
         <>
           {/* MODO */}
-          <div className="flex gap-2">
-            <button onClick={()=>setModo('diente')}>Diente</button>
-            <button onClick={()=>setModo('cara')}>Cara</button>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold">Modo:</span>
+
+            <button
+              onClick={()=>setModo('diente')}
+              className={`px-3 py-1 rounded ${modo==='diente'?'bg-blue-500 text-white':'bg-gray-200'}`}
+            >
+              Diente
+            </button>
+
+            <button
+              onClick={()=>setModo('cara')}
+              className={`px-3 py-1 rounded ${modo==='cara'?'bg-blue-500 text-white':'bg-gray-200'}`}
+            >
+              Cara
+            </button>
           </div>
 
           {/* ESTADOS */}
@@ -165,7 +172,10 @@ export default function Odontograma({
               <button
                 key={k}
                 onClick={()=>setEstadoSeleccionado(k)}
-                className="px-2 py-1 border rounded"
+                className={`px-3 py-1 rounded border ${
+                  estadoSeleccionado===k?'ring-2 ring-black':''
+                }`}
+                style={{ backgroundColor: COLORES[k].fill }}
               >
                 {v}
               </button>
@@ -182,6 +192,22 @@ export default function Odontograma({
       {/* INFERIOR */}
       <div className="flex justify-center gap-1">
         {DIENTES_INF.map(n => <Diente key={n} num={n} />)}
+      </div>
+
+      {/* LEYENDA */}
+      <div className="flex flex-wrap gap-3 mt-4 justify-center">
+        {Object.entries(LABELS).map(([k,v])=>(
+          <div key={k} className="flex items-center gap-2 text-xs">
+            <span
+              className="w-4 h-4 rounded border"
+              style={{
+                backgroundColor: COLORES[k].fill,
+                borderColor: COLORES[k].stroke
+              }}
+            />
+            {v}
+          </div>
+        ))}
       </div>
 
     </div>
