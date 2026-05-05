@@ -6,7 +6,9 @@ const { sequelize, Usuario } = require('./models');
 
 const app = express();
 
-// Middlewares
+// =======================
+// MIDDLEWARES
+// =======================
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
@@ -43,25 +45,34 @@ app.get('/api/health', (req, res) => {
 const PORT = process.env.PORT || 4000;
 
 // =======================
-// INICIO SEGURO DEL SERVIDOR
+// INICIO DEL SERVIDOR
 // =======================
 async function iniciar() {
   try {
+
     console.log('🚀 Iniciando servidor...');
 
-    // Verificar variables críticas
-    console.log('DB_HOST:', process.env.DB_HOST);
-    console.log('DB_NAME:', process.env.DB_NAME);
-    console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'OK' : 'MISSING');
+    // =======================
+    // LOG VARIABLES (DEBUG)
+    // =======================
+    console.log("DB_HOST:", process.env.DB_HOST);
+    console.log("DB_NAME:", process.env.DB_NAME);
+    console.log("DB_USER:", process.env.DB_USER);
+    console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? "OK" : "MISSING");
+    console.log("JWT_SECRET:", process.env.JWT_SECRET ? "OK" : "MISSING");
 
-    // Conexión a BD
+    // =======================
+    // CONEXIÓN A BD
+    // =======================
     await sequelize.authenticate();
     console.log('✅ DB conectada');
 
     await sequelize.sync();
     console.log('📦 Tablas sincronizadas');
 
-    // Crear admin si no existe
+    // =======================
+    // CREAR ADMIN SI NO EXISTE
+    // =======================
     const adminExiste = await Usuario.findOne({
       where: { email: 'admin@clinica.com' }
     });
@@ -78,7 +89,9 @@ async function iniciar() {
       console.log('👤 Usuario admin creado');
     }
 
-    // Levantar servidor SOLO si todo está bien
+    // =======================
+    // LEVANTAR SERVIDOR
+    // =======================
     app.listen(PORT, () => {
       console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
     });
