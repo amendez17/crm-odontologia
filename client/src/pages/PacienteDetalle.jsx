@@ -623,7 +623,7 @@ body{
 <body>
 
 <div class="header">
-  <img src="https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" class="logo"/>
+  <img src="/logo_clinica-removebg-preview.png" class="logo"/>
   <h1>Clínica Dental Almar</h1>
   <h2>Historia Clínica</h2>
 </div>
