@@ -111,7 +111,7 @@ const imprimirConsentimiento = (c) => {
 <style>
 @page {
   size: Letter;
-  margin: 15mm;
+  margin: 15mm;}
   body{
     font-family: Arial, sans-serif;
     padding: 40px;
