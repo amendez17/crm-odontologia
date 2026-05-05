@@ -102,129 +102,119 @@ export default function PacienteDetalle() {
 const imprimirConsentimiento = (c) => {
   const win = window.open('', '_blank', 'width=800,height=900');
 
-  win.document.write('
+  win.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
-<title>Presupuesto Premium #${p.id}</title>
+<title>Consentimiento - ${c.tipo || ''}</title>
 
 <style>
   body{
-    font-family: "Arial", sans-serif;
-    margin:0;
-    padding:0;
-    background:#f8fafc;
+    font-family: Arial, sans-serif;
+    padding: 40px;
+    max-width: 700px;
+    margin: 0 auto;
+    color: #333;
+    background: #fff;
   }
 
-  /* WATERMARK */
-  .watermark{
-    position:fixed;
-    top:30%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    opacity:0.5;
-    font-size:80px;
-    font-weight:bold;
-    color:#c8a24a;
-    z-index:0;
-    pointer-events:none;
-  }
-
-  .container{
-    position:relative;
-    z-index:1;
-    max-width:850px;
-    margin:20px auto;
-    background:#fff;
-    padding:35px;
-    border-radius:14px;
-    box-shadow:0 15px 40px rgba(0,0,0,0.08);
-  }
-
-  /* HEADER LUXURY */
   .header{
     text-align:center;
-    border-bottom:3px solid #c8a24a;
-    padding-bottom:20px;
+    border-bottom:2px solid #c8a24a;
+    padding-bottom:15px;
     margin-bottom:25px;
   }
 
   .logo{
-    width:95px;
-    height:95px;
+    width:85px;
+    height:85px;
     object-fit:contain;
     margin-bottom:10px;
   }
 
   .header h1{
     margin:0;
-    font-size:24px;
+    font-size:22px;
     color:#c8a24a;
-    letter-spacing:2px;
+    letter-spacing:1px;
   }
 
-  .header p{
-    margin:4px 0;
+  .header h2{
+    margin:5px 0;
+    font-size:15px;
     color:#6b7280;
-    font-size:12px;
+    font-weight:normal;
   }
 
-  /* INFO */
-  .info{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:12px;
-    margin-bottom:20px;
+  .badge{
+    display:inline-block;
+    margin-top:8px;
+    padding:4px 12px;
+    font-size:11px;
+    background:#f5e6b3;
+    color:#7a5c1b;
+    border-radius:20px;
+    font-weight:bold;
   }
 
   .card{
-    background:#fffaf0;
+    margin:10px 0;
+    padding:10px;
     border-left:4px solid #c8a24a;
-    padding:12px;
-    border-radius:10px;
+    background:#fffaf0;
   }
 
   .label{
-    font-size:10px;
-    text-transform:uppercase;
+    font-size:11px;
     color:#6b7280;
-    letter-spacing:1px;
   }
 
   .value{
     font-size:14px;
     font-weight:bold;
-    color:#111827;
-    margin-top:4px;
+    color:#333;
   }
- /* SIGNATURES */
-  .firma{
-    margin-top:70px;
+
+  .content{
+    white-space:pre-wrap;
+    font-size:13px;
+    margin:25px 0;
+    line-height:1.6;
+    color:#374151;
+  }
+
+  .estado{
+    font-size:13px;
+    margin:10px 0;
+    padding:10px;
+    background:#fef9c3;
+    border-left:4px solid #c8a24a;
+    border-radius:6px;
+    color:#7a5c1b;
+    font-weight:bold;
+  }
+
+  .firma-section{
+    margin-top:60px;
     display:flex;
     justify-content:space-around;
   }
 
   .linea{
     border-top:1px solid #c8a24a;
-    width:200px;
-    text-align:center;
-    padding-top:6px;
+    margin-top:60px;
+    padding-top:5px;
     font-size:12px;
     color:#6b7280;
   }
 
-  /* FOOTER */
   .footer{
-    margin-top:35px;
+    margin-top:30px;
     text-align:center;
     font-size:11px;
     color:#9ca3af;
   }
-
-  @media print{
-    body{background:white}
-    .container{box-shadow:none}
-  }  </style>
+</style>
 
 </head>
 
@@ -243,12 +233,9 @@ const imprimirConsentimiento = (c) => {
   <div class="card">
     <div class="label">Paciente</div>
     <div class="value">
-       ${paciente.nombre||''} ${paciente.apellido} 
+      ${c.paciente?.nombre || ''} ${c.paciente?.apellido || ''}
     </div>
-    <div class="label">DNI:</div>
- <div class="value">
- ${paciente.dni}
-  </div>
+    <div class="label">DNI: ${c.paciente?.dni || ''}</div>
   </div>
 
   <div class="card">
@@ -264,9 +251,9 @@ const imprimirConsentimiento = (c) => {
 
   ${
     c.firmado
-      ? <div class="estado">
+      ? `<div class="estado">
           ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-AR')}
-        </div>
+        </div>`
       : ''
   }
 
@@ -290,7 +277,7 @@ const imprimirConsentimiento = (c) => {
 
 </body>
 </html>
-  );
+  `);
 
   win.document.close();
 };
