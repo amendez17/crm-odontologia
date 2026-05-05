@@ -57,7 +57,11 @@ return (
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-dental-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <span className="text-4xl">🦷</span>
+             <img 
+  src="/logo.png" 
+  alt="Clinica Dental Almar"
+  className="w-20 h-20 object-contain mx-auto mb-4"
+/>
             </div>
             <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary-700 to-dental-600 bg-clip-text text-transparent">
               Clinica Dental Almar
