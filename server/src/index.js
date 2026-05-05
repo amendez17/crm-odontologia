@@ -6,10 +6,7 @@ const { sequelize, Usuario } = require('./models');
 
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: "*"
-}));
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // Rutas
@@ -30,7 +27,7 @@ app.use('/api/consentimiento', require('./routes/consentimiento.routes'));
 app.use('/api/actividad', require('./routes/actividad.routes'));
 app.use('/api/mantenimiento', require('./routes/mantenimiento.routes'));
 
-// Health check
+// Health
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
 const PORT = process.env.PORT || 4000;
@@ -47,16 +44,12 @@ async function iniciar() {
       .catch(err => console.error('Sync error:', err));
   }
 
-  app.listen(process.env.PORT || 4000, () => {
-    console.log('Servidor corriendo');
-  });
-}
+  // crear admin dentro del async (CORRECTO)
+  try {
+    const adminExiste = await Usuario.findOne({
+      where: { email: 'admin@clinica.com' }
+    });
 
-iniciar();
-    console.log('Tablas sincronizadas.');
-
-    // Crear usuario admin por defecto si no existe
-    const adminExiste = await Usuario.findOne({ where: { email: 'admin@clinica.com' } });
     if (!adminExiste) {
       await Usuario.create({
         nombre: 'Admin',
@@ -65,15 +58,16 @@ iniciar();
         password: 'admin123',
         rol: 'administrador'
       });
-      console.log('Usuario admin creado: admin@clinica.com / admin123');
-    }
 
-    app.listen(PORT, () => {
-      console.log(`Servidor corriendo en puerto ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Error al iniciar:', error);
+      console.log('Usuario admin creado');
+    }
+  } catch (err) {
+    console.error('Error creando admin:', err);
   }
+
+  app.listen(process.env.PORT || 4000, () => {
+    console.log('Servidor corriendo');
+  });
 }
 
 iniciar();
