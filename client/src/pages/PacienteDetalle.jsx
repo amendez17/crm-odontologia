@@ -238,15 +238,16 @@ const imprimirConsentimiento = (c) => {
     <div class="badge">${c.tipo}</div>
   </div>
 
-  <div class="info">
-  <strong>Paciente:</strong> ${paciente.nombre|| ''} ${paciente.apellido|| ''} <br>
-   <strong>DNI:</strong> ${paciente.dni || ''}<br>
-   
+ <div class="card">
+      <div class="label">Paciente</div>
+      <div class="value">${p.paciente?.nombre} ${p.paciente?.apellido}</div>
+      <div style="font-size:12px;color:#6b7280">DNI: ${p.paciente?.dni || ''}</div>
+    </div>
 
-    <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}<br>
-    <strong>Fecha:</strong> ${c.createdAt?.split('T')[0] || ''}
-  </div>
-
+    <div class="card">
+      <div class="label">Doctor</div>
+      <div class="value">Dr. ${p.doctor?.nombre} ${p.doctor?.apellido}</div>
+    </div>
   <div class="content">
     ${c.contenido}
   </div>
