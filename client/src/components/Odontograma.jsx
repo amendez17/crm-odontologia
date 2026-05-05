@@ -2,210 +2,209 @@ import { useState, useEffect } from 'react';
 
 /* ================= COLORES ================= */
 const COLORES = {
-  sano: { fill: '#e8f5e9', stroke: '#4caf50', label: '#2e7d32' },
-  caries: { fill: '#ffcdd2', stroke: '#e53935', label: '#b71c1c' },
-  obturacion: { fill: '#bbdefb', stroke: '#1e88e5', label: '#0d47a1' },
-  corona: { fill: '#fff3e0', stroke: '#fb8c00', label: '#e65100' },
-  extraccion: { fill: '#cfd8dc', stroke: '#546e7a', label: '#37474f' },
-  endodoncia: { fill: '#e1bee7', stroke: '#8e24aa', label: '#4a148c' },
-  implante: { fill: '#b2ebf2', stroke: '#00acc1', label: '#006064' },
-  protesis: { fill: '#f8bbd0', stroke: '#d81b60', label: '#880e4f' },
-  ausente: { fill: '#f5f5f5', stroke: '#bdbdbd', label: '#757575' },
-  fractura: { fill: '#ffe0b2', stroke: '#f4511e', label: '#bf360c' }
+  sano: { fill: '#e8f5e9', stroke: '#4caf50' },
+  caries: { fill: '#ffcdd2', stroke: '#e53935' },
+  obturacion: { fill: '#bbdefb', stroke: '#1e88e5' },
+  corona: { fill: '#fff3e0', stroke: '#fb8c00' },
+  extraccion: { fill: '#cfd8dc', stroke: '#546e7a' },
+  endodoncia: { fill: '#e1bee7', stroke: '#8e24aa' },
+  implante: { fill: '#b2ebf2', stroke: '#00acc1' },
+  protesis: { fill: '#f8bbd0', stroke: '#d81b60' },
+  ausente: { fill: '#f5f5f5', stroke: '#bdbdbd' }
 };
 
 const LABELS = {
-  sano:'Sano', caries:'Caries', obturacion:'Obturación', corona:'Corona',
-  extraccion:'Extracción', endodoncia:'Endodoncia', implante:'Implante',
-  protesis:'Prótesis', ausente:'Ausente', fractura:'Fractura'
+  sano:'Sano', caries:'Caries', obturacion:'Obturación',
+  corona:'Corona', extraccion:'Extracción',
+  endodoncia:'Endodoncia', implante:'Implante',
+  protesis:'Prótesis', ausente:'Ausente'
 };
 
-const DIENTES_SUP = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
-const DIENTES_INF = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const DIENTES_SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+const DIENTES_INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 
-/* ================= COMPONENTE ================= */
-export default function Odontograma({ registros = [], onPiezaClick, readOnly = false }) {
+/* ================= DIENTE ================= */
+function DienteGrafico({
+  numero, estado, caras, estadoSeleccionado,
+  onCaraClick, onDienteClick, modo, esInferior
+}) {
+  const [hover, setHover] = useState(null);
+  const base = COLORES[estado] || COLORES.sano;
 
-  const [estadoSeleccionado, setEstadoSeleccionado] = useState('caries');
+  const getColor = (cara) => {
+    if (hover === cara) return COLORES[estadoSeleccionado];
+    if (caras?.[cara]) return COLORES[caras[cara]];
+    return base;
+  };
+
+  const cara = (name, x, y, w, h) => (
+    <rect
+      x={x} y={y} width={w} height={h}
+      fill={getColor(name).fill}
+      stroke={getColor(name).stroke}
+      strokeWidth="1"
+      className="transition-all duration-200 cursor-pointer hover:opacity-80"
+      onMouseEnter={() => setHover(name)}
+      onMouseLeave={() => setHover(null)}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (modo === 'cara') onCaraClick(numero, name, estadoSeleccionado);
+      }}
+    >
+      <title>{`${numero} - ${name}`}</title>
+    </rect>
+  );
+
+  return (
+    <svg width="40" height="50"
+      onClick={() => modo === 'diente' && onDienteClick(numero, estadoSeleccionado)}
+      className="cursor-pointer hover:scale-105 transition-all"
+    >
+      {cara('vestibular',10,0,20,10)}
+      {cara('mesial',0,10,10,20)}
+      {cara('distal',30,10,10,20)}
+      {cara('lingual',10,30,20,10)}
+      {cara('oclusal',10,10,20,20)}
+    </svg>
+  );
+}
+
+/* ================= ODONTOGRAMA ================= */
+export default function Odontograma({
+  registros = [],
+  onPiezaClick,
+  onGuardar
+}) {
+
   const [modo, setModo] = useState('diente');
-
-  const [odontogramaLocal, setOdontogramaLocal] = useState({});
+  const [estadoSeleccionado, setEstadoSeleccionado] = useState('caries');
   const [carasLocal, setCarasLocal] = useState({});
+  const [history, setHistory] = useState([]);
+  const [future, setFuture] = useState([]);
 
-  /* ===== SYNC BACKEND ===== */
-  useEffect(() => {
-    const mapa = {};
-    registros.forEach(r => {
-      mapa[r.pieza_dental] = r.estado;
-    });
-    setOdontogramaLocal(mapa);
-  }, [registros]);
+  /* ===== helpers ===== */
+  const getEstado = (pieza) =>
+    registros.find(r => r.pieza_dental === pieza)?.estado || 'sano';
 
-  const getEstado = (pieza) => odontogramaLocal[pieza] || 'sano';
+  const getCaras = (pieza) => ({
+    ...(registros.find(r => r.pieza_dental === pieza)?.caras || {}),
+    ...(carasLocal[pieza] || {})
+  });
 
-  /* ===== CLICK DIENTE ===== */
-  const handleDiente = (pieza) => {
-    if (readOnly || modo !== 'diente') return;
+  /* ===== undo ===== */
+  const pushHistory = (data) => {
+    setHistory(h => [...h, JSON.stringify(data)]);
+    setFuture([]);
+  };
 
-    setOdontogramaLocal(prev => ({
+  const undo = () => {
+    if (!history.length) return;
+    const prev = JSON.parse(history.at(-1));
+    setFuture(f => [JSON.stringify(carasLocal), ...f]);
+    setCarasLocal(prev);
+    setHistory(h => h.slice(0,-1));
+  };
+
+  const redo = () => {
+    if (!future.length) return;
+    const next = JSON.parse(future[0]);
+    setHistory(h => [...h, JSON.stringify(carasLocal)]);
+    setCarasLocal(next);
+    setFuture(f => f.slice(1));
+  };
+
+  /* ===== clicks ===== */
+  const handleCaraClick = (num, cara, estado) => {
+    pushHistory(carasLocal);
+
+    setCarasLocal(prev => ({
       ...prev,
-      [pieza]: estadoSeleccionado
+      [num]: {
+        ...prev[num],
+        [cara]: prev[num]?.[cara] === estado ? 'sano' : estado
+      }
     }));
-
-    onPiezaClick?.(pieza, estadoSeleccionado);
   };
 
-  /* ===== CLICK CARA ===== */
-  const handleCara = (pieza, cara) => {
-    if (readOnly || modo !== 'cara') return;
-
-    setCarasLocal(prev => {
-      const diente = prev[pieza] || {};
-      const actual = diente[cara];
-
-      return {
-        ...prev,
-        [pieza]: {
-          ...diente,
-          [cara]: actual === estadoSeleccionado ? 'sano' : estadoSeleccionado
-        }
-      };
-    });
+  const handleDienteClick = (num, estado) => {
+    onPiezaClick?.(num, estado);
   };
 
-  /* ===== DIENTE SVG PRO ===== */
-  const Diente = ({ num }) => {
-    const estado = getEstado(num);
-    const color = COLORES[estado];
-    const caras = carasLocal[num] || {};
+  /* ===== autosave ===== */
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (!onGuardar) return;
 
-    const getCara = (c) => {
-      const e = caras[c];
-      return e && e !== 'sano' ? COLORES[e] : null;
-    };
+      Object.entries(carasLocal).forEach(([pieza, caras]) => {
+        onGuardar({
+          pieza_dental: Number(pieza),
+          caras
+        });
+      });
+    }, 800);
 
-    return (
-      <div className="flex flex-col items-center group">
-        <svg
-          width="42"
-          height="60"
-          className="cursor-pointer transition-all duration-200 hover:scale-110"
-          onClick={() => handleDiente(num)}
-        >
-          {/* BASE */}
-          <rect
-            x="5"
-            y="5"
-            width="32"
-            height="40"
-            rx="6"
-            fill={color.fill}
-            stroke={color.stroke}
-            strokeWidth="2"
-            style={{ transition: 'all .2s ease' }}
-          />
-
-          {/* CARAS */}
-          {[
-            { key:'vestibular', pos:[10,5,22,10] },
-            { key:'palatino', pos:[10,35,22,10] },
-            { key:'mesial', pos:[5,15,10,20] },
-            { key:'distal', pos:[27,15,10,20] },
-            { key:'oclusal', pos:[15,18,12,12] }
-          ].map(({key,pos})=>{
-            const col = getCara(key);
-            if(!col) return null;
-
-            return (
-              <rect
-                key={key}
-                x={pos[0]}
-                y={pos[1]}
-                width={pos[2]}
-                height={pos[3]}
-                fill={col.fill}
-                stroke={col.stroke}
-                strokeWidth="1.5"
-                className="cursor-pointer transition-all hover:opacity-80"
-                onClick={(e)=>{
-                  e.stopPropagation();
-                  handleCara(num, key);
-                }}
-              />
-            );
-          })}
-        </svg>
-
-        <span className="text-[10px] mt-1">{num}</span>
-      </div>
-    );
-  };
+    return () => clearTimeout(t);
+  }, [carasLocal]);
 
   /* ================= UI ================= */
   return (
     <div className="space-y-4">
 
-      {!readOnly && (
-        <>
-          {/* MODO */}
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold">Modo:</span>
-
-            <button
-              onClick={()=>setModo('diente')}
-              className={`px-3 py-1 rounded ${modo==='diente'?'bg-blue-500 text-white':'bg-gray-200'}`}
-            >
-              Diente
-            </button>
-
-            <button
-              onClick={()=>setModo('cara')}
-              className={`px-3 py-1 rounded ${modo==='cara'?'bg-blue-500 text-white':'bg-gray-200'}`}
-            >
-              Cara
-            </button>
-          </div>
-
-          {/* ESTADOS */}
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(LABELS).map(([k,v])=>(
-              <button
-                key={k}
-                onClick={()=>setEstadoSeleccionado(k)}
-                className={`px-3 py-1 rounded border ${
-                  estadoSeleccionado===k?'ring-2 ring-black':''
-                }`}
-                style={{ backgroundColor: COLORES[k].fill }}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* SUPERIOR */}
-      <div className="flex justify-center gap-1">
-        {DIENTES_SUP.map(n => <Diente key={n} num={n} />)}
+      {/* CONTROLES */}
+      <div className="flex gap-2 flex-wrap">
+        <button onClick={()=>setModo('diente')}>Diente</button>
+        <button onClick={()=>setModo('cara')}>Cara</button>
+        <button onClick={undo}>↺</button>
+        <button onClick={redo}>↻</button>
       </div>
 
-      {/* INFERIOR */}
-      <div className="flex justify-center gap-1">
-        {DIENTES_INF.map(n => <Diente key={n} num={n} />)}
+      <div className="flex flex-wrap gap-1">
+        {Object.keys(COLORES).map(k => (
+          <button key={k} onClick={()=>setEstadoSeleccionado(k)}
+            style={{background: COLORES[k].fill}}
+            className="px-2 text-xs rounded">
+            {LABELS[k]}
+          </button>
+        ))}
       </div>
 
-      {/* LEYENDA */}
-      <div className="flex flex-wrap gap-3 mt-4 justify-center">
-        {Object.entries(LABELS).map(([k,v])=>(
-          <div key={k} className="flex items-center gap-2 text-xs">
-            <span
-              className="w-4 h-4 rounded border"
-              style={{
-                backgroundColor: COLORES[k].fill,
-                borderColor: COLORES[k].stroke
-              }}
+      {/* ARCADA SUPERIOR */}
+      <div className="text-center text-xs text-gray-400">Arcada Superior</div>
+      <div className="flex justify-center">
+        {DIENTES_SUPERIOR.map((n,i)=>(
+          <div key={n} className="flex">
+            <DienteGrafico
+              numero={n}
+              estado={getEstado(n)}
+              caras={getCaras(n)}
+              estadoSeleccionado={estadoSeleccionado}
+              onCaraClick={handleCaraClick}
+              onDienteClick={handleDienteClick}
+              modo={modo}
             />
-            {v}
+            {i===7 && <div className="w-4 border-l" />}
+          </div>
+        ))}
+      </div>
+
+      {/* LINEA MEDIA */}
+      <div className="text-center text-xs">L.M</div>
+
+      {/* ARCADA INFERIOR */}
+      <div className="flex justify-center">
+        {DIENTES_INFERIOR.map((n,i)=>(
+          <div key={n} className="flex">
+            <DienteGrafico
+              numero={n}
+              estado={getEstado(n)}
+              caras={getCaras(n)}
+              estadoSeleccionado={estadoSeleccionado}
+              onCaraClick={handleCaraClick}
+              onDienteClick={handleDienteClick}
+              modo={modo}
+              esInferior
+            />
+            {i===7 && <div className="w-4 border-l" />}
           </div>
         ))}
       </div>
