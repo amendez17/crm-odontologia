@@ -18,7 +18,7 @@ export default function Login() {
 
     try {
       // 🔐 Ruta correcta del backend
-      const { data } = await api.post('/api/auth/login', {
+      const { data } = await api.post('/auth/login', {
         email,
         password
       });
