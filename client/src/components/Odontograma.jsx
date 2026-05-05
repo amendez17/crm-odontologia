@@ -56,16 +56,31 @@ function DienteGrafico({
   );
 
   return (
-    <svg width="40" height="50"
-      onClick={() => modo === 'diente' && onDienteClick(numero, estadoSeleccionado)}
-      className="cursor-pointer hover:scale-105 transition-all"
-    >
-      {cara('vestibular',10,0,20,10)}
-      {cara('mesial',0,10,10,20)}
-      {cara('distal',30,10,10,20)}
-      {cara('lingual',10,30,20,10)}
-      {cara('oclusal',10,10,20,20)}
-    </svg>
+    <div className="flex flex-col items-center mx-1">
+
+      {/* Número arriba si es inferior */}
+      {esInferior && (
+        <span className="text-[10px] font-bold mb-1">{numero}</span>
+      )}
+
+      <svg
+        width="40"
+        height="50"
+        onClick={() => modo === 'diente' && onDienteClick(numero, estadoSeleccionado)}
+        className="cursor-pointer hover:scale-105 transition-all"
+      >
+        {cara('vestibular',10,0,20,10)}
+        {cara('mesial',0,10,10,20)}
+        {cara('distal',30,10,10,20)}
+        {cara(esInferior ? 'lingual' : 'palatino',10,30,20,10)}
+        {cara('oclusal',10,10,20,20)}
+      </svg>
+
+      {/* Número abajo si es superior */}
+      {!esInferior && (
+        <span className="text-[10px] font-bold mt-1">{numero}</span>
+      )}
+    </div>
   );
 }
 
@@ -79,10 +94,7 @@ export default function Odontograma({
   const [modo, setModo] = useState('diente');
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('caries');
   const [carasLocal, setCarasLocal] = useState({});
-  const [history, setHistory] = useState([]);
-  const [future, setFuture] = useState([]);
 
-  /* ===== helpers ===== */
   const getEstado = (pieza) =>
     registros.find(r => r.pieza_dental === pieza)?.estado || 'sano';
 
@@ -91,32 +103,7 @@ export default function Odontograma({
     ...(carasLocal[pieza] || {})
   });
 
-  /* ===== undo ===== */
-  const pushHistory = (data) => {
-    setHistory(h => [...h, JSON.stringify(data)]);
-    setFuture([]);
-  };
-
-  const undo = () => {
-    if (!history.length) return;
-    const prev = JSON.parse(history.at(-1));
-    setFuture(f => [JSON.stringify(carasLocal), ...f]);
-    setCarasLocal(prev);
-    setHistory(h => h.slice(0,-1));
-  };
-
-  const redo = () => {
-    if (!future.length) return;
-    const next = JSON.parse(future[0]);
-    setHistory(h => [...h, JSON.stringify(carasLocal)]);
-    setCarasLocal(next);
-    setFuture(f => f.slice(1));
-  };
-
-  /* ===== clicks ===== */
   const handleCaraClick = (num, cara, estado) => {
-    pushHistory(carasLocal);
-
     setCarasLocal(prev => ({
       ...prev,
       [num]: {
@@ -146,24 +133,23 @@ export default function Odontograma({
     return () => clearTimeout(t);
   }, [carasLocal]);
 
-  /* ================= UI ================= */
   return (
     <div className="space-y-4">
 
       {/* CONTROLES */}
       <div className="flex gap-2 flex-wrap">
-        <button onClick={()=>setModo('diente')}>Diente</button>
-        <button onClick={()=>setModo('cara')}>Cara</button>
-        <button onClick={undo}>↺</button>
-        <button onClick={redo}>↻</button>
+        <button onClick={()=>setModo('diente')} className="px-3 py-1 bg-gray-100 rounded">Diente</button>
+        <button onClick={()=>setModo('cara')} className="px-3 py-1 bg-gray-100 rounded">Cara</button>
       </div>
 
-      <div className="flex flex-wrap gap-1">
-        {Object.keys(COLORES).map(k => (
-          <button key={k} onClick={()=>setEstadoSeleccionado(k)}
+      {/* SELECTOR DE ESTADO */}
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(LABELS).map(([k,v]) => (
+          <button key={k}
+            onClick={()=>setEstadoSeleccionado(k)}
             style={{background: COLORES[k].fill}}
-            className="px-2 text-xs rounded">
-            {LABELS[k]}
+            className="px-2 py-1 text-xs rounded border">
+            {v}
           </button>
         ))}
       </div>
@@ -182,13 +168,17 @@ export default function Odontograma({
               onDienteClick={handleDienteClick}
               modo={modo}
             />
-            {i===7 && <div className="w-4 border-l" />}
+            {i===7 && <div className="w-4 border-l border-dashed" />}
           </div>
         ))}
       </div>
 
       {/* LINEA MEDIA */}
-      <div className="text-center text-xs">L.M</div>
+      <div className="flex items-center">
+        <div className="flex-1 border-t border-dashed" />
+        <span className="mx-2 text-xs">L.M</span>
+        <div className="flex-1 border-t border-dashed" />
+      </div>
 
       {/* ARCADA INFERIOR */}
       <div className="flex justify-center">
@@ -204,7 +194,25 @@ export default function Odontograma({
               modo={modo}
               esInferior
             />
-            {i===7 && <div className="w-4 border-l" />}
+            {i===7 && <div className="w-4 border-l border-dashed" />}
+          </div>
+        ))}
+      </div>
+
+      <div className="text-center text-xs text-gray-400">Arcada Inferior</div>
+
+      {/* 🔥 LEYENDA / SIMBOLOGÍA */}
+      <div className="flex flex-wrap justify-center gap-3 mt-3">
+        {Object.entries(LABELS).map(([k,v]) => (
+          <div key={k} className="flex items-center gap-1 text-xs">
+            <span
+              className="w-3 h-3 rounded"
+              style={{
+                background: COLORES[k].fill,
+                border: `1px solid ${COLORES[k].stroke}`
+              }}
+            />
+            {v}
           </div>
         ))}
       </div>
