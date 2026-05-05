@@ -140,7 +140,7 @@ export default function Presupuestos() {
     const totalPagado = (p.pagos || []).reduce((s, pa) => s + parseFloat(pa.monto), 0);
     const saldo = parseFloat(p.total) - totalPagado - parseFloat(p.descuento || 0);
 
-    win.document.write(`<!DOCTYPE html><html><head><title>Presupuesto #${p.id}</title>
+    win.document.write(`<!DOCTYPE html><html><head><img src="/logo_clinica-removebg-preview.png.png" style="width:80px;margin-bottom:10px;" /><title>Presupuesto #${p.id}</title>
     <style>
       body{font-family:Arial,sans-serif;padding:40px;max-width:650px;margin:0 auto;color:#333}
       .header{text-align:center;border-bottom:3px solid #fcf0be;padding-bottom:20px;margin-bottom:25px}
