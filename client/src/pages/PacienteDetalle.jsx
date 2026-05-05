@@ -67,57 +67,27 @@ export default function PacienteDetalle() {
     }
   };*/
 const handleOdontograma = async (pieza, data) => {
-  await api.put(`/odontograma/${pieza}`, data, {
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("token")}`
-  }
-});
   try {
-    if (data.estado === 'por_cara') {
-      // 🔥 GUARDAR CARAS
-      await api.put(`/odontograma/${pieza}`, {
-        pieza_dental: pieza,
-        caras: data.caras
-      });
-    } else {
-      // 🔥 GUARDAR DIENTE COMPLETO
-      await api.put(`/odontograma/${pieza}`, {
-        pieza_dental: pieza,
-        estado: data
-      });
-    }
+    const isPorCara = data.caras !== undefined;
 
-    // 🔥 REFRESH LOCAL
-    setOdontograma(prev => {
-      const index = prev.findIndex(p => p.pieza_dental === pieza);
-
-      if (index !== -1) {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
-          ...(data.estado === 'por_cara'
-            ? { caras: data.caras }
-            : { estado: data })
-        };
-        return updated;
-      }
-
-      return [
-        ...prev,
-        {
+    const payload = isPorCara
+      ? {
           pieza_dental: pieza,
-          ...(data.estado === 'por_cara'
-            ? { caras: data.caras }
-            : { estado: data })
+          caras: data.caras
         }
-      ];
-    });
+      : {
+          pieza_dental: pieza,
+          estado: data.estado
+        };
+
+    console.log("PAYLOAD:", payload);
+
+    await api.put(`/odontograma/${pieza}`, payload);
 
   } catch (error) {
-    console.error('Error guardando odontograma:', error);
+    console.error("Error guardando odontograma:", error.response?.data || error);
   }
-};
-/*  const handleOdontograma = async (pieza, estado, cara = null) => {
+};/*  const handleOdontograma = async (pieza, estado, cara = null) => {
   await axios.post('/api/odontograma', {
     pieza_dental: pieza,
     estado,
