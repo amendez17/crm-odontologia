@@ -106,115 +106,169 @@ const imprimirConsentimiento = (c) => {
 <!DOCTYPE html>
 <html>
 <head>
-<title>Consentimiento - ${c.tipo || ''}</title>
+<title>Presupuesto Premium #${p.id}</title>
 
 <style>
   body{
-    font-family: Arial, sans-serif;
-    padding: 40px;
-    max-width: 700px;
-    margin: 0 auto;
-    color: #333;
-    background: #fff;
+    font-family: "Arial", sans-serif;
+    margin:0;
+    padding:0;
+    background:#f8fafc;
   }
 
+  /* WATERMARK */
+  .watermark{
+    position:fixed;
+    top:30%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    opacity:0.5;
+    font-size:80px;
+    font-weight:bold;
+    color:#c8a24a;
+    z-index:0;
+    pointer-events:none;
+  }
+
+  .container{
+    position:relative;
+    z-index:1;
+    max-width:850px;
+    margin:20px auto;
+    background:#fff;
+    padding:35px;
+    border-radius:14px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.08);
+  }
+
+  /* HEADER LUXURY */
   .header{
     text-align:center;
-    border-bottom:2px solid #c8a24a;
-    padding-bottom:15px;
+    border-bottom:3px solid #c8a24a;
+    padding-bottom:20px;
     margin-bottom:25px;
   }
 
   .logo{
-    width:85px;
-    height:85px;
+    width:95px;
+    height:95px;
     object-fit:contain;
     margin-bottom:10px;
   }
 
   .header h1{
     margin:0;
-    font-size:22px;
+    font-size:24px;
     color:#c8a24a;
-    letter-spacing:1px;
+    letter-spacing:2px;
   }
 
-  .header h2{
-    margin:5px 0;
-    font-size:15px;
+  .header p{
+    margin:4px 0;
     color:#6b7280;
-    font-weight:normal;
+    font-size:12px;
   }
 
-  .badge{
-    display:inline-block;
-    margin-top:8px;
-    padding:4px 12px;
-    font-size:11px;
-    background:#f5e6b3;
-    color:#7a5c1b;
-    border-radius:20px;
-    font-weight:bold;
+  /* INFO */
+  .info{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:12px;
+    margin-bottom:20px;
   }
 
   .card{
-    margin:10px 0;
-    padding:10px;
-    border-left:4px solid #c8a24a;
     background:#fffaf0;
+    border-left:4px solid #c8a24a;
+    padding:12px;
+    border-radius:10px;
   }
 
   .label{
-    font-size:11px;
+    font-size:10px;
+    text-transform:uppercase;
     color:#6b7280;
+    letter-spacing:1px;
   }
 
   .value{
     font-size:14px;
     font-weight:bold;
-    color:#333;
+    color:#111827;
+    margin-top:4px;
   }
 
-  .content{
-    white-space:pre-wrap;
+  /* TABLE LUXURY */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+  }
+
+  th{
+    background:linear-gradient(90deg,#c8a24a,#e2c275);
+    color:white;
+    padding:12px;
+    font-size:12px;
+    text-transform:uppercase;
+  }
+
+  td{
+    padding:12px;
+    border-bottom:1px solid #eee;
     font-size:13px;
-    margin:25px 0;
-    line-height:1.6;
+  }
+
+  /* TOTALS */
+  .totales{
+    margin-top:25px;
+    text-align:right;
+  }
+
+  .totales div{
+    margin:6px 0;
+    font-size:14px;
     color:#374151;
   }
 
-  .estado{
-    font-size:13px;
-    margin:10px 0;
-    padding:10px;
-    background:#fef9c3;
-    border-left:4px solid #c8a24a;
-    border-radius:6px;
-    color:#7a5c1b;
+  .total-final{
+    font-size:22px;
     font-weight:bold;
+    color:#c8a24a;
+    border-top:3px solid #c8a24a;
+    padding-top:10px;
+    margin-top:10px;
   }
 
-  .firma-section{
-    margin-top:60px;
+  /* SIGNATURES */
+  .firma{
+    margin-top:70px;
     display:flex;
     justify-content:space-around;
   }
 
   .linea{
     border-top:1px solid #c8a24a;
-    margin-top:60px;
-    padding-top:5px;
+    width:200px;
+    text-align:center;
+    padding-top:6px;
     font-size:12px;
     color:#6b7280;
   }
 
+  /* FOOTER */
   .footer{
-    margin-top:30px;
+    margin-top:35px;
     text-align:center;
     font-size:11px;
     color:#9ca3af;
   }
-</style>
+
+  @media print{
+    body{background:white}
+    .container{box-shadow:none}
+  }
+  </style>
 
 </head>
 
