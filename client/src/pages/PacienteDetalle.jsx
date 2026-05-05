@@ -66,7 +66,7 @@ export default function PacienteDetalle() {
       toast.error('Error al actualizar odontograma');
     }
   };*/
-const handleOdontograma = async (pieza, data) => {
+/*const handleOdontograma = async (pieza, data) => {
   try {
     const isPorCara = data.caras !== undefined;
 
@@ -87,7 +87,42 @@ const handleOdontograma = async (pieza, data) => {
   } catch (error) {
     console.error("Error guardando odontograma:", error.response?.data || error);
   }
-};/*  const handleOdontograma = async (pieza, estado, cara = null) => {
+};*/
+  const handleOdontograma = async (pieza, data) => {
+  try {
+
+    // 1. Buscar registro REAL en el estado
+    const registro = odontograma.find(
+      r => r.pieza_dental === pieza
+    );
+
+    // 2. Si no existe → crear
+    if (!registro) {
+      await api.post('/odontograma', {
+        paciente_id: parseInt(id),
+        pieza_dental: pieza,
+        ...data
+      });
+
+    } else {
+      // 3. Si existe → usar ID real
+      await api.put(`/odontograma/${registro.id}`, {
+        ...data
+      });
+    }
+
+    // 4. Recargar
+    const { data: refreshed } = await api.get(`/odontograma/${id}`);
+    setOdontograma(refreshed);
+
+    toast.success('Odontograma actualizado');
+
+  } catch (error) {
+    console.error(error);
+    toast.error('Error al guardar odontograma');
+  }
+};
+/*  const handleOdontograma = async (pieza, estado, cara = null) => {
   await axios.post('/api/odontograma', {
     pieza_dental: pieza,
     estado,
