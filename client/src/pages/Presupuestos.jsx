@@ -129,75 +129,234 @@ export default function Presupuestos() {
   };
 
   const imprimirPresupuesto = (p) => {
-    const win = window.open('', '_blank', 'width=700,height=900');
-    const filas = (p.detalles || []).map(d => `
+  const win = window.open('', '_blank', 'width=800,height=900');
+
+  const filas = (p.detalles || []).map(d => `
+    <tr>
+      <td>${d.tratamiento?.nombre || ''}</td>
+      <td style="text-align:center">${d.pieza_dental || '-'}</td>
+      <td style="text-align:right">$${Number(d.precio).toLocaleString()}</td>
+    </tr>
+  `).join('');
+
+  win.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+<title>Presupuesto #${p.id}</title>
+
+<style>
+  body{
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:0;
+    background:#f4f7fb;
+  }
+
+  .container{
+    max-width:800px;
+    margin:20px auto;
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+  }
+
+  .header{
+    text-align:center;
+    border-bottom:2px solid #e6eef7;
+    padding-bottom:15px;
+    margin-bottom:20px;
+  }
+
+  .logo{
+    width:90px;
+    height:90px;
+    object-fit:contain;
+    margin-bottom:10px;
+  }
+
+  .header h1{
+    margin:0;
+    font-size:20px;
+    color:#0f172a;
+  }
+
+  .header p{
+    margin:5px 0;
+    color:#64748b;
+    font-size:12px;
+  }
+
+  .info{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:15px;
+    margin-bottom:20px;
+    font-size:13px;
+  }
+
+  .card{
+    background:#f8fafc;
+    padding:10px;
+    border-radius:8px;
+  }
+
+  .label{
+    font-size:11px;
+    color:#64748b;
+    text-transform:uppercase;
+  }
+
+  .value{
+    font-weight:bold;
+    margin-top:3px;
+    color:#0f172a;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+  }
+
+  th{
+    background:#0ea5e9;
+    color:white;
+    padding:10px;
+    font-size:12px;
+  }
+
+  td{
+    padding:10px;
+    border-bottom:1px solid #eee;
+    font-size:13px;
+  }
+
+  .totales{
+    margin-top:20px;
+    text-align:right;
+  }
+
+  .totales div{
+    margin:5px 0;
+  }
+
+  .total-final{
+    font-size:18px;
+    font-weight:bold;
+    color:#0ea5e9;
+    border-top:2px solid #0ea5e9;
+    padding-top:10px;
+    margin-top:10px;
+  }
+
+  .firma{
+    margin-top:60px;
+    display:flex;
+    justify-content:space-around;
+  }
+
+  .linea{
+    border-top:1px solid #333;
+    width:180px;
+    text-align:center;
+    padding-top:5px;
+    font-size:12px;
+  }
+
+  .footer{
+    margin-top:30px;
+    text-align:center;
+    font-size:11px;
+    color:#94a3b8;
+  }
+
+  @media print{
+    body{background:white}
+    .container{box-shadow:none}
+  }
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <img src="/logo_clinica-removebg-preview.png" class="logo" />
+    <h1>Clínica Dental Almar</h1>
+    <p>Presupuesto Odontológico Profesional</p>
+  </div>
+
+  <!-- INFO -->
+  <div class="info">
+    <div class="card">
+      <div class="label">Paciente</div>
+      <div class="value">${p.paciente?.nombre} ${p.paciente?.apellido}</div>
+      <div>DNI: ${p.paciente?.dni || ''}</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Doctor</div>
+      <div class="value">Dr. ${p.doctor?.nombre} ${p.doctor?.apellido}</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Fecha</div>
+      <div class="value">${p.createdAt?.split('T')[0]}</div>
+      <div>Presupuesto #${p.id}</div>
+    </div>
+  </div>
+
+  <!-- TABLA -->
+  <table>
+    <thead>
       <tr>
-        <td style="padding:8px;border-bottom:1px solid #eee">${d.tratamiento?.nombre || ''}</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${d.pieza_dental || '-'}</td>
-        <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">$${Number(d.precio).toLocaleString()}</td>
+        <th>Tratamiento</th>
+        <th>Pieza</th>
+        <th>Precio</th>
       </tr>
-    `).join('');
-    const totalPagado = (p.pagos || []).reduce((s, pa) => s + parseFloat(pa.monto), 0);
-    const saldo = parseFloat(p.total) - totalPagado - parseFloat(p.descuento || 0);
+    </thead>
+    <tbody>
+      ${filas}
+    </tbody>
+  </table>
 
-    win.document.write(`<!DOCTYPE html><html><head><img 
-  src="/https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
-  alt="Clinica Dental Almar"
-  className="w-20 h-20 object-contain mx-auto mb-4"
-/><title>Presupuesto #${p.id}</title>
-    <style>
-      body{font-family:Arial,sans-serif;padding:40px;max-width:650px;margin:0 auto;color:#333}
-      .header{text-align:center;border-bottom:3px solid #fcf0be;padding-bottom:20px;margin-bottom:25px}
-      .header h1{margin:0;color:#fcf0be;font-size:24px}
-      .header p{margin:4px 0;color:#666;font-size:12px}
-      .info{display:flex;justify-content:space-between;margin-bottom:20px;font-size:13px}
-      .info div{flex:1}
-      .info .label{color:#888;font-size:11px;text-transform:uppercase}
-      .info .value{font-weight:bold;margin-top:2px}
-      table{width:100%;border-collapse:collapse;margin:15px 0}
-      th{background:#f8fafc;padding:10px 8px;text-align:left;font-size:12px;color:#666;border-bottom:2px solid #e2e8f0}
-      .totals{margin-top:15px;text-align:right;font-size:14px}
-      .totals .row{display:flex;justify-content:flex-end;gap:30px;padding:4px 0}
-      .totals .grand{font-size:20px;font-weight:bold;color:#fcf0be;border-top:2px solid #fcf0be;padding-top:8px;margin-top:8px}
-      .footer{margin-top:50px;display:flex;justify-content:space-between;font-size:11px;color:#999}
-      .firma{margin-top:60px;display:flex;justify-content:space-around}
-      .firma div{text-align:center;width:200px}
-      .firma .linea{border-top:1px solid #333;margin-top:50px;padding-top:5px;font-size:12px;color:#666}
-      .estado{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;text-transform:uppercase}
-      @media print{body{padding:20px}}
-    </style></head><body>
-      <div class="header">
-        <h1>Clinica Dental Almar</h1>
-        <p>Presupuesto Odontológico</p>
-      </div>
-      <div class="info">
-        <div><div class="label">Paciente</div><div class="value">${p.paciente?.nombre} ${p.paciente?.apellido}</div><div style="font-size:12px;color:#666">DNI: ${p.paciente?.dni || ''}</div></div>
-        <div><div class="label">Doctor</div><div class="value">Dr. ${p.doctor?.nombre} ${p.doctor?.apellido}</div></div>
-        <div style="text-align:right"><div class="label">Presupuesto</div><div class="value">#${p.id}</div><div style="font-size:12px;color:#666">${p.createdAt?.split('T')[0] || ''}</div></div>
-      </div>
-      <table>
-        <thead><tr><th>Tratamiento</th><th style="text-align:center">Pieza</th><th style="text-align:right">Precio</th></tr></thead>
-        <tbody>${filas}</tbody>
-      </table>
-      <div class="totals">
-        <div class="row"><span>Subtotal:</span><span>$${Number(p.total).toLocaleString()}</span></div>
-        ${parseFloat(p.descuento) > 0 ? `<div class="row"><span>Descuento:</span><span>-$${Number(p.descuento).toLocaleString()}</span></div>` : ''}
-        ${totalPagado > 0 ? `<div class="row"><span>Pagado:</span><span style="color:green">-$${Number(totalPagado).toLocaleString()}</span></div>` : ''}
-        <div class="row grand"><span>Total${saldo < parseFloat(p.total) ? ' pendiente' : ''}:</span><span>$${Number(Math.max(0, saldo)).toLocaleString()}</span></div>
-      </div>
-      <div class="firma">
-        <div><div class="linea">Firma del profesional</div></div>
-        <div><div class="linea">Firma del paciente</div></div>
-      </div>
-      <div class="footer">
-        <span>Presupuesto válido por 30 días</span>
-        <span>Impreso: ${new Date().toLocaleDateString('es-AR')}</span>
-      </div>
-      <script>window.onload=function(){window.print()}</script>
-    </body></html>`);
-    win.document.close();
-  };
+  <!-- TOTALES -->
+  <div class="totales">
+    <div>Subtotal: $${Number(p.total).toLocaleString()}</div>
+    ${p.descuento ? `<div>Descuento: -$${Number(p.descuento).toLocaleString()}</div>` : ''}
+    <div class="total-final">
+      TOTAL: $${Number(p.total - (p.descuento || 0)).toLocaleString()}
+    </div>
+  </div>
 
+  <!-- FIRMAS -->
+  <div class="firma">
+    <div class="linea">Firma del Profesional</div>
+    <div class="linea">Firma del Paciente</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Clínica Dental Almar · Todos los derechos reservados
+  </div>
+
+</div>
+
+<script>
+  window.onload = () => window.print();
+</script>
+
+</body>
+</html>
+  `);
+
+  win.document.close();
+};
   const total = detalles.reduce((s, d) => s + (parseFloat(d.precio) || 0), 0);
 
   return (
