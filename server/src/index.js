@@ -6,15 +6,11 @@ const { sequelize, Usuario } = require('./models');
 
 const app = express();
 
-// =======================
-// MIDDLEWARES
-// =======================
-app.use(cors({ origin: "*" }));
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-// =======================
-// RUTAS
-// =======================
+// Rutas
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/usuarios', require('./routes/usuarios.routes'));
 app.use('/api/pacientes', require('./routes/pacientes.routes'));
@@ -32,51 +28,21 @@ app.use('/api/consentimiento', require('./routes/consentimiento.routes'));
 app.use('/api/actividad', require('./routes/actividad.routes'));
 app.use('/api/mantenimiento', require('./routes/mantenimiento.routes'));
 
-// =======================
-// HEALTH CHECK
-// =======================
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK' });
-});
+// Health check
+app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
-// =======================
-// PUERTO
-// =======================
 const PORT = process.env.PORT || 4000;
 
-// =======================
-// INICIO DEL SERVIDOR
-// =======================
 async function iniciar() {
   try {
-
-    console.log('🚀 Iniciando servidor...');
-
-    // =======================
-    // LOG VARIABLES (DEBUG)
-    // =======================
-    console.log("DB_HOST:", process.env.DB_HOST);
-    console.log("DB_NAME:", process.env.DB_NAME);
-    console.log("DB_USER:", process.env.DB_USER);
-    console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? "OK" : "MISSING");
-    console.log("JWT_SECRET:", process.env.JWT_SECRET ? "OK" : "MISSING");
-
-    // =======================
-    // CONEXIÓN A BD
-    // =======================
     await sequelize.authenticate();
-    console.log('✅ DB conectada');
+    console.log('Conexión a MySQL establecida.');
 
     await sequelize.sync();
-    console.log('📦 Tablas sincronizadas');
+    console.log('Tablas sincronizadas.');
 
-    // =======================
-    // CREAR ADMIN SI NO EXISTE
-    // =======================
-    const adminExiste = await Usuario.findOne({
-      where: { email: 'admin@clinica.com' }
-    });
-
+    // Crear usuario admin por defecto si no existe
+    const adminExiste = await Usuario.findOne({ where: { email: 'admin@clinica.com' } });
     if (!adminExiste) {
       await Usuario.create({
         nombre: 'Admin',
@@ -85,23 +51,14 @@ async function iniciar() {
         password: 'admin123',
         rol: 'administrador'
       });
-
-      console.log('👤 Usuario admin creado');
+      console.log('Usuario admin creado: admin@clinica.com / admin123');
     }
 
-    // =======================
-    // LEVANTAR SERVIDOR
-    // =======================
     app.listen(PORT, () => {
-      console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+      console.log(`Servidor corriendo en http://localhost:${PORT}`);
     });
-
   } catch (error) {
-    console.error('❌ ERROR CRÍTICO AL INICIAR SERVIDOR:');
-    console.error(error);
-
-    // IMPORTANTE para Render
-    process.exit(1);
+    console.error('Error al iniciar:', error);
   }
 }
 
