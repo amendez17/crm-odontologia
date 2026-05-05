@@ -233,9 +233,9 @@ const imprimirConsentimiento = (c) => {
   <div class="card">
     <div class="label">Paciente</div>
     <div class="value">
-      ${c.paciente?.nombre || ''} ${c.paciente?.apellido || ''}
+      <strong>Paciente:</strong> ${paciente.nombre} ${paciente.apellido} 
     </div>
-    <div class="label">DNI: ${c.paciente?.dni || ''}</div>
+    <div class="label">DNI: ${paciente.dni}</div>
   </div>
 
   <div class="card">
