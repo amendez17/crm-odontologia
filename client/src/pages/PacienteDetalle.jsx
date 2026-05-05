@@ -109,6 +109,9 @@ const imprimirConsentimiento = (c) => {
 <title>Consentimiento - ${c.tipo || ''}</title>
 
 <style>
+@page {
+  size: Letter;
+  margin: 15mm;
   body{
     font-family: Arial, sans-serif;
     padding: 40px;
