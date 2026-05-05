@@ -5,9 +5,7 @@ import Odontograma from '../components/Odontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar } from 'react-icons/fi';
-useEffect(() => {
-  console.log("ODONTOGRAMA BACKEND:", odontograma);
-}, [odontograma]);
+
 export default function PacienteDetalle() {
   const { id } = useParams();
   const [paciente, setPaciente] = useState(null);
@@ -54,6 +52,9 @@ export default function PacienteDetalle() {
     api.get('/usuarios/doctores').then(res => setDoctores(res.data)).catch(() => {});
     api.get('/consentimiento/plantillas').then(res => setPlantillas(res.data)).catch(() => {});
   }, []);
+  useEffect(() => {
+  console.log("ODONTOGRAMA BACKEND:", odontograma);
+}, [odontograma]);
 
  /* const handleOdontograma = async (pieza, estado) => {
     try {
