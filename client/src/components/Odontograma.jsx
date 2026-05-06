@@ -106,7 +106,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
   };
 
   // Crown with 5 surfaces
-  const renderCorona = () => {
+   const renderCorona = () => {
     const size = tipo === 'molar' ? 44 : tipo === 'premolar' ? 40 : 36;
     const cx = size / 2 + (44 - size) / 2;
     const cy = esInferior ? 30 : 20;
@@ -116,6 +116,11 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     const baseStroke = esAusente ? '#bdbdbd' : '#8d6e63';
     const baseFill = esAusente ? '#f0f0f0' : '#fef9f4';
 
+    // Color del diente completo (cuando estado != sano y no es ausente)
+    const dienteEstadoActivo = estado && estado !== 'sano' && !esAusente;
+    const dienteFill = dienteEstadoActivo ? color.fill : baseFill;
+    const dienteStroke = dienteEstadoActivo ? color.stroke : baseStroke;
+
     // Surface paths using diamond/cross pattern
     const topColor = getCaraColor('vestibular');
     const bottomColor = getCaraColor(esInferior ? 'palatino' : 'lingual');
@@ -123,15 +128,17 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     const rightColor = getCaraColor('distal');
     const centerColor = getCaraColor('oclusal');
 
-return (
-    <g>
-      {/* Tooth crown base */}
-      <rect x={cx-r} y={cy-r} width={r*2} height={r*2} rx={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} ry={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} fill={dienteFill} stroke={dienteStroke} strokeWidth="1.5"/>
 
-      {/* Top surface (vestibular) */}
+
+    return (
+      <g>
+        {/* Tooth crown base */}
+        <rect x={cx-r} y={cy-r} width={r*2} height={r*2} rx={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} ry={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} fill={dienteFill} stroke={dienteStroke} strokeWidth="1.5"/>
+
+        {/* Top surface (vestibular) */}
         <path
           d={`M${cx-r},${cy-r} L${cx+r},${cy-r} L${cx+ri},${cy-ri} L${cx-ri},${cy-ri} Z`}
-          fill={topColor ? topColor.fill : baseFill}
+          fill={topColor ? topColor.fill : 'transparent'}
           stroke={topColor ? topColor.stroke : baseStroke}
           strokeWidth={topColor ? '1.5' : '0.5'}
           className={!readOnly && !esAusente ? 'cursor-pointer hover:opacity-75' : ''}
@@ -141,7 +148,7 @@ return (
         {/* Bottom surface (palatino/lingual) */}
         <path
           d={`M${cx-r},${cy+r} L${cx+r},${cy+r} L${cx+ri},${cy+ri} L${cx-ri},${cy+ri} Z`}
-          fill={bottomColor ? bottomColor.fill : baseFill}
+          fill={bottomColor ? bottomColor.fill : 'transparent'}
           stroke={bottomColor ? bottomColor.stroke : baseStroke}
           strokeWidth={bottomColor ? '1.5' : '0.5'}
           className={!readOnly && !esAusente ? 'cursor-pointer hover:opacity-75' : ''}
@@ -151,7 +158,7 @@ return (
         {/* Left surface (mesial) */}
         <path
           d={`M${cx-r},${cy-r} L${cx-ri},${cy-ri} L${cx-ri},${cy+ri} L${cx-r},${cy+r} Z`}
-          fill={leftColor ? leftColor.fill : baseFill}
+          fill={leftColor ? leftColor.fill : 'transparent'}
           stroke={leftColor ? leftColor.stroke : baseStroke}
           strokeWidth={leftColor ? '1.5' : '0.5'}
           className={!readOnly && !esAusente ? 'cursor-pointer hover:opacity-75' : ''}
@@ -161,7 +168,7 @@ return (
         {/* Right surface (distal) */}
         <path
           d={`M${cx+r},${cy-r} L${cx+ri},${cy-ri} L${cx+ri},${cy+ri} L${cx+r},${cy+r} Z`}
-          fill={rightColor ? rightColor.fill : baseFill}
+          fill={rightColor ? rightColor.fill : 'transparent'}
           stroke={rightColor ? rightColor.stroke : baseStroke}
           strokeWidth={rightColor ? '1.5' : '0.5'}
           className={!readOnly && !esAusente ? 'cursor-pointer hover:opacity-75' : ''}
@@ -172,7 +179,7 @@ return (
         <rect
           x={cx-ri} y={cy-ri} width={ri*2} height={ri*2}
           rx={2} ry={2}
-          fill={centerColor ? centerColor.fill : baseFill}
+          fill={centerColor ? centerColor.fill : 'transparent'}
           stroke={centerColor ? centerColor.stroke : baseStroke}
           strokeWidth={centerColor ? '1.5' : '0.5'}
           className={!readOnly && !esAusente ? 'cursor-pointer hover:opacity-75' : ''}
@@ -200,7 +207,7 @@ return (
       </g>
     );
   };
-
+  
   const svgHeight = esInferior ? 58 : (tipo === 'canino' ? 68 : tipo === 'molar' ? 66 : 62);
   const svgWidth = 44;
 
