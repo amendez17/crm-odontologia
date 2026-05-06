@@ -205,7 +205,7 @@ export default function Dashboard() {
             <div className="space-y-2">
               {pacientesRecientes.map(pac => (
                 <Link key={pac.id} to={`/pacientes/${pac.id}`} className="flex items-center gap-3 p-3 bg-surface-50 rounded-2xl hover:bg-dental-50/50 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-teal flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#c9a227] via-[#b89b5e] to-[#d6c28a] flex items-center justify-center text-white font-bold text-sm shadow-sm">
                     {pac.nombre[0]}{pac.apellido[0]}
                   </div>
                   <div>
