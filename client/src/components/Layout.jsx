@@ -118,14 +118,33 @@ export default function Layout() {
       <aside className={`fixed lg:static inset-y-0 left-0 z-30 ${sidebarW} bg-gradient-sidebar shadow-sidebar transform transition-all duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col overflow-hidden`}>
 
         {/* Logo */}
-        <div className={`flex items-center border-b border-white/10 h-[70px] flex-shrink-0 ${collapsed ? 'justify-center px-0' : 'px-4 gap-3'}`}>
-          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
-            <img
-    src="/logo_clinica-removebg-preview.png"
-    alt="Clinica Dental Almar"
-    className="w-14 h-14 object-contain relative z-10"
-  />
-          </div>
+        <div className={`flex items-center border-b border-white/5 h-[70px] flex-shrink-0 ${collapsed ? 'justify-center px-0' : 'px-4 gap-3'}`}>
+        <div className="w-11 h-11 rounded-2xl bg-white/25 backdrop-blur-xl border border-white/30 shadow-[0_8px_30px_rgba(255,255,255,0.12)] flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+    
+    {/* efecto liquid glass */}
+    <div className="
+      absolute inset-0
+      bg-gradient-to-br 
+      from-white/50 
+      via-white/10 
+      to-transparent
+      pointer-events-none
+    " />
+
+    <img src="/logo_clinica-removebg-preview.png" alt="Clinica Dental Almar" className="w-14 h-14 object-contain relative z-10"/>
+  </div>
+
+  {!collapsed && (
+    <div className="min-w-0">
+      <p className="text-white font-bold text-base leading-tight truncate">
+        Clinica Dental Almar
+      </p>
+      <p className="text-white/60 text-[11px] truncate">
+        Sistema dental
+      </p>
+    </div>
+  )}
+</div>          </div>
           {!collapsed && (
             <div className="min-w-0">
               <p className="text-white font-bold text-base leading-tight truncate">Clinica Dental Almar</p>
