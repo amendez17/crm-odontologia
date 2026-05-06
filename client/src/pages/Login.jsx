@@ -54,7 +54,7 @@ return (<div className="min-h-screen flex items-center justify-center p-4 bg-gra
   {/* Card principal (glass Apple style) */}
   <div className="relative w-full max-w-md animate-slide-up">
 
-    /*<div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40 p-8">*/
+    { /*<div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40 p-8">*/}
 
       {/* Logo */}
       <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl border border-white/10 relative overflow-hidden">
