@@ -13,6 +13,7 @@ export default function Reportes() {
   const [hasta, setHasta] = useState(FIN_MES);
   const [dataIngresos, setDataIngresos] = useState(null);
   const [dataCitas, setDataCitas] = useState(null);
+  const [dataDoctores, setDataDoctores] = useState(null);
   const [dataTratamientos, setDataTratamientos] = useState(null);
   const [dataDeudas, setDataDeudas] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,9 @@ export default function Reportes() {
       } else if (tab === 'tratamientos') {
         const { data } = await api.get('/reportes/tratamientos-populares', { params: { desde, hasta } });
         setDataTratamientos(data);
+      } else if (tab === 'doctores') {
+        const { data } = await api.get('/dashboard');
+        setDataDoctores(data.doctorStats || []);
       } else if (tab === 'deudas') {
         const { data } = await api.get('/reportes/pacientes-deuda');
         setDataDeudas(data);
@@ -46,6 +50,7 @@ export default function Reportes() {
     { key: 'citas', label: 'Citas', icon: FiCalendar },
     { key: 'tratamientos', label: 'Tratamientos', icon: FiTrendingUp },
     { key: 'deudas', label: 'Deudas', icon: FiAlertCircle },
+    { key: 'doctores', label: 'Doctores', icon: FiTrendingUp },
   ];
 
   const METODO_LABELS = {
@@ -291,7 +296,73 @@ export default function Reportes() {
               )}
             </div>
           )}
+{/* TAB DOCTORES */}
+{tab === 'doctores' && dataDoctores && (
+  <div className="space-y-6">
 
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {dataDoctores.map(doc => (
+        <div
+          key={doc.id}
+          className="card hover:shadow-xl transition-all duration-300"
+        >
+          <div className="flex items-center gap-4 mb-4">
+
+            <div className="w-14 h-14 rounded-2xl bg-gradient-dental text-white flex items-center justify-center font-bold text-lg shadow-lg">
+              {doc.nombre?.split(' ')[1]?.[0]}
+              {doc.nombre?.split(' ')[2]?.[0]}
+            </div>
+
+            <div>
+              <h3 className="font-bold text-gray-900">
+                {doc.nombre}
+              </h3>
+
+              <p className="text-sm text-surface-400">
+                {doc.especialidad}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+
+            <div className="flex items-center justify-between p-3 rounded-xl bg-primary-50">
+              <span className="text-sm text-surface-500">
+                Citas del mes
+              </span>
+
+              <span className="font-bold text-primary-700">
+                {doc.citasMes}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl bg-dental-50">
+              <span className="text-sm text-surface-500">
+                Completadas
+              </span>
+
+              <span className="font-bold text-dental-700">
+                {doc.citasCompletadas}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl bg-green-50">
+              <span className="text-sm text-surface-500">
+                Ingresos generados
+              </span>
+
+              <span className="font-bold text-green-700">
+                ${Number(doc.ingresos).toLocaleString()}
+              </span>
+            </div>
+
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+)}
           {/* TAB DEUDAS */}
           {tab === 'deudas' && dataDeudas && (
             <div className="space-y-4">
