@@ -773,55 +773,185 @@ ${registros || '<p style="text-align:center;color:#999">Sin registros</p>'}
     }
   };
 
-  const imprimirRecibo = (pago) => {
-    const recibo = window.open('', '_blank', 'width=400,height=600');
-    recibo.document.write(`
-      <!DOCTYPE html><html><head<title>Recibo de Pago</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 30px; max-width: 380px; margin: 0 auto; color: #333; }
-        .header { text-align: center; border-bottom: 2px solid #fcf0be; padding-bottom: 15px; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: #fcf0be; font-size: 22px; }
-        .header p { margin: 4px 0; color: #666; font-size: 12px; }
-        .info { margin: 15px 0; }
-        .info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dotted #ddd; font-size: 13px; }
-        .info-row .label { color: #666; }
-        .info-row .value { font-weight: bold; }
-        .total { text-align: center; margin: 25px 0; padding: 15px; background: #f0f9ff; border-radius: 8px; }
-        .total .amount { font-size: 32px; font-weight: bold; color: #fcf0be; }
-        .total .label { font-size: 12px; color: #666; }
-        .footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 11px; color: #999; }
-        @media print { body { padding: 15px; } }
-      </style></head><body>
-        <div class="header"> <img 
-  src="/https://crm-odontologia.vercel.app/logo_clinica-removebg-preview.png" 
-  alt="Clinica Dental Almar"
-  className="w-20 h-20 object-contain mx-auto mb-4"
-/>
-          <h1>Clinica Dental Almar</h1>
-          <p>Clínica Odontológica</p>
-          <p>Recibo de Pago</p>
-        </div>
-        <div class="total">
-          <div class="label">MONTO RECIBIDO</div>
-          <div class="amount">$${Number(pago.monto).toLocaleString()}</div>
-        </div>
-        <div class="info">
-          <div class="info-row"><span class="label">Paciente</span><span class="value">${paciente.nombre} ${paciente.apellido}</span></div>
-          <div class="info-row"><span class="label">DNI</span><span class="value">${paciente.dni}</span></div>
-          <div class="info-row"><span class="label">Fecha</span><span class="value">${pago.fecha}</span></div>
-          <div class="info-row"><span class="label">Método</span><span class="value">${pago.metodo_pago?.replace('_', ' ')}</span></div>
-          ${pago.numero_recibo ? `<div class="info-row"><span class="label">N° Recibo</span><span class="value">${pago.numero_recibo}</span></div>` : ''}
-          ${pago.notas ? `<div class="info-row"><span class="label">Notas</span><span class="value">${pago.notas}</span></div>` : ''}
-        </div>
-        <div class="footer">
-          <p>¡Gracias por su pago y su preferencia!</p>
-          <p>Fecha de impresión: ${new Date().toLocaleDateString('es-AR')}</p>
-        </div>
-        <script>window.onload = function() { window.print(); }</script>
-      </body></html>
-    `);
-    recibo.document.close();
-  };
+ const imprimirRecibo = (pago) => {
+  const recibo = window.open('', '_blank', 'width=420,height=650');
+
+  recibo.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Recibo de Pago</title>
+
+<style>
+@page {
+  size: A5;
+  margin: 10mm;
+}
+
+body{
+  font-family: Arial, sans-serif;
+  margin:0;
+  padding:0;
+  background:#fff;
+  color:#2c2c2c;
+}
+
+/* CONTENEDOR */
+.container{
+  padding:20px;
+  border:1px solid #f0e6c8;
+  border-radius:12px;
+}
+
+/* HEADER */
+.header{
+  text-align:center;
+  border-bottom:2px solid #c8a24a;
+  padding-bottom:10px;
+  margin-bottom:15px;
+}
+
+.logo{
+  width:70px;
+  margin-bottom:8px;
+}
+
+.header h1{
+  margin:0;
+  font-size:18px;
+  color:#b8962e;
+}
+
+.header p{
+  margin:2px 0;
+  font-size:12px;
+  color:#6b7280;
+}
+
+/* MONTO */
+.total{
+  text-align:center;
+  margin:15px 0;
+  padding:15px;
+  background:#fffaf0;
+  border-left:4px solid #c8a24a;
+  border-radius:8px;
+}
+
+.total .label{
+  font-size:11px;
+  color:#6b7280;
+}
+
+.total .amount{
+  font-size:28px;
+  font-weight:bold;
+  color:#b8962e;
+  margin-top:5px;
+}
+
+/* INFO */
+.info{
+  margin-top:15px;
+}
+
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  border-bottom:1px dotted #e5e7eb;
+  font-size:13px;
+}
+
+.label{
+  color:#6b7280;
+}
+
+.value{
+  font-weight:bold;
+  color:#2c2c2c;
+}
+
+/* FOOTER */
+.footer{
+  margin-top:20px;
+  text-align:center;
+  font-size:11px;
+  color:#9ca3af;
+  border-top:1px solid #eee;
+  padding-top:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <img class="logo" src="/logo_clinica-removebg-preview.png" />
+    <h1>Clínica Dental Almar</h1>
+    <p>Recibo de Pago</p>
+  </div>
+
+  <div class="total">
+    <div class="label">MONTO RECIBIDO</div>
+    <div class="amount">$${Number(pago.monto).toLocaleString()}</div>
+  </div>
+
+  <div class="info">
+    <div class="info-row">
+      <span class="label">Paciente</span>
+      <span class="value">${paciente.nombre} ${paciente.apellido}</span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">DNI</span>
+      <span class="value">${paciente.dni}</span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">Fecha</span>
+      <span class="value">${pago.fecha}</span>
+    </div>
+
+    <div class="info-row">
+      <span class="label">Método</span>
+      <span class="value">${pago.metodo_pago?.replace('_', ' ')}</span>
+    </div>
+
+    ${pago.numero_recibo ? `
+    <div class="info-row">
+      <span class="label">Recibo #</span>
+      <span class="value">${pago.numero_recibo}</span>
+    </div>` : ''}
+
+    ${pago.notas ? `
+    <div class="info-row">
+      <span class="label">Notas</span>
+      <span class="value">${pago.notas}</span>
+    </div>` : ''}
+  </div>
+
+  <div class="footer">
+    Gracias por su confianza · Clínica Dental Almar<br/>
+    ${new Date().toLocaleDateString('es-MX')}
+  </div>
+
+</div>
+
+<script>
+window.onload = () => window.print();
+</script>
+
+</body>
+</html>
+  `);
+
+  recibo.document.close();
+};
 
   if (loading) return <div className="text-center py-10 text-surface-400">Cargando...</div>;
   if (!paciente) return <div className="text-center py-10 text-surface-400">Paciente no encontrado</div>;
