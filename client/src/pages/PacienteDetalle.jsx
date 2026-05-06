@@ -89,40 +89,36 @@ export default function PacienteDetalle() {
   }
 };*/
   const handleOdontograma = async (pieza, data) => {
-  try {
+    try {
+      // Normaliza: acepta tanto string ('caries') como objeto ({ estado, cara })
+      const payload = typeof data === 'string'
+        ? { estado: data, cara: 'completa' }
+        : { cara: 'completa', ...data };
 
-    // 1. Buscar registro REAL en el estado
-    const registro = odontograma.find(
-      r => r.pieza_dental === pieza
-    );
+      // Busca registro existente por (pieza + cara)
+      const registro = odontograma.find(
+        r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara
+      );
 
-    // 2. Si no existe → crear
-    if (!registro) {
-      await api.post('/odontograma', {
-        paciente_id: parseInt(id),
-        pieza_dental: pieza,
-        ...data
-      });
+      if (!registro) {
+        await api.post('/odontograma', {
+          paciente_id: parseInt(id),
+          pieza_dental: pieza,
+          ...payload
+        });
+      } else {
+        await api.put(`/odontograma/${registro.id}`, payload);
+      }
 
-    } else {
-      // 3. Si existe → usar ID real
-      await api.put(`/odontograma/${registro.id}`, {
-        ...data
-      });
+      const { data: refreshed } = await api.get(`/odontograma/${id}`);
+      setOdontograma(refreshed);
+      toast.success('Odontograma actualizado');
+    } catch (error) {
+      console.error('Error guardando odontograma:', error.response?.data || error);
+      toast.error('Error al guardar odontograma');
     }
-
-    // 4. Recargar
-    const { data: refreshed } = await api.get(`/odontograma/${id}`);
-    setOdontograma(refreshed);
-
-    toast.success('Odontograma actualizado');
-
-  } catch (error) {
-    console.error(error);
-    toast.error('Error al guardar odontograma');
-  }
-};
-/*  const handleOdontograma = async (pieza, estado, cara = null) => {
+  };
+  /*  const handleOdontograma = async (pieza, estado, cara = null) => {
   await axios.post('/api/odontograma', {
     pieza_dental: pieza,
     estado,
