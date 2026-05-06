@@ -58,15 +58,16 @@ export default function Login() {
       <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40 p-8">
 
         {/* Logo */}
-        <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl border border-white/10 relative overflow-hidden">
-          <div className="absolute inset-0 bg-white/5 blur-xl" />
+        <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100 shadow-lg border border-slate-300/40 relative overflow-hidden">
+  
+  <div className="absolute inset-0 bg-white/40 blur-xl" />
 
-          <img
-            src="/logo_clinica-removebg-preview.png"
-            alt="Clinica Dental Almar"
-            className="w-14 h-14 object-contain relative z-10"
-          />
-        </div>
+  <img
+    src="/logo_clinica-removebg-preview.png"
+    alt="Clinica Dental Almar"
+    className="w-14 h-14 object-contain relative z-10"
+  />
+</div>
 
         <h1 className="text-3xl font-semibold tracking-tight text-slate-800 text-center">
           Clinica Dental Almar
