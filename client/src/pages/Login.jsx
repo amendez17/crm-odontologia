@@ -42,33 +42,32 @@ export default function Login() {
       setLoading(false);
     }
   };
-return (
-   <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-slate-50 to-slate-100 relative overflow-hidden">
-  
-  {/* Background decorations */}
+return (<div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-slate-50 to-slate-100 relative overflow-hidden">
+
+  {/* Fondo suave tipo Apple */}
   <div className="absolute inset-0 overflow-hidden">
-    <div className="absolute -top-40 -right-40 w-96 h-96 bg-slate-300/10 rounded-full" />
-    <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-200/10 rounded-full" />
-    <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-300/10 rounded-full blur-3xl" />
-    <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-slate-300/10 rounded-full blur-3xl" />
+    <div className="absolute -top-40 -right-40 w-96 h-96 bg-slate-200/20 rounded-full blur-3xl" />
+    <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-slate-200/20 rounded-full blur-3xl" />
+    <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-[#c9a227]/10 rounded-full blur-3xl" />
   </div>
 
+  {/* Card principal (glass Apple style) */}
   <div className="relative w-full max-w-md animate-slide-up">
-    
-    <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-2xl p-8 border border-slate-200">
-      
+
+    <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40 p-8">
+
       {/* Logo */}
       <div className="text-center mb-8">
         
-        <div className="w-20 h-20 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-500 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <img 
-            src="/logo_clinica-removebg-preview.png" 
+        <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center shadow-md bg-gradient-to-br from-[#d6c28a] via-[#c9a227] to-[#b89b5e]">
+          <img
+            src="/logo_clinica-removebg-preview.png"
             alt="Clinica Dental Almar"
             className="w-14 h-14 object-contain"
           />
         </div>
 
-        <h1 className="text-3xl font-extrabold bg-gradient-to-r from-slate-800 via-slate-700 to-amber-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-800">
           Clinica Dental Almar
         </h1>
 
@@ -79,55 +78,57 @@ return (
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
-        
+
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Email
           </label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition"
+            className="w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3 text-base outline-none focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/20 transition"
             placeholder="admin@clinica.com"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">
+          <label className="block text-sm font-medium text-slate-600 mb-2">
             Contraseña
           </label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition"
+            className="w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3 text-base outline-none focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/20 transition"
             placeholder="••••••••"
             required
           />
         </div>
 
+        {/* Botón Apple style */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-white py-3 rounded-2xl font-bold text-base hover:from-amber-600 hover:via-amber-500 hover:to-yellow-600 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+          className="w-full py-3 rounded-2xl font-medium text-white transition-all shadow-md hover:shadow-xl active:scale-[0.98]
+          bg-gradient-to-r from-[#c9a227] via-[#b89b5e] to-[#d6c28a] hover:opacity-90 disabled:opacity-50"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               Ingresando...
             </span>
           ) : (
-            'Iniciar sesión'
+            "Iniciar sesión"
           )}
         </button>
       </form>
 
       {/* Footer */}
-      <div className="mt-6 p-3 bg-slate-50 rounded-2xl border border-slate-200">
-        <p className="text-xs text-slate-500 text-center">
-          ¡Gracias por su preferencia, su salud es primero!
+      <div className="mt-6 text-center">
+        <p className="text-xs text-slate-400">
+          Clínica Dental • Sistema seguro de gestión odontológica
         </p>
       </div>
 
