@@ -228,7 +228,7 @@ export default function Layout() {
                       onClick={() => irAPaciente(pac.id)}
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary-50 transition-colors text-left"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-gradient-dental text-white flex items-center justify-center font-bold text-xs">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#d6c08d] to-[#bfa46f] text-white flex items-center justify-center font-bold text-xs shadow-sm">
                         {pac.nombre[0]}{pac.apellido[0]}
                       </div>
                       <div className="min-w-0">
@@ -262,7 +262,7 @@ export default function Layout() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />
                 <div className="absolute right-0 top-14 z-50 w-80 bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-slide-up">
-                  <div className="px-4 py-3 bg-gradient-dental text-white">
+                  <div className="px-4 py-3 bg-gradient-to-r from-[#cbb27c] to-[#b89a5f] text-white">
                     <h3 className="font-semibold text-sm">Citas pendientes</h3>
                     <p className="text-xs text-white/80">Hoy y mañana</p>
                   </div>
@@ -308,7 +308,7 @@ export default function Layout() {
           </div>
 
           {/* User avatar */}
-          <div className="w-10 h-10 rounded-xl bg-gradient-dental flex items-center justify-center text-white font-bold text-sm shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#d6c08d] to-[#b89a5f] flex items-center justify-center text-white font-bold text-sm shadow-md">
             {usuario?.nombre?.[0]}{usuario?.apellido?.[0]}
           </div>
         </header>
