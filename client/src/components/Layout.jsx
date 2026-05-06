@@ -121,7 +121,11 @@ export default function Layout() {
         {/* Logo */}
         <div className={`flex items-center border-b border-white/10 h-[70px] flex-shrink-0 ${collapsed ? 'justify-center px-0' : 'px-4 gap-3'}`}>
           <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
-            <span className="text-xl">🦷</span>
+            <img
+    src="/logo_clinica-removebg-preview.png"
+    alt="Clinica Dental Almar"
+    className="w-14 h-14 object-contain relative z-10"
+  />
           </div>
           {!collapsed && (
             <div className="min-w-0">
