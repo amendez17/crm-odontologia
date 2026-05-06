@@ -91,7 +91,7 @@ export default function Pacientes() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary-800">Pacientes</h1>
+          <h1 className="text-2xl font-bold text-[#7a5c1e]">Pacientes</h1>
           <p className="text-sm text-surface-500">{totalPacientes} pacientes registrados</p>
         </div>
         <div className="flex gap-2">
@@ -117,7 +117,7 @@ export default function Pacientes() {
       </div>
 
       {/* Tabla */}
-      <div className="card overflow-x-auto p-0">
+      <div className="overflow-x-auto p-0 bg-white/80 backdrop-blur-xl border border-white/40 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.06)]">
         <table className="table-modern">
           <thead>
             <tr>
@@ -137,7 +137,7 @@ export default function Pacientes() {
               <tr key={pac.id}>
                 <td>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-dental-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#c9a227] via-[#b89b5e] to-[#d6c28a] flex items-center justify-center text-white font-bold text-xs shadow-md">
                       {pac.nombre[0]}{pac.apellido[0]}
                     </div>
                     <span className="font-semibold text-primary-900">{pac.apellido}, {pac.nombre}</span>
@@ -148,7 +148,7 @@ export default function Pacientes() {
                 <td className="text-surface-600">{pac.obra_social || '-'}</td>
                 <td>
                   <div className="flex items-center gap-1">
-                    <Link to={`/pacientes/${pac.id}`} className="p-2 text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Ver detalle">
+                    <Link to={`/pacientes/${pac.id}`} className="p-2 text-[#b89b5e] hover:bg-[#c9a227]/10 rounded-xl transition-colors" title="Ver detalle">
                       <FiEye size={16} />
                     </Link>
                     <button onClick={() => abrirEditar(pac)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl transition-colors" title="Editar">
