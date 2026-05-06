@@ -258,10 +258,10 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   }, [registros]);
 
   const getEstadoPieza = (pieza) => {
-    // Solo el estado del registro "completa" define el color global del diente
-    const reg = registros.find(
-      r => r.pieza_dental === pieza && (r.cara || 'completa') === 'completa'
-    );
+    // Si hay duplicados, usar el de mayor id (el más reciente)
+    const reg = registros
+      .filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === 'completa')
+      .sort((a, b) => b.id - a.id)[0];
     return reg ? reg.estado : 'sano';
   };
 
