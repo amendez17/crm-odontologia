@@ -319,7 +319,7 @@ export default function Citas() {
         <div className="flex items-center justify-between gap-1">
           <div className="min-w-0 flex-1">
             <p className={`font-bold text-xs ${color.text}`}>{cita.hora_inicio?.slice(0, 5)}</p>
-            <p className="text-xs text-gray-800 font-medium truncate">{cita.paciente?.apellido}, {cita.paciente?.nombre?.charAt(0)}.</p>
+            <p className="text-xs text-gray-800 font-medium truncate">{cita.paciente?.nombre}, {cita.paciente?.apellido?.charAt(0)}.</p>
             <p className="text-[10px] text-gray-500 truncate">{cita.motivo || `Dr. ${cita.doctor?.apellido}`}</p>
           </div>
           <div className="flex flex-col gap-0.5 flex-shrink-0">
