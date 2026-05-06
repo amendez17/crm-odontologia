@@ -60,14 +60,14 @@ export default {
       boxShadow: {
   card: '0 2px 10px rgba(0,0,0,0.04)',
   'card-hover': '0 10px 30px rgba(0,0,0,0.08)',
-  sidebar: '4px 0 25px rgba(199, 164, 90, 0.18)',
+  sidebar: '4px 0 24px rgba(111, 83, 23, 0.12)',
   glow: '0 0 18px rgba(212, 175, 55, 0.18)',
   'glow-teal': '0 0 18px rgba(20, 184, 166, 0.15)',
 },
       backgroundImage: {
   'gradient-dental':'linear-gradient(135deg, #cfaa58 0%, #e8c987 45%, #fffef9 100%)',
   'gradient-accent':'linear-gradient(135deg, #d6b25e 0%, #f2dfb7 100%)',
-  'gradient-sidebar':'linear-gradient(180deg, #8f6e35 0%, #c7a45a 45%, #e7cf97 100%)',
+ 'gradient-sidebar': 'linear-gradient(180deg, #75571a 0%, #b78b38 50%, #cfa75a 100%)',
   'gradient-header':'linear-gradient(135deg, #ffffff 0%, #fdf8ee 100%)',
   'gradient-surface':'linear-gradient(135deg, #ffffff 0%, #faf8f3 100%)',
 },
