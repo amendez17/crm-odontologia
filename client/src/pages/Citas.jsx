@@ -27,7 +27,7 @@ const DOCTOR_COLORS = [
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const HORAS = Array.from({ length: 13 }, (_, i) => i + 7); // 7:00 – 19:00
+const HORAS = Array.from({ length: 23 }, (_, i) => i + 1); // 7:00 – 19:00
 const ALTURA_HORA = 60; // px por hora
 
 function getLunesDeSemana(fecha) {
@@ -237,10 +237,11 @@ export default function Citas() {
     if (!tel) { toast.error('El paciente no tiene teléfono registrado'); return; }
     const fechaFmt = new Date(cita.fecha + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
     const msg = encodeURIComponent(
-      `Hola ${cita.paciente?.nombre}, le recordamos su cita odontológica:\n` +
+      `Hola ${cita.paciente?.nombre || '}${cita.paciente?.apellido}\n Su cita ha quedado confirmada con éxito.\n` +
       `📅 ${fechaFmt}\n🕐 ${cita.hora_inicio?.slice(0, 5)} hs\n` +
       `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
       `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
+      `📋📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa \n` : ''}` +
       `\nPor favor confirme su asistencia. ¡Gracias!`
     );
     window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
