@@ -11,19 +11,18 @@ import {
 } from 'react-icons/fi';
 
 const navItems = [
-  { to: '/',             icon: FiHome,      label: 'Dashboard',     end: true },
-  { to: '/pacientes',    icon: FiUsers,     label: 'Pacientes' },
-  { to: '/citas',        icon: FiCalendar,  label: 'Citas' },
-  { to: '/tratamientos', icon: FiClipboard, label: 'Tratamientos' },
-  { to: '/presupuestos', icon: FiFileText,  label: 'Presupuestos' },
-  { to: '/pagos',        icon: FiDollarSign,label: 'Pagos' },
-  { to: '/reportes',     icon: FiBarChart2, label: 'Reportes' },
-  { to: '/usuarios',     icon: FiSettings,  label: 'Usuarios' },
-  { to: '/actividad',     icon: FiActivity,  label: 'Actividad' },
-  { to: '/mantenimiento', icon: FiShield,     label: 'Mantenimiento' },
-  { to: '/configuracion', icon: FiSliders,    label: 'Configuración' },
+  { to: '/', icon: FiHome, label: 'Dashboard', end: true, roles: ["administrador", "doctor", "recepcionista"] },
+  { to: '/pacientes', icon: FiUsers, label: 'Pacientes', roles: ["administrador", "doctor", "recepcionista"] },
+  { to: '/citas', icon: FiCalendar, label: 'Citas', roles: ["administrador", "doctor", "recepcionista"] },
+  { to: '/tratamientos', icon: FiClipboard, label: 'Tratamientos', roles: ["administrador", "doctor"] },
+  { to: '/presupuestos', icon: FiFileText, label: 'Presupuestos', roles: ["administrador", "doctor"] },
+  { to: '/pagos', icon: FiDollarSign, label: 'Pagos', roles: ["administrador", "doctor", "recepcionista"] },
+  { to: '/reportes', icon: FiBarChart2, label: 'Reportes', roles: ["administrador"] },
+  { to: '/usuarios', icon: FiSettings, label: 'Usuarios', roles: ["administrador"] },
+  { to: '/actividad', icon: FiActivity, label: 'Actividad', roles: ["administrador"] },
+  { to: '/mantenimiento', icon: FiShield, label: 'Mantenimiento', roles: ["administrador"] },
+  { to: '/configuracion', icon: FiSliders, label: 'Configuración', roles: ["administrador"] },
 ];
-
 export default function Layout() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
@@ -140,7 +139,7 @@ export default function Layout() {
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
-          {navItems.map(({ to, icon: Icon, label, end }) => (
+          {navItems.filter(item => item.roles.includes(usuario?.rol)) .map(({ to, icon: Icon, label, end }) => (
             <NavLink
               key={to}
               to={to}
