@@ -124,10 +124,9 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     const centerColor = getCaraColor('oclusal');
 
     return (
-      <g>
-        {/* Tooth crown base */}
-        <rect x={cx-r} y={cy-r} width={r*2} height={r*2} rx={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} ry={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} fill={baseFill} stroke={baseStroke} strokeWidth="1.2"/>
-
+    <g>
+      {/* Tooth crown base */}
+      <rect x={cx-r} y={cy-r} width={r*2} height={r*2} rx={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} ry={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} fill={dienteFill} stroke={dienteStroke} strokeWidth="1.5"/>
         {/* Top surface (vestibular) */}
         <path
           d={`M${cx-r},${cy-r} L${cx+r},${cy-r} L${cx+ri},${cy-ri} L${cx-ri},${cy-ri} Z`}
