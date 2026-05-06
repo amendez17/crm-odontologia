@@ -95,10 +95,10 @@ export default function PacienteDetalle() {
         ? { estado: data, cara: 'completa' }
         : { cara: 'completa', ...data };
 
-      // Busca registro existente por (pieza + cara)
-      const registro = odontograma.find(
-        r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara
-      );
+     // Busca el registro más reciente (mayor id) para esa pieza + cara
+      const registro = odontograma
+        .filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara)
+        .sort((a, b) => b.id - a.id)[0];
 
       if (!registro) {
         await api.post('/odontograma', {
