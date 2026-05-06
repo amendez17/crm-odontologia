@@ -51,19 +51,20 @@ export default function App() {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
+        <Route path="/" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><Layout /></PrivateRoute>}>
           <Route index element={<Dashboard />} />
-          <Route path="pacientes" element={<Pacientes />} />
-          <Route path="pacientes/:id" element={<PacienteDetalle />} />
-          <Route path="citas" element={<Citas />} />
-          <Route path="tratamientos" element={<Tratamientos />} />
-          <Route path="presupuestos" element={<Presupuestos />} />
-          <Route path="pagos" element={<Pagos />} />
-          <Route path="usuarios" element={<Usuarios />} />
-          <Route path="reportes" element={<Reportes />} />
-          <Route path="actividad" element={<Actividad />} />
-          <Route path="mantenimiento" element={<Mantenimiento />} />
-          <Route path="configuracion" element={<Configuracion />} />
+        
+          <Route path="pacientes" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <Pacientes /> </PrivateRoute> }/>
+          <Route path="pacientes/:id" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <PacienteDetalle /> </PrivateRoute>}/>
+          <Route path="citas" element={  <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}>    <Citas />  </PrivateRoute> }/>  
+          <Route path="tratamientos" element={ <PrivateRoute roles={["administrador", "doctor"]}> <Tratamientos /> </PrivateRoute>}/>
+          <Route path="presupuestos" element={ <PrivateRoute roles={["administrador", "doctor"]}> <Presupuestos /> </PrivateRoute> }/>
+          <Route path="pagos" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <Pagos /></PrivateRoute>}/>
+          <Route path="usuarios" element={ <PrivateRoute roles={["administrador"]}> <Usuarios />  </PrivateRoute> }/>
+          <Route path="reportes" element={ <PrivateRoute roles={["administrador"]}> <Reportes /> </PrivateRoute> }/>
+          <Route path="actividad" element={ <PrivateRoute roles={["administrador"]}> <Actividad /> </PrivateRoute>}/>
+          <Route path="mantenimiento" element={ <PrivateRoute roles={["administrador"]}> <Mantenimiento /> </PrivateRoute> }/>
+          <Route path="configuracion" element={<PrivateRoute roles={["administrador"]}><Configuracion />   </PrivateRoute>}/>
         </Route>
       </Routes>
     </>
