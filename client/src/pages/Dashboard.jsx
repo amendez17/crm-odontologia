@@ -107,7 +107,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {[
           { label: 'Total Pacientes', value: estadisticas.totalPacientes, icon: FiUsers, gradient: 'from-primary-600 to-primary-400', iconBg: 'bg-primary-500' },
           { label: 'Citas Hoy', value: estadisticas.citasHoy, icon: FiCalendar, gradient: 'from-dental-600 to-dental-400', iconBg: 'bg-dental-500' },
