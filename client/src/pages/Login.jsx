@@ -42,7 +42,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-return (
   
   return (
   <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-slate-50 to-slate-100 relative overflow-hidden">
