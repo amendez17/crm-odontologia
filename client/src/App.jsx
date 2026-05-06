@@ -16,12 +16,35 @@ import Configuracion from './pages/Configuracion';
 import Actividad from './pages/Actividad';
 import Mantenimiento from './pages/Mantenimiento';
 
-function PrivateRoute({ children }) {
+/*function PrivateRoute({ children }) {
   const { usuario, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen">Cargando...</div>;
   return usuario ? children : <Navigate to="/login" />;
 }
+*/
+function PrivateRoute({ children, roles }) {
+  const { usuario, loading } = useAuth();
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Cargando...
+      </div>
+    );
+  }
+
+  // 🔒 no logueado
+  if (!usuario) {
+    return <Navigate to="/login" />;
+  }
+
+  // 🔒 sin permisos
+  if (roles && !roles.includes(usuario.rol)) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
+}
 export default function App() {
   return (
     <>
