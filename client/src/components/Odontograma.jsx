@@ -49,12 +49,11 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     return null;
   };
 
-  const handleCaraClick = (cara, e) => {
-    e.stopPropagation();
+ const handleCaraClick = (cara, e) => {
     if (readOnly || esAusente) return;
     onCaraClick?.(numero, cara, estadoSeleccionado);
   };
-
+  
   const handleDienteClick = () => {
     if (readOnly) return;
     onDienteClick?.(numero, estadoSeleccionado);
