@@ -43,7 +43,7 @@ export default function Login() {
     }
   };
 return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary-800 via-primary-600 to-dental-500 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-slate-50 to-slate-100 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full" />
