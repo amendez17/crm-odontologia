@@ -111,8 +111,7 @@ export default function Dashboard() {
         {[
           { label: 'Total Pacientes', value: estadisticas.totalPacientes, icon: FiUsers, gradient: 'from-primary-600 to-primary-400', iconBg: 'bg-primary-500' },
           { label: 'Citas Hoy', value: estadisticas.citasHoy, icon: FiCalendar, gradient: 'from-dental-600 to-dental-400', iconBg: 'bg-dental-500' },
-          { label: 'Pendientes', value: estadisticas.citasPendientes, icon: FiClock, gradient: 'from-accent-600 to-accent-400', iconBg: 'bg-accent-500' },
-          { label: 'Ingresos Mes', value: `$${Number(estadisticas.ingresosMes).toLocaleString()}`, icon: FiDollarSign, gradient: 'from-purple-600 to-purple-400', iconBg: 'bg-purple-500' },
+          { label: 'Pendientes', value: estadisticas.citasPendientes, icon: FiClock, gradient: 'from-accent-600 to-accent-400', iconBg: 'bg-accent-500' }
         ].map((stat, i) => (
           <div key={i} className="stat-card animate-slide-up" style={{ animationDelay: `${i * 0.05}s` }}>
             <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white shadow-lg`}>
@@ -152,42 +151,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Doctor Stats */}
-      {doctorStats?.length > 0 && (
-        <div className="card">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Rendimiento por Doctor</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {doctorStats.map(doc => (
-              <div key={doc.id} className="card-flat hover:shadow-md transition-all">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-dental flex items-center justify-center text-white font-bold text-sm shadow-md">
-                    {doc.nombre.split(' ')[1]?.[0]}{doc.nombre.split(' ')[2]?.[0]}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{doc.nombre}</p>
-                    <p className="text-xs text-surface-400">{doc.especialidad}</p>
-                  </div>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-surface-400">Citas</span>
-                    <span className="font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-lg">{doc.citasMes}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-surface-400">Completadas</span>
-                    <span className="font-bold text-dental-600 bg-dental-50 px-2 py-0.5 rounded-lg">{doc.citasCompletadas}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-surface-400">Ingresos</span>
-                    <span className="font-bold text-accent-600 bg-accent-50 px-2 py-0.5 rounded-lg">${Number(doc.ingresos).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
+      
+     
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Próximas citas */}
         <div className="card">
