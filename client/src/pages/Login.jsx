@@ -57,15 +57,17 @@ return (<div className="min-h-screen flex items-center justify-center p-4 bg-gra
     <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40 p-8">
 
       {/* Logo */}
-      <div className="text-center mb-8">
-        
-        <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center shadow-md bg-gradient-to-br from-[#d6c28a] via-[#c9a227] to-[#b89b5e]">
-          <img
-            src="/logo_clinica-removebg-preview.png"
-            alt="Clinica Dental Almar"
-            className="w-14 h-14 object-contain"
-          />
-        </div>
+      <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-xl border border-white/10 relative overflow-hidden">
+  
+  {/* brillo sutil estilo Apple */}
+  <div className="absolute inset-0 bg-white/5 blur-xl" />
+
+  <img
+    src="/logo_clinica-removebg-preview.png"
+    alt="Clinica Dental Almar"
+    className="w-14 h-14 object-contain relative z-10"
+  />
+</div>
 
         <h1 className="text-3xl font-semibold tracking-tight text-slate-800">
           Clinica Dental Almar
