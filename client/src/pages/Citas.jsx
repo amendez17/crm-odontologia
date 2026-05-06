@@ -233,20 +233,32 @@ export default function Citas() {
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const enviarWhatsApp = (cita) => {
-    const tel = cita.paciente?.telefono?.replace(/\D/g, '') || '';
-    if (!tel) { toast.error('El paciente no tiene teléfono registrado'); return; }
-    const fechaFmt = new Date(cita.fecha + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
-    const msg = encodeURIComponent(
-      `Hola ${cita.paciente?.nombre || '}${cita.paciente?.apellido}\n Su cita ha quedado confirmada con éxito.\n` +
-      `📅 ${fechaFmt}\n🕐 ${cita.hora_inicio?.slice(0, 5)} hs\n` +
-      `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
-      `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
-      `📋📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa \n` : ''}` +
-      `\nPor favor confirme su asistencia. ¡Gracias!`
-    );
-    window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
-  };
+  const tel = cita.paciente?.telefono?.replace(/\D/g, '') || '';
+  if (!tel) {
+    toast.error('El paciente no tiene teléfono registrado');
+    return;
+  }
 
+  const fechaFmt = new Date(cita.fecha + 'T12:00:00')
+    .toLocaleDateString('es-MX', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    });
+
+  const msg = encodeURIComponent(
+    `Hola ${cita.paciente?.nombre || ''} ${cita.paciente?.apellido || ''}\n` +
+    `Su cita ha quedado confirmada con éxito.\n\n` +
+    `📅 ${fechaFmt}\n` +
+    `🕐 ${cita.hora_inicio?.slice(0, 5)} hs\n` +
+    `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
+    `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
+    `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
+    `Por favor confirme su asistencia. ¡Gracias!`
+  );
+
+  window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+};
   // ── Drag & Drop ─────────────────────────────────────────────────────────────
 
   const handleDragStart = (e, cita) => {
