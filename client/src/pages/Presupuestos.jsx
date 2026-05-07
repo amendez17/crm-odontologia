@@ -380,6 +380,9 @@ export default function Presupuestos() {
     <div class="total-final">
       TOTAL: $${Number(Math.max(0, totalFinal)).toLocaleString()}
     </div>
+    <div class="valido">
+      Este presupuesto es valido por 30 Días despues de su emisión.
+    </div>
   </div>
 
   <!-- SIGNATURES -->
@@ -390,8 +393,7 @@ export default function Presupuestos() {
 
   <!-- FOOTER -->
   <div class="footer">
-    Documento oficial · Clínica Dental Almar · Todos los derechos reservados\n
-          Este presupuesto es valido por 30 Días despues de su emisión.
+    Documento oficial · Clínica Dental Almar · Todos los derechos reservados®          
   </div>
 
 </div>
