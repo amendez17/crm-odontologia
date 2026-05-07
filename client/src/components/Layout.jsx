@@ -117,45 +117,67 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-30 ${sidebarW} bg-gradient-sidebar shadow-sidebar transform transition-all duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col overflow-hidden`}>
 
-        {/* Logo */}
-        <div className={`flex items-center border-b border-white/5 h-[70px] flex-shrink-0 ${collapsed ? 'justify-center px-0' : 'px-4 gap-3'}`}>
-        <div className="w-11 h-11 rounded-2xl bg-white/25 backdrop-blur-xl border border-white/30 shadow-[0_8px_30px_rgba(255,255,255,0.12)] flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-    
-    {/* efecto liquid glass */}
-    <div className="
-      absolute inset-0
-      bg-gradient-to-br 
-      from-white/50 
-      via-white/10 
-      to-transparent
-      pointer-events-none
-    " />
+      {/* Logo */}
+<div
+  className={`flex items-center border-b border-white/5 h-[70px] flex-shrink-0 ${
+    collapsed ? 'justify-center px-0' : 'px-4 gap-3'
+  }`}
+>
+  {/* Logo glass */}
+  <div
+    className="
+      w-11 h-11
+      rounded-2xl
+      bg-white/20
+      backdrop-blur-xl
+      border border-white/20
+      shadow-[0_8px_24px_rgba(255,255,255,0.10)]
+      flex items-center justify-center
+      flex-shrink-0
+      relative
+      overflow-hidden
+    "
+  >
+    {/* Shine */}
+    <div
+      className="
+        absolute inset-0
+        bg-gradient-to-br
+        from-white/45
+        via-white/10
+        to-transparent
+        pointer-events-none
+      "
+    />
 
-    <img src="/logo_clinica-removebg-preview.png" alt="Clinica Dental Almar" className="w-14 h-14 object-contain relative z-10"/>
+    <img
+      src="/logo_clinica-removebg-preview.png"
+      alt="Clinica Dental Almar"
+      className="w-14 h-14 object-contain relative z-10"
+    />
   </div>
 
+  {/* Texto */}
   {!collapsed && (
     <div className="min-w-0">
       <p className="text-white font-bold text-base leading-tight truncate">
         Clinica Dental Almar
       </p>
+
       <p className="text-white/60 text-[11px] truncate">
         Sistema dental
       </p>
     </div>
   )}
-</div>         
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="text-white font-bold text-base leading-tight truncate">Clinica Dental Almar</p>
-              <p className="text-white/50 text-[11px] truncate">Sistema dental</p>
-            </div>
-          )}
-          <button className="lg:hidden ml-auto text-white/70 hover:text-white" onClick={() => setSidebarOpen(false)}>
-            <FiX size={18} />
-          </button>
-        </div>
 
+  {/* Mobile close */}
+  <button
+    className="lg:hidden ml-auto text-white/70 hover:text-white"
+    onClick={() => setSidebarOpen(false)}
+  >
+    <FiX size={18} />
+  </button>
+</div>
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
           {navItems.filter(item => item.roles.includes(usuario?.rol)) .map(({ to, icon: Icon, label, end }) => (
