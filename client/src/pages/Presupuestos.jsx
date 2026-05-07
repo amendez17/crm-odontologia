@@ -54,7 +54,10 @@ export default function Presupuestos() {
       setDoctores(docRes.data);
       setTratamientos(tratRes.data);
       setCitas(citasRes.data);
-    } catch {}
+    } catch {} catch (err) {
+  console.error(err);
+  toast.error('Error cargando datos');
+}
   };
 
   useEffect(() => { cargar(); }, [filtroEstado, filtroPaciente]);
@@ -158,6 +161,8 @@ export default function Presupuestos() {
     margin:0;
     padding:0;
     background:#f8fafc;
+    -webkit-print-color-adjust: exact;
+print-color-adjust: exact;
   }
 
   /* WATERMARK */
@@ -430,7 +435,19 @@ export default function Presupuestos() {
           >
             <FiDownload size={16} /> CSV
           </button>
-          <button onClick={() => { setForm({ paciente_id: '', doctor_id: '', cita_id: '',  notas: '', descuento: '0' }); setDetalles([]);setModal(true); }} className="btn-primary flex items-center gap-2"> <FiPlus size={16} /> Nuevo Presupuesto </button>
+          <button onClick={() => {
+  setForm({
+    paciente_id: '',
+    doctor_id: '',
+    cita_id: '',
+    notas: '',
+    descuento: '0'
+  });
+
+  setDetalles([]);
+  setModalDetalle(null);
+  setModal(true);
+}} className="btn-primary flex items-center gap-2"> <FiPlus size={16} /> Nuevo Presupuesto </button>
         </div>
       </div>
 
@@ -506,7 +523,7 @@ export default function Presupuestos() {
       {/* Modal Nuevo Presupuesto */}
       <Modal isOpen={modal} onClose={() => setModal(false)} title="Nuevo Presupuesto" size="xl">
         <form onSubmit={guardar} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> 
             <div>
   <label className="block text-sm font-medium text-surface-600 mb-1">
     Cita Relacionada
@@ -574,7 +591,7 @@ export default function Presupuestos() {
                       </select>
                     </div>
                     <div className="w-24">
-                      <input type="number" placeholder="Pieza" value={d.pieza_dental} onChange={e => actualizarDetalle(i, 'pieza_dental', e.target.value)} className="input-field text-sm" />
+                      <input type="number" min="1" max="32" placeholder="Pieza" value={d.pieza_dental} onChange={e => actualizarDetalle(i, 'pieza_dental', e.target.value)} className="input-field text-sm" />
                     </div>
                     <div className="w-28">
                       <input type="number" step="0.01" placeholder="Precio" value={d.precio} onChange={e => actualizarDetalle(i, 'precio', e.target.value)} className="input-field text-sm" required />
