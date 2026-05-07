@@ -17,10 +17,11 @@ export default function Presupuestos() {
   const [pacientes, setPacientes] = useState([]);
   const [doctores, setDoctores] = useState([]);
   const [tratamientos, setTratamientos] = useState([]);
+  const [citas, setCitas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [modalDetalle, setModalDetalle] = useState(null);
-  const [form, setForm] = useState({ paciente_id: '', doctor_id: '', notas: '', descuento: '0' });
+  const [form, setForm] = useState({ paciente_id: '', doctor_id: '', cita_id: '', notas: '', descuento: '0'});
   const [detalles, setDetalles] = useState([]);
   const [filtroEstado, setFiltroEstado] = useState('');
   const [filtroPaciente, setFiltroPaciente] = useState('');
@@ -43,14 +44,16 @@ export default function Presupuestos() {
 
   const cargarDatos = async () => {
     try {
-      const [pacRes, docRes, tratRes] = await Promise.all([
+      const [pacRes, docRes, tratRes, citasRes] = await Promise.all([
         api.get('/pacientes', { params: { limit: 1000 } }),
         api.get('/usuarios/doctores'),
-        api.get('/tratamientos')
+        api.get('/tratamientos'),
+        api.get('/citas')
       ]);
       setPacientes(pacRes.data.pacientes || []);
       setDoctores(docRes.data);
       setTratamientos(tratRes.data);
+      setCitas(citasRes.data);
     } catch {}
   };
 
@@ -506,6 +509,13 @@ export default function Presupuestos() {
       <Modal isOpen={modal} onClose={() => setModal(false)} title="Nuevo Presupuesto" size="xl">
         <form onSubmit={guardar} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div></div><label className="block text-sm font-medium text-surface-600 mb-1">Cita Relacionada</label>
+                 <select value={form.cita_id} onChange={(e) => {const cita = citas.find(c => c.id === parseInt(e.target.value));
+                  setForm({...form,cita_id: e.target.value,paciente_id: cita?.paciente_id || '',doctor_id: cita?.doctor_id || ''});
+                    }}className="input-field" > <option value="">Sin cita</option>
+                     {citas.map(c => ( <option key={c.id} value={c.id}>
+                      #{c.id} - {c.paciente?.nombre} {c.paciente?.apellido} </option>))} </select>
+                    </div>
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Paciente *</label>
               <select value={form.paciente_id} onChange={e => setForm({ ...form, paciente_id: e.target.value })} className="input-field" required>
