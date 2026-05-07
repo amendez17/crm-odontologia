@@ -430,9 +430,7 @@ export default function Presupuestos() {
           >
             <FiDownload size={16} /> CSV
           </button>
-          <button onClick={() => { setForm({ paciente_id: '', doctor_id: '', notas: '', descuento: '0' }); setDetalles([]); setModal(true); }} className="btn-primary flex items-center gap-2">
-            <FiPlus size={16} /> Nuevo Presupuesto
-          </button>
+          <button onClick={() => { setForm({ paciente_id: '', doctor_id: '', cita_id: '',  notas: '', descuento: '0' }); setDetalles([]);setModal(true); }} className="btn-primary flex items-center gap-2"> <FiPlus size={16} /> Nuevo Presupuesto </button>
         </div>
       </div>
 
