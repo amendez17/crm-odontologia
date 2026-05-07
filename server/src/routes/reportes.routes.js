@@ -119,26 +119,49 @@ router.get('/citas', auth, async (req, res) => {
 router.get('/tratamientos-populares', auth, async (req, res) => {
   try {
     const { desde, hasta } = req.query;
+
     const where = {};
+
     if (desde && hasta) {
-      where.createdAt = { [Op.between]: [desde, hasta] };
+      where.createdAt = {
+        [Op.between]: [
+          new Date(`${desde}T00:00:00`),
+          new Date(`${hasta}T23:59:59`)
+        ]
+      };
     }
 
     const populares = await DetallePresupuesto.findAll({
       where,
+
       attributes: [
         'tratamiento_id',
         [fn('COUNT', col('DetallePresupuesto.id')), 'cantidad'],
         [fn('SUM', col('DetallePresupuesto.precio')), 'ingresos']
       ],
-      include: [{ model: Tratamiento, as: 'tratamiento', attributes: ['nombre', 'precio'] }],
-      group: ['tratamiento_id', 'tratamiento.id', 'tratamiento.nombre', 'tratamiento.precio'],
+
+      include: [
+        {
+          model: Tratamiento,
+          as: 'tratamiento',
+          attributes: ['nombre', 'precio']
+        }
+      ],
+
+      group: [
+        'tratamiento_id',
+        'tratamiento.id',
+        'tratamiento.nombre',
+        'tratamiento.precio'
+      ],
+
       order: [[literal('cantidad'), 'DESC']],
       limit: 15,
       raw: true
     });
 
     res.json(populares);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
