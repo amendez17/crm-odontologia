@@ -15,6 +15,10 @@ const LogActividad = require('./LogActividad');
 
 // --- Asociaciones ---
 
+//Presupuestos-Citas
+Presupuesto.belongsTo(Cita, {foreignKey: 'cita_id',as: 'cita'});
+Cita.hasOne(Presupuesto, {foreignKey: 'cita_id',as: 'presupuesto'
+});
 // Citas
 Paciente.hasMany(Cita, { foreignKey: 'paciente_id', as: 'citas' });
 Cita.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
