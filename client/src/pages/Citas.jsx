@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
+import { FiFileText } from 'react-icons/fi';
 import {
   FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,
   FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar
@@ -349,6 +350,7 @@ export default function Citas() {
           </div>
           <div className="flex flex-col gap-0.5 flex-shrink-0">
             <button onClick={(e) => { e.stopPropagation(); enviarWhatsApp(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle size={11} /></button>
+            <button onClick={() => crearPresupuestoDesdeCita(cita)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Crear presupuesto">  <FiFileText size={15} /> </button>
             <button onClick={(e) => { e.stopPropagation(); abrirEditar(cita); }} className="p-0.5 text-yellow-600 hover:bg-yellow-100 rounded"><FiEdit2 size={11} /></button>
             <button onClick={(e) => { e.stopPropagation(); eliminar(cita.id); }} className="p-0.5 text-red-600 hover:bg-red-100 rounded"><FiTrash2 size={11} /></button>
           </div>
@@ -389,6 +391,7 @@ export default function Citas() {
             {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
           <button onClick={() => enviarWhatsApp(cita)} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg" title="WhatsApp"><FiMessageCircle size={15} /></button>
+          <button onClick={() => crearPresupuestoDesdeCita(cita)}  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"  title="Crear presupuesto">  <FiFileText size={15} /></button>
           <button onClick={() => abrirEditar(cita)} className="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg"><FiEdit2 size={15} /></button>
           <button onClick={() => eliminar(cita.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"><FiTrash2 size={15} /></button>
         </div>
