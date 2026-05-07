@@ -124,39 +124,27 @@ export default function Layout() {
   }`}
 >
   {/* Logo glass */}
+<div className="w-11 h-11 rounded-2xl bg-white/40 backdrop-blur-2xl border border-white/50 shadow-[0_8px_30px_rgba(255,255,255,0.18)] flex items-center justify-center flex-shrink-0 relative overflow-hidden">    
+   {/* brillo superior */}
   <div
     className="
-      w-11 h-11
-      rounded-2xl
-      bg-white/20
-      backdrop-blur-xl
-      border border-white/20
-      shadow-[0_8px_24px_rgba(255,255,255,0.10)]
-      flex items-center justify-center
-      flex-shrink-0
-      relative
-      overflow-hidden
+      absolute inset-0
+      bg-gradient-to-br
+      from-white/80
+      via-white/25
+      to-transparent
+      pointer-events-none
     "
-  >
-    {/* Shine */}
-    <div
-      className="
-        absolute inset-0
-        bg-gradient-to-br
-        from-white/45
-        via-white/10
-        to-transparent
-        pointer-events-none
-      "
-    />
-
+  />
+   {/* reflejo */}
+  <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 blur-md rounded-full pointer-events-none"/>
+  
     <img
-      src="/logo_clinica-removebg-preview.png"
-      alt="Clinica Dental Almar"
-      className="w-14 h-14 object-contain relative z-10"
-    />
-  </div>
-
+    src="/logo_clinica-removebg-preview.png"
+    alt="Clinica Dental Almar"
+    className="w-14 h-14 object-contain relative z-10"
+  />
+</div>
   {/* Texto */}
   {!collapsed && (
     <div className="min-w-0">
