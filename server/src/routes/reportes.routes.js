@@ -118,21 +118,10 @@ router.get('/citas', auth, async (req, res) => {
 // GET /api/reportes/tratamientos-populares
 router.get('/tratamientos-populares', auth, async (req, res) => {
   try {
+
     const { desde, hasta } = req.query;
 
-    const where = {};
-
-    if (desde && hasta) {
-      where.createdAt = {
-        [Op.between]: [
-          new Date(`${desde}T00:00:00`),
-          new Date(`${hasta}T23:59:59`)
-        ]
-      };
-    }
-
     const populares = await DetallePresupuesto.findAll({
-      where,
 
       attributes: [
         'tratamiento_id',
@@ -145,6 +134,21 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
           model: Tratamiento,
           as: 'tratamiento',
           attributes: ['nombre', 'precio']
+        },
+
+        {
+          model: Presupuesto,
+          as: 'presupuesto',
+          attributes: [],
+
+          where: desde && hasta ? {
+            createdAt: {
+              [Op.between]: [
+                new Date(`${desde}T00:00:00`),
+                new Date(`${hasta}T23:59:59`)
+              ]
+            }
+          } : undefined
         }
       ],
 
@@ -163,7 +167,10 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
     res.json(populares);
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({
+      error: error.message
+    });
   }
 });
 
