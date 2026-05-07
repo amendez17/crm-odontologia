@@ -15,6 +15,10 @@ const Presupuesto = sequelize.define('Presupuesto', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+  cita_id: {
+  type: DataTypes.INTEGER,
+  allowNull: true
+  },
   estado: {
     type: DataTypes.ENUM('pendiente', 'aceptado', 'en_curso', 'finalizado', 'rechazado'),
     defaultValue: 'pendiente'
