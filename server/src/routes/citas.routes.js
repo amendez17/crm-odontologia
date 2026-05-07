@@ -81,6 +81,42 @@ router.put('/:id', auth, registrarActividad('actualizar', 'cita'), async (req, r
     res.status(400).json({ error: error.message });
   }
 });
+// POST /api/citas/:id/presupuesto
+router.post('/:id/presupuesto', auth, async (req, res) => {
+  try {
+    const cita = await Cita.findByPk(req.params.id, {
+      include: [
+        { model: Paciente, as: 'paciente' },
+        { model: Usuario, as: 'doctor' }
+      ]
+    });
+
+    if (!cita) {
+      return res.status(404).json({ error: 'Cita no encontrada' });
+    }
+
+    const existe = await Presupuesto.findOne({
+      where: { cita_id: cita.id }
+    });
+
+    if (existe) {
+      return res.status(400).json({ error: 'Ya existe un presupuesto para esta cita' });
+    }
+
+    const presupuesto = await Presupuesto.create({
+      paciente_id: cita.paciente_id,
+      doctor_id: cita.doctor_id,
+      cita_id: cita.id,
+      fecha: cita.fecha,
+      descripcion: cita.motivo || ''
+    });
+
+    res.status(201).json(presupuesto);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 //modificacion refuerzo
 router.post('/:id/presupuesto', auth, async (req, res) => {
   try {
