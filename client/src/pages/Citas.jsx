@@ -257,6 +257,22 @@ export default function Citas() {
   };
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const crearPresupuestoDesdeCita = async (cita) => {
+  try {
+    const payload = {
+      paciente_id: cita.paciente_id,
+      doctor_id: cita.doctor_id,
+      cita_id: cita.id,
+      fecha: cita.fecha,
+      descripcion: cita.motivo || '',
+    };
+
+    await api.post('/presupuestos', payload);
+    toast.success('Presupuesto creado desde la cita');
+  } catch (err) {
+    toast.error('Error al crear presupuesto');
+  }
+};
 
   const enviarWhatsApp = (cita) => {
   const tel = cita.paciente?.telefono?.replace(/\D/g, '') || '';
