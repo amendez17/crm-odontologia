@@ -50,9 +50,12 @@ router.get('/:id', auth, async (req, res) => {
 router.post('/', auth, registrarActividad('crear', 'presupuesto'), async (req, res) => {
   const t = await sequelize.transaction();
   try {
-    const { detalles, ...presupuestoData } = req.body;
+   const { detalles, cita_id, ...presupuestoData } = req.body;
 
-    const presupuesto = await Presupuesto.create(presupuestoData, { transaction: t });
+const presupuesto = await Presupuesto.create({
+  ...presupuestoData,
+  cita_id
+}, { transaction: t });
 
     if (detalles && detalles.length > 0) {
       const detallesConId = detalles.map(d => ({ ...d, presupuesto_id: presupuesto.id }));
