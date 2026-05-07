@@ -391,6 +391,7 @@ export default function Presupuestos() {
   <!-- FOOTER -->
   <div class="footer">
     Documento oficial · Clínica Dental Almar · Todos los derechos reservados
+          Este presupuesto es valido por 30 Días despues de su emisión.
   </div>
 
 </div>
