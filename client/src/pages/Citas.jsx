@@ -44,7 +44,9 @@ function getDiasSemana(fecha) {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(lunes);
     d.setDate(lunes.getDate() + i);
-    return d.toISOString().split('T')[0];
+    return d.getFullYear() + '-' +
+String(d.getMonth() + 1).padStart(2, '0') + '-' +
+String(d.getDate()).padStart(2, '0');
   });
 }
 
@@ -58,15 +60,16 @@ function getMesGrid(fecha) {
   inicioGrid = inicioGrid === 0 ? 6 : inicioGrid - 1; // lunes = 0
   const dias = [];
   for (let i = inicioGrid; i > 0; i--) {
-    dias.push({ fecha: new Date(año, mes, 1 - i).toISOString().split('T')[0], mesActual: false });
+    dias.push({fecha: formatLocalDate(new Date(año, mes, 1 - i)),mesActual: false});
   }
-  for (let i = 1; i <= ultimoDia.getDate(); i++) {
-    dias.push({ fecha: new Date(año, mes, i).toISOString().split('T')[0], mesActual: true });
-  }
-  let ext = 1;
+  for (let i = 1; i <= ultimoDia.getDate(); i++) {dias.push({fecha: formatLocalDate(new Date(año, mes, i)),mesActual: true});
+}  let ext = 1;
   while (dias.length % 7 !== 0) {
-    dias.push({ fecha: new Date(año, mes + 1, ext++).toISOString().split('T')[0], mesActual: false });
-  }
+  dias.push({
+    fecha: formatLocalDate(new Date(año, mes + 1, ext++)),
+    mesActual: false
+  });
+}
   return dias;
 }
 
@@ -75,14 +78,26 @@ function timeToMinutes(t) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
 }
+function getFechaLocal() {
+  const hoy = new Date();
+  const year = hoy.getFullYear();
+  const month = String(hoy.getMonth() + 1).padStart(2, '0');
+  const day = String(hoy.getDate()).padStart(2, '0');
 
+  return `${year}-${month}-${day}`;
+}
+const formatLocalDate = (date) => {
+  return new Date(
+    date.getTime() - date.getTimezoneOffset() * 60000
+  ).toISOString().split('T')[0];
+};
 export default function Citas() {
   const [citas, setCitas]           = useState([]);
   const [citasSemana, setCitasSemana] = useState({});
   const [citasMes, setCitasMes]     = useState({});
   const [doctores, setDoctores]     = useState([]);
   const [pacientes, setPacientes]   = useState([]);
-  const [fecha, setFecha]           = useState(new Date().toISOString().split('T')[0]);
+  const [fecha, setFecha] = useState(getFechaLocal());
   const [vista, setVista]           = useState('semana');
   const [loading, setLoading]       = useState(true);
   const [modal, setModal]           = useState(false);
@@ -133,8 +148,8 @@ export default function Citas() {
     setLoading(true);
     try {
       const d = new Date(fecha + 'T12:00:00');
-      const desde = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
-      const hasta  = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
+      const desde = formatLocalDate(new Date(d.getFullYear(), d.getMonth(), 1));
+      const hasta = formatLocalDate(new Date(d.getFullYear(), d.getMonth() + 1, 0));
       const params = { desde, hasta };
       if (filtroDoctor) params.doctor_id = filtroDoctor;
       if (filtroEstado) params.estado = filtroEstado;
@@ -173,12 +188,22 @@ export default function Citas() {
   // ── Navegación ──────────────────────────────────────────────────────────────
 
   const cambiarPeriodo = (dir) => {
-    const d = new Date(fecha + 'T12:00:00');
-    if (vista === 'dia')    d.setDate(d.getDate() + dir);
-    else if (vista === 'semana') d.setDate(d.getDate() + dir * 7);
-    else d.setMonth(d.getMonth() + dir);
-    setFecha(d.toISOString().split('T')[0]);
-  };
+  const d = new Date(fecha + 'T12:00:00');
+
+  if (vista === 'dia') {
+    d.setDate(d.getDate() + dir);
+  } else if (vista === 'semana') {
+    d.setDate(d.getDate() + dir * 7);
+  } else {
+    d.setMonth(d.getMonth() + dir);
+  }
+
+  setFecha(
+    new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split('T')[0]
+  );
+};
 
   const formatFecha      = (f) => new Date(f + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const formatFechaCorta = (f) => new Date(f + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
@@ -583,7 +608,7 @@ export default function Citas() {
 
   // ── Render principal ─────────────────────────────────────────────────────────
 
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = getFechaLocal();
   const diasSemana = getDiasSemana(fecha);
 
   return (
