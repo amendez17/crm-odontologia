@@ -417,7 +417,49 @@ print-color-adjust: exact;
 
   win.document.close();
 };  const total = detalles.reduce((s, d) => s + (parseFloat(d.precio) || 0), 0);
+const exportarCSV = async () => {
+  try {
+    const params = new URLSearchParams();
 
+    if (filtroEstado) {
+      params.set('estado', filtroEstado);
+    }
+
+    if (filtroPaciente) {
+      params.set('paciente_id', filtroPaciente);
+    }
+
+    const response = await api.get(
+      `/exportar/presupuestos?${params.toString()}`,
+      {
+        responseType: 'blob'
+      }
+    );
+
+    const url = window.URL.createObjectURL(
+      new Blob([response.data])
+    );
+
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.setAttribute('download', 'presupuestos.csv');
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
+
+    toast.success('CSV exportado');
+
+  } catch (err) {
+    console.error(err);
+    toast.error('Error exportando CSV');
+  }
+};
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -426,16 +468,12 @@ print-color-adjust: exact;
           <button onClick={() => setShowFiltros(!showFiltros)} className={`btn-secondary flex items-center gap-1 ${(filtroEstado || filtroPaciente) ? 'ring-2 ring-primary-300' : ''}`}>
             <FiFilter size={16} /> Filtros
           </button>
-          <button
-            onClick={() => {
-              const params = new URLSearchParams();
-              if (filtroEstado) params.set('estado', filtroEstado);
-              window.open(`/api/exportar/presupuestos?${params.toString()}`, '_blank');
-            }}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <FiDownload size={16} /> CSV
-          </button>
+         <button
+  onClick={exportarCSV}
+  className="btn-secondary flex items-center gap-2"
+>
+  <FiDownload size={16} /> CSV
+</button>
           <button onClick={() => {
   setForm({
     paciente_id: '',
