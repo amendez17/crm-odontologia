@@ -43,23 +43,24 @@ export default function Presupuestos() {
   };
 
   const cargarDatos = async () => {
-    try {
-      const [pacRes, docRes, tratRes, citasRes] = await Promise.all([
-        api.get('/pacientes', { params: { limit: 1000 } }),
-        api.get('/usuarios/doctores'),
-        api.get('/tratamientos'),
-        api.get('/citas')
-      ]);
-      setPacientes(pacRes.data.pacientes || []);
-      setDoctores(docRes.data);
-      setTratamientos(tratRes.data);
-      setCitas(citasRes.data);
-    } catch {} catch (err) {
-  console.error(err);
-  toast.error('Error cargando datos');
-}
-  };
+  try {
+    const [pacRes, docRes, tratRes, citasRes] = await Promise.all([
+      api.get('/pacientes', { params: { limit: 1000 } }),
+      api.get('/usuarios/doctores'),
+      api.get('/tratamientos'),
+      api.get('/citas')
+    ]);
 
+    setPacientes(pacRes.data.pacientes || []);
+    setDoctores(docRes.data);
+    setTratamientos(tratRes.data);
+    setCitas(citasRes.data);
+
+  } catch (err) {
+    console.error(err);
+    toast.error('Error cargando datos');
+  }
+};
   useEffect(() => { cargar(); }, [filtroEstado, filtroPaciente]);
   useEffect(() => { cargarDatos(); }, []);
 
