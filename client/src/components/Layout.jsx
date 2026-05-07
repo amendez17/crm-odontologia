@@ -144,7 +144,7 @@ export default function Layout() {
       </p>
     </div>
   )}
-</div>          </div>
+</div>         
           {!collapsed && (
             <div className="min-w-0">
               <p className="text-white font-bold text-base leading-tight truncate">Clinica Dental Almar</p>
