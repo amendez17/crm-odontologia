@@ -31,7 +31,7 @@ export default function Reportes() {
         const { data } = await api.get('/reportes/tratamientos-populares', { params: { desde, hasta } });
         setDataTratamientos(data);
       } else if (tab === 'doctores') {
-        const { data } = await api.get('/dashboard');
+        const { data } = await api.get('/dashboard', { params: { desde, hasta }});
         setDataDoctores(data.doctorStats || []);
       } else if (tab === 'deudas') {
         const { data } = await api.get('/reportes/pacientes-deuda');
