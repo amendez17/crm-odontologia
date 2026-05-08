@@ -704,16 +704,31 @@ const exportarCSV = async () => {
   >
     <option value="">Sin cita</option>
 
-    {citas.map(c => (
-      <option key={c.id} value={c.id}>
-        #{c.id} - {c.paciente?.nombre} {c.paciente?.apellido}
-      </option>
-    ))}
+    {citas
+  .filter(c => {
+
+    // SOLO citas del paciente seleccionado
+    const mismoPaciente =
+      Number(c.paciente_id) === Number(form.paciente_id);
+
+    // citas ya usadas en otros presupuestos
+    const citaYaUsada = presupuestos.some(p =>
+      Number(p.cita_id) === Number(c.id) &&
+      Number(p.id) !== Number(editandoId)
+    );
+
+    return mismoPaciente && !citaYaUsada;
+  })
+  .map(c => (
+    <option key={c.id} value={c.id}>
+      #{c.id} - {c.paciente?.nombre} {c.paciente?.apellido}
+    </option>
+))}
   </select>
 </div>
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Paciente *</label>
-              <select value={form.paciente_id} onChange={e => setForm({ ...form, paciente_id: e.target.value })} className="input-field" required>
+              <select value={form.paciente_id} onChange={e => setForm({ ...form, paciente_id: e.target.value, cita_id: '' })} className="input-field" required>
                 <option value="">Seleccionar</option>
                 {pacientes.map(p => <option key={p.id} value={p.id}>{p.apellido}, {p.nombre}</option>)}
               </select>
