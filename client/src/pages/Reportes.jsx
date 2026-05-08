@@ -99,6 +99,51 @@ const exportarPagos = async () => {
     alert('Error al exportar reporte');
   }
 };
+
+  //exportar
+  const descargarCSV = async (
+  endpoint,
+  nombre
+) => {
+
+  try {
+
+    const response = await api.get(
+      endpoint,
+      {
+        params: { desde, hasta },
+        responseType: 'blob'
+      }
+    );
+
+    const url =
+      window.URL.createObjectURL(
+        new Blob([response.data])
+      );
+
+    const link =
+      document.createElement('a');
+
+    link.href = url;
+
+    link.setAttribute(
+      'download',
+      nombre
+    );
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert('Error al exportar');
+  }
+};
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-primary-800">Reportes</h1>
@@ -285,6 +330,10 @@ const exportarPagos = async () => {
 
           {/* TAB TRATAMIENTOS */}
           {tab === 'tratamientos' && dataTratamientos && (
+          <button onClick={() =>  descargarCSV( '/exportar/tratamientos','reporte-tratamientos.csv' ) }  className="btn-secondary flex items-center gap-2">
+  <FiDownload size={14} />
+  Exportar
+</button>
             <div className="card">
               <h3 className="font-semibold text-primary-900 mb-4">Tratamientos más solicitados</h3>
               {dataTratamientos.length === 0 ? (
@@ -320,7 +369,10 @@ const exportarPagos = async () => {
 {/* TAB DOCTORES */}
 {tab === 'doctores' && dataDoctores && (
   <div className="space-y-6">
-
+<button onClick={() => descargarCSV( '/exportar/doctores', 'reporte-doctores.csv' ) } className="btn-secondary flex items-center gap-2">
+  <FiDownload size={14} />
+  Exportar
+</button>
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
       {dataDoctores.map(doc => (
         <div
@@ -393,7 +445,9 @@ const exportarPagos = async () => {
                   ${dataDeudas.reduce((s, d) => s + d.deuda, 0).toLocaleString()}
                 </p>
                 <p className="text-red-100 text-sm mt-1">{dataDeudas.length} pacientes con deuda</p>
-              </div>
+                <button onClick={() =>  descargarCSV( '/exportar/deudas', 'reporte-deudas.csv' ) } className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                <FiDownload size={14} /> Exportar </button>
+                </div>
 
               <div className="card overflow-x-auto p-0">
                 <table className="table-modern">
