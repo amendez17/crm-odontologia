@@ -240,8 +240,8 @@ const exportarPacientes = async () => {
               <label className="block text-sm font-medium text-surface-600 mb-1">Género</label>
               <select name="genero" value={form.genero} onChange={handleChange} className="input-field">
                 <option value="">Seleccionar</option>
-                <option value="masculino">Masculino</option>
-                <option value="femenino">Femenino</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
                 <option value="otro">Otro</option>
               </select>
             </div>
