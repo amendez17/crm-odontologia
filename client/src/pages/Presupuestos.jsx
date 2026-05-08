@@ -184,7 +184,15 @@ const guardar = async (e) => {
     }
   };
 
-  const verDetalle = async (id) => {
+   const verDetalle = async (id) => {
+    try {
+      const { data } = await api.get(`/presupuestos/${id}`);
+      setModalDetalle(data);
+    } catch {
+      toast.error('Error al cargar detalle');
+    }
+  };
+  
     const editar = async (id) => {
 
   try {
