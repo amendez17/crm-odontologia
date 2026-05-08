@@ -190,23 +190,23 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
 // GET /api/reportes/pacientes-deuda - Pacientes con deuda pendiente
 router.get('/pacientes-deuda', auth, async (req, res) => {
   try {
-    const pacientes = await Paciente.findAll({
-      where: { activo: true },
-      include: [
-        {
-          model: Presupuesto, as: 'presupuestos',
-          where: { estado: { [Op.in]: ['aceptado', 'en_curso'] } },
-          required: true,
-          attributes: ['id', 'total']
-        },
-        {
-          model: Pago, as: 'pagos',
-          attributes: ['monto'],
-          required: false
-        }
-      ]
-    });
-
+const pacientes = await Paciente.findAll({
+  where: { activo: true },
+  include: [
+    {
+      model: Presupuesto,
+      as: 'presupuestos',
+      attributes: ['id', 'total', 'estado'],
+      required: false
+    },
+    {
+      model: Pago,
+      as: 'pagos',
+      attributes: ['monto'],
+      required: false
+    }
+  ]
+});
     const deudores = pacientes.map(p => {
       const totalPresupuestos = p.presupuestos.reduce((s, pr) => s + parseFloat(pr.total), 0);
       const totalPagado = p.pagos.reduce((s, pa) => s + parseFloat(pa.monto), 0);
