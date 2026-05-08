@@ -5,6 +5,24 @@ const { registrarActividad } = require('../middleware/logger');
 const { Op } = require('sequelize');
 const router = express.Router();
 
+function toCSV(headers, rows) {
+  const escape = (val) => {
+    if (val == null) return '';
+    const str = String(val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const lines = [headers.join(',')];
+
+  rows.forEach(row => {
+    lines.push(row.map(escape).join(','));
+  });
+
+  return '\ufeff' + lines.join('\r\n');
+}
 // GET /api/pacientes
 router.get('/', auth, async (req, res) => {
   try {
