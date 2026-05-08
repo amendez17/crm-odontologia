@@ -82,17 +82,150 @@ const presupuesto = await Presupuesto.create({
   }
 });
 
+
 // PUT /api/presupuestos/:id
-router.put('/:id', auth, registrarActividad('actualizar', 'presupuesto'), async (req, res) => {
-  try {
-    const presupuesto = await Presupuesto.findByPk(req.params.id);
-    if (!presupuesto) return res.status(404).json({ error: 'Presupuesto no encontrado.' });
-    await presupuesto.update(req.body);
-    res.json(presupuesto);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+router.put(
+  '/:id',
+  auth,
+  registrarActividad('actualizar', 'presupuesto'),
+  async (req, res) => {
+
+    const t = await sequelize.transaction();
+
+    try {
+
+      const presupuesto = await Presupuesto.findByPk(
+        req.params.id,
+        {
+          include: [
+            {
+              model: DetallePresupuesto,
+              as: 'detalles'
+            }
+          ],
+          transaction: t
+        }
+      );
+
+      if (!presupuesto) {
+
+        await t.rollback();
+
+        return res.status(404).json({
+          error: 'Presupuesto no encontrado.'
+        });
+      }
+
+      const {
+        paciente_id,
+        doctor_id,
+        cita_id,
+        estado,
+        descuento = 0,
+        notas,
+        detalles
+      } = req.body;
+
+      // ACTUALIZAR DATOS PRINCIPALES
+      await presupuesto.update({
+        paciente_id,
+        doctor_id,
+        cita_id: cita_id || null,
+        estado,
+        descuento,
+        notas
+      }, {
+        transaction: t
+      });
+
+      // ACTUALIZAR DETALLES
+      if (detalles && detalles.length > 0) {
+
+        // BORRAR DETALLES ANTERIORES
+        await DetallePresupuesto.destroy({
+          where: {
+            presupuesto_id: presupuesto.id
+          },
+          transaction: t
+        });
+
+        // CREAR NUEVOS
+        const nuevosDetalles = detalles.map(det => ({
+          presupuesto_id: presupuesto.id,
+          tratamiento_id: det.tratamiento_id,
+          pieza_dental: det.pieza_dental || null,
+          precio: det.precio
+        }));
+
+        await DetallePresupuesto.bulkCreate(
+          nuevosDetalles,
+          { transaction: t }
+        );
+
+        // RECALCULAR TOTAL
+        const subtotal = detalles.reduce(
+          (sum, d) => sum + parseFloat(d.precio),
+          0
+        );
+
+        const total =
+          subtotal - parseFloat(descuento || 0);
+
+        await presupuesto.update({
+          total
+        }, {
+          transaction: t
+        });
+      }
+
+      await t.commit();
+
+      // RETORNAR PRESUPUESTO ACTUALIZADO
+      const actualizado = await Presupuesto.findByPk(
+        presupuesto.id,
+        {
+          include: [
+            {
+              model: Paciente,
+              as: 'paciente'
+            },
+            {
+              model: Usuario,
+              as: 'doctor',
+              attributes: {
+                exclude: ['password']
+              }
+            },
+            {
+              model: DetallePresupuesto,
+              as: 'detalles',
+              include: [
+                {
+                  model: Tratamiento,
+                  as: 'tratamiento'
+                }
+              ]
+            },
+            {
+              model: Pago,
+              as: 'pagos'
+            }
+          ]
+        }
+      );
+
+      res.json(actualizado);
+
+    } catch (error) {
+
+      await t.rollback();
+
+      res.status(400).json({
+        error: error.message
+      });
+    }
   }
-});
+);
 
 // DELETE /api/presupuestos/:id
 router.delete('/:id', auth, registrarActividad('eliminar', 'presupuesto'), async (req, res) => {
