@@ -502,8 +502,8 @@ body{
       alt="Clinica Dental Almar"
     />
     <h1>Clínica Dental Almar</h1>
-     <h2><FiMapPin className="text-[#c9a227]"/>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
-    <h2><FiPhone className="text-[#c9a227]" /> 669 113 0990</h2>
+     <h2> <span style="color:#c9a227;">🏢</span>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
+    <h2><span style="color:#c9a227;">📞</span> 669 113 0990</h2>
     <h2>Consentimiento Informado</h2>
 
     <div class="tipo">${c.tipo || ''}</div>
@@ -549,10 +549,9 @@ body{
 
   win.document.close();
 
-  setTimeout(() => {
-    win.focus();
-    win.print();
-  }, 300);
+win.onload = () => {
+  win.focus();
+  win.print();
 };
  const imprimirHistoria = () => {
   const win = window.open('', '_blank', 'width=700,height=900');
@@ -698,8 +697,8 @@ body{
       alt="Clinica Dental Almar"
     />
   <h1>Clínica Dental Almar</h1>
-   <h2> <FiMapPin className="text-[#c9a227]"/>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
-    <h2><FiPhone className="text-[#c9a227]" /> 669 113 0990</h2>
+   <h2> <span style="color:#c9a227;">🏢</span>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
+    <h2><span style="color:#c9a227;">📞</span> 669 113 0990</h2>
   <h2>Historia Clínica</h2>
 </div>
 
@@ -734,10 +733,9 @@ ${registros || '<p style="text-align:center;color:#999">Sin registros</p>'}
 
   win.document.close();
 
-  setTimeout(() => {
-    win.focus();
-    win.print();
-  }, 300);
+ win.onload = () => {
+  win.focus();
+  win.print();
 };
   const crearCita = async (e) => {
     e.preventDefault();
@@ -936,7 +934,7 @@ body{
   </div>
 
   <div class="footer">
-    <FiAward className="text-[#c9a227]" />Gracias por su confianza · Clínica Dental Almar<br/>
+    <span style="color:#c9a227;">🔰</span>Gracias por su confianza · Clínica Dental Almar<br/>
     ${new Date().toLocaleDateString('es-MX')}
   </div>
 
