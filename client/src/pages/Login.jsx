@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiShield } from 'react-icons/fi';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -149,7 +149,7 @@ export default function Login() {
         {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-xs text-slate-400">
-             🦷Clínica Dental • 🛡️Sistema seguro de gestión odontológica
+             Clínica Dental • <FiShield className="text-[#c9a227]" />Sistema seguro de gestión odontológica
           </p>
         </div>
 
