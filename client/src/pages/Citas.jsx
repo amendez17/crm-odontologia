@@ -274,6 +274,35 @@ export default function Citas() {
   }
 };
 
+  const enviarWhatsApprecordatorio = (cita) => {
+  const tel = cita.paciente?.telefono?.replace(/\D/g, '') || '';
+  if (!tel) {
+    toast.error('El paciente no tiene teléfono registrado');
+    return;
+  }
+
+  const fechaFmt = new Date(cita.fecha + 'T12:00:00')
+    .toLocaleDateString('es-MX', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    });
+
+  const msg = encodeURIComponent(
+    `Hola ${cita.paciente?.nombre || ''} ${cita.paciente?.apellido || ''}\n` +
+    `Le recordamos su cita programada para mañana.\n\n` +
+    `📅 ${fechaFmt}\n` +
+    `🕐 ${cita.hora_inicio?.slice(0, 5)} hs\n` +
+    `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
+    `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
+    `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
+    `Si necesita reprogramar, por favor avísenos con anticipación.\n\n'+
+    ' Por favor confirme su asistencia. ¡Gracias!`
+  );
+
+  window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+};
+
   const enviarWhatsApp = (cita) => {
   const tel = cita.paciente?.telefono?.replace(/\D/g, '') || '';
   if (!tel) {
@@ -366,7 +395,8 @@ export default function Citas() {
           </div>
           <div className="flex flex-col gap-0.5 flex-shrink-0">
             <button onClick={(e) => { e.stopPropagation(); enviarWhatsApp(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle size={11} /></button>
-            <button onClick={() => crearPresupuestoDesdeCita(cita)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Crear presupuesto">  <FiFileText size={15} /> </button>
+            <button onClick={(e) => { e.stopPropagation(); enviarWhatsApprecordatorio(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle className="text-[#f5a60a]" size={11} /></button>
+            <button onClick={() => crearPresupuestoDesdeCita(cita)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Crear presupuesto">  <FiFileText size={11} /> </button>
             <button onClick={(e) => { e.stopPropagation(); abrirEditar(cita); }} className="p-0.5 text-yellow-600 hover:bg-yellow-100 rounded"><FiEdit2 size={11} /></button>
             <button onClick={(e) => { e.stopPropagation(); eliminar(cita.id); }} className="p-0.5 text-red-600 hover:bg-red-100 rounded"><FiTrash2 size={11} /></button>
           </div>
