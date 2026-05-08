@@ -148,9 +148,9 @@ export default function Login() {
 
         {/* Footer */}
         <div className="mt-6 text-center">
-          <label className="block text-sm font-medium text-slate-200 mb-2 flex items-center gap-2">
+          <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
              Clínica Dental • <FiShield className="text-[#c9a227]" />Sistema seguro de gestión odontológica
-          </label>
+          </p>
         </div>
 
       </div>
