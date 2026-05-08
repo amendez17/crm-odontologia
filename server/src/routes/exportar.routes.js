@@ -77,7 +77,210 @@ router.get('/pagos', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+//GET /api/exportar/deudas
+router.get('/deudas', auth, async (req, res) => {
+  try {
 
+    const pacientes = await Paciente.findAll({
+      where: { activo: true },
+
+      include: [
+        {
+          model: Presupuesto,
+          as: 'presupuestos',
+          required: false
+        },
+
+        {
+          model: Pago,
+          as: 'pagos',
+          required: false
+        }
+      ]
+    });
+
+    const deudores = pacientes.map(p => {
+
+      const totalPresupuestos = p.presupuestos.reduce(
+        (s, pr) => s + parseFloat(pr.total || 0),
+        0
+      );
+
+      const totalPagado = p.pagos.reduce(
+        (s, pa) => s + parseFloat(pa.monto || 0),
+        0
+      );
+
+      const deuda = totalPresupuestos - totalPagado;
+
+      return {
+        nombre: p.nombre,
+        apellido: p.apellido,
+        telefono: p.telefono,
+        deuda
+      };
+
+    }).filter(p => p.deuda > 0);
+
+    let csv =
+      'Nombre,Apellido,Telefono,Deuda\n';
+
+    deudores.forEach(d => {
+
+      csv +=
+        `${d.nombre},${d.apellido},${d.telefono},${d.deuda}\n`;
+    });
+
+    res.header(
+      'Content-Type',
+      'text/csv'
+    );
+
+    res.attachment(
+      'reporte-deudas.csv'
+    );
+
+    return res.send(csv);
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
+
+//GET /api/expertar/tratamientos
+router.get('/tratamientos', auth, async (req, res) => {
+  try {
+
+    const { desde, hasta } = req.query;
+
+    const whereCita = {};
+
+    if (desde && hasta) {
+
+      whereCita.fecha = {
+        [Op.between]: [desde, hasta]
+      };
+    }
+
+    const tratamientos =
+      await DetallePresupuesto.findAll({
+
+        attributes: [
+          [fn('COUNT', col('DetallePresupuesto.id')), 'cantidad'],
+          [fn('SUM', col('DetallePresupuesto.precio')), 'ingresos']
+        ],
+
+        include: [
+
+          {
+            model: Tratamiento,
+            as: 'tratamiento',
+            attributes: ['nombre']
+          },
+
+          {
+            model: Presupuesto,
+            as: 'presupuesto',
+            required: true,
+            attributes: [],
+
+            include: [
+              {
+                model: Cita,
+                as: 'cita',
+                required: true,
+                attributes: [],
+                where: whereCita
+              }
+            ]
+          }
+        ],
+
+        group: [
+          'tratamiento.id',
+          'tratamiento.nombre'
+        ],
+
+        raw: true
+      });
+
+    let csv =
+      'Tratamiento,Cantidad,Ingresos\n';
+
+    tratamientos.forEach(t => {
+
+      csv +=
+        `${t['tratamiento.nombre']},${t.cantidad},${t.ingresos}\n`;
+    });
+
+    res.header(
+      'Content-Type',
+      'text/csv'
+    );
+
+    res.attachment(
+      'reporte-tratamientos.csv'
+    );
+
+    return res.send(csv);
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
+//GET /api/exportar/doctores
+router.get('/doctores', auth, async (req, res) => {
+  try {
+
+    const doctores =
+      await Usuario.findAll({
+
+        where: {
+          rol: 'doctor'
+        },
+
+        include: [
+          {
+            model: Cita,
+            as: 'citas',
+            required: false
+          }
+        ]
+      });
+
+    let csv =
+      'Doctor,Citas\n';
+
+    doctores.forEach(d => {
+
+      csv +=
+        `${d.nombre} ${d.apellido},${d.citas.length}\n`;
+    });
+
+    res.header(
+      'Content-Type',
+      'text/csv'
+    );
+
+    res.attachment(
+      'reporte-doctores.csv'
+    );
+
+    return res.send(csv);
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
 // GET /api/exportar/citas
 router.get('/citas', auth, async (req, res) => {
   try {
