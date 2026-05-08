@@ -88,21 +88,38 @@ export default function Pacientes() {
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 const exportarPacientes = async () => {
   try {
+    const token = localStorage.getItem('token');
+
     const res = await api.get('/pacientes/exportar', {
-      responseType: 'blob'
+      responseType: 'blob',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
 
-    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const blob = new Blob([res.data], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
     const link = document.createElement('a');
+
     link.href = url;
-    link.setAttribute('download', 'pacientes.csv');
+    link.download = 'pacientes.csv';
+
     document.body.appendChild(link);
+
     link.click();
 
-    link.remove(); // ✔️ limpiar DOM
-    window.URL.revokeObjectURL(url); // ✔️ liberar memoria
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Pacientes exportados');
 
   } catch (err) {
+    console.log(err);
     toast.error('Error al exportar');
   }
 };
