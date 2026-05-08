@@ -88,5 +88,41 @@ router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (r
     res.status(500).json({ error: error.message });
   }
 });
+// GET /api/pacientes/exportar
+router.get('/exportar', auth, async (req, res) => {
+  try {
+    const pacientes = await Paciente.findAll({
+      where: { activo: true },
+      order: [['apellido', 'ASC'], ['nombre', 'ASC']]
+    });
 
+    const headers = [
+      'Apellido', 'Nombre', 'DNI', 'Teléfono', 'Email',
+      'Dirección', 'Obra Social', 'N° Afiliado',
+      'Fecha Nacimiento', 'Género'
+    ];
+
+    const rows = pacientes.map(p => [
+      p.apellido,
+      p.nombre,
+      p.dni,
+      p.telefono,
+      p.email,
+      p.direccion,
+      p.obra_social,
+      p.numero_afiliado,
+      p.fecha_nacimiento,
+      p.genero
+    ]);
+
+    const csv = toCSV(headers, rows);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=pacientes.csv');
+    res.send(csv);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 module.exports = router;
