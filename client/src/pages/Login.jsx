@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
+import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -42,7 +43,7 @@ export default function Login() {
       setLoading(false);
     }
   };
-  
+  const [show, setShow] = useState(false);
   return (
   <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-slate-50 to-slate-100 relative overflow-hidden">
 
@@ -68,10 +69,10 @@ export default function Login() {
     className="w-14 h-14 object-contain relative z-10"
   />
 </div>
-
+<div className="w-20 h-[2px] mx-auto bg-gradient-to-r from-transparent via-[#c9a227] to-transparent my-3 opacity-60" />
         <h1 className="text-3xl font-semibold tracking-tight text-slate-800 text-center">
-          Clinica Dental Almar
-        </h1>
+  Clínica Dental <span className="text-[#c9a227]">Almar</span>
+</h1>
 
         <p className="text-slate-500 text-sm mt-1 text-center">
           Sistema de gestión odontológica
@@ -81,33 +82,52 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-5 mt-6">
 
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3 text-base outline-none focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/20 transition"
-              placeholder="user@clinica.com"
-              required
-            />
-          </div>
+  <label className="block text-sm font-medium text-slate-600 mb-2 flex items-center gap-2">
+    <FiMail className="text-[#c9a227]" />
+    Email
+  </label>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-2">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3 text-base outline-none focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/20 transition"
-              placeholder="••••••••"
-              required
-            /> 
-            
-          </div>
+  <div className="relative">
+    <FiMail className="absolute left-3 top-3.5 text-[#c9a227]/70" />
+
+    <input
+      type="email"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      className="w-full bg-white/80 border border-slate-200 rounded-xl pl-10 pr-4 py-3 outline-none focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/20 transition"
+      placeholder="user@clinica.com"
+      required
+    />
+  </div>
+</div>
+
+          <<div>
+  <label className="block text-sm font-medium text-slate-600 mb-2 flex items-center gap-2">
+    <FiLock className="text-[#c9a227]" />
+    Contraseña
+  </label>
+
+  <div className="relative">
+    <FiLock className="absolute left-3 top-3.5 text-[#c9a227]/70" />
+
+    <input
+      type={show ? 'text' : 'password'}
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      className="w-full bg-white/80 border border-slate-200 rounded-xl pl-10 pr-10 py-3 outline-none focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/20 transition"
+      placeholder="••••••••"
+      required
+    />
+
+    <button
+      type="button"
+      onClick={() => setShow(!show)}
+      className="absolute right-3 top-3.5 text-slate-500 hover:text-[#c9a227] transition"
+    >
+      {show ? <FiEyeOff /> : <FiEye />}
+    </button>
+  </div>
+</div>
 
           <button
             type="submit"
