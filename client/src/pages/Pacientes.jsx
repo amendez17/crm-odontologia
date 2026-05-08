@@ -140,7 +140,7 @@ export default function Pacientes() {
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#c9a227] via-[#b89b5e] to-[#d6c28a] flex items-center justify-center text-white font-bold text-xs shadow-md">
                       {pac.nombre[0]}{pac.apellido[0]}
                     </div>
-                    <span className="font-semibold text-primary-900">{pac.apellido}, {pac.nombre}</span>
+                    <span className="font-semibold text-primary-900"> {pac.nombre},{pac.apellido}</span>
                   </div>
                 </td>
                 <td className="text-surface-600">{pac.dni}</td>
