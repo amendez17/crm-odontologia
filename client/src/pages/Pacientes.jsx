@@ -98,6 +98,10 @@ const exportarPacientes = async () => {
     link.setAttribute('download', 'pacientes.csv');
     document.body.appendChild(link);
     link.click();
+
+    link.remove(); // ✔️ limpiar DOM
+    window.URL.revokeObjectURL(url); // ✔️ liberar memoria
+
   } catch (err) {
     toast.error('Error al exportar');
   }
