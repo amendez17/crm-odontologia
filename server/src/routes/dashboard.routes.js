@@ -76,52 +76,59 @@ router.get('/', auth, async (req, res) => {
 const filtroFechas = desde && hasta ? {  [Op.between]: [desde, hasta]  }: {  [Op.gte]: new Date(  new Date().getFullYear(), new Date().getMonth(),   1   ).toISOString().split('T')[0] };
     const doctorStats = await Promise.all(doctores.map(async (doc) => {
 
-  const [citasMes, citasCompletadas, ingresos] = await Promise.all([
+  const [citasMes, citasCompletadas, pagos] = await Promise.all([
 
-    Cita.count({
-      where: {
-        doctor_id: doc.id,
-        fecha: filtroFechas
-      }
-    }),
+  Cita.count({
+    where: {
+      doctor_id: doc.id,
+      fecha: filtroFechas
+    }
+  }),
 
-    Cita.count({
-      where: {
-        doctor_id: doc.id,
-        fecha: filtroFechas,
-        estado: 'completada'
-      }
-    }),
+  Cita.count({
+    where: {
+      doctor_id: doc.id,
+      fecha: filtroFechas,
+      estado: 'completada'
+    }
+  }),
 
-    Pago.sum('monto', {
+  Pago.findAll({
 
-      include: [
-        {
-          model: Presupuesto,
-          as: 'presupuesto',
-          attributes: [],
-          where: {
-            doctor_id: doc.id
-          },
-          required: true
+    include: [
+      {
+        model: Presupuesto,
+        as: 'presupuesto',
+        required: true,
+        attributes: ['doctor_id'],
+        where: {
+          doctor_id: doc.id
         }
-      ],
-
-      where: {
-        fecha: filtroFechas
       }
-    })
+    ],
 
-  ]);
+    where: {
+      fecha: filtroFechas
+    },
 
-  return {
-    id: doc.id,
-    nombre: `Dr. ${doc.nombre} ${doc.apellido}`,
-    especialidad: doc.especialidad || 'General',
-    citasMes,
-    citasCompletadas,
-    ingresos: ingresos || 0
-  };
+    attributes: ['monto'],
+    raw: true
+  })
+]);
+
+const ingresos = pagos.reduce(
+  (s, p) => s + parseFloat(p.monto || 0),
+  0
+);
+
+return {
+  id: doc.id,
+  nombre: `Dr. ${doc.nombre} ${doc.apellido}`,
+  especialidad: doc.especialidad || 'General',
+  citasMes,
+  citasCompletadas,
+  ingresos
+};
 }));
      
 
