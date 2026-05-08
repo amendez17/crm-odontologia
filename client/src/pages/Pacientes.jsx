@@ -145,7 +145,7 @@ const exportarPacientes = async () => {
         <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" size={18} />
         <input
           type="text"
-          placeholder="Buscar por nombre, apellido o DNI..."
+          placeholder="Buscar por nombre, apellido o numero de paciente..."
           value={buscar}
           onChange={(e) => { setBuscar(e.target.value); setPagina(1); }}
           className="input-field pl-11"
@@ -158,7 +158,7 @@ const exportarPacientes = async () => {
           <thead>
             <tr>
               <th>Paciente</th>
-              <th>DNI</th>
+              <th>Numero de paciente</th>
               <th>Teléfono</th>
               <th>Obra Social</th>
               <th>Acciones</th>
@@ -229,7 +229,7 @@ const exportarPacientes = async () => {
               <input name="apellido" value={form.apellido} onChange={handleChange} className="input-field" required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-600 mb-1">DNI *</label>
+              <label className="block text-sm font-medium text-surface-600 mb-1">Numero de Paciente *</label>
               <input name="dni" value={form.dni} onChange={handleChange} className="input-field" required />
             </div>
             <div>
