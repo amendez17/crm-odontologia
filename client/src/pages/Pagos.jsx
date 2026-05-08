@@ -77,20 +77,64 @@ export default function Pagos() {
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const presupuestosPaciente = presupuestos.filter(p => p.paciente_id === parseInt(form.paciente_id));
+const exportarPagos = async () => {
+  try {
+    const token = localStorage.getItem('token');
 
+    const params = new URLSearchParams();
+
+    if (filtroDesde && filtroHasta) {
+      params.append('desde', filtroDesde);
+      params.append('hasta', filtroHasta);
+    }
+
+    const res = await api.get(
+      `/exportar/pagos?${params.toString()}`,
+      {
+        responseType: 'blob',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    const blob = new Blob([res.data], {
+      type: 'text/csv;charset=utf-8;'
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = 'pagos.csv';
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Pagos exportados');
+
+  } catch (err) {
+    console.log(err);
+    toast.error('Error al exportar pagos');
+  }
+};
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-primary-800">Pagos</h1>
         <div className="flex gap-2">
-          <a
-            href={`/api/exportar/pagos${filtroDesde && filtroHasta ? `?desde=${filtroDesde}&hasta=${filtroHasta}` : ''}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary flex items-center gap-2"
-          >
-            <FiDownload size={16} /> Exportar CSV
-          </a>
+          <button
+  onClick={exportarPagos}
+  className="btn-secondary flex items-center gap-2"
+>
+  <FiDownload size={16} /> Exportar CSV
+</button>
           <button onClick={() => { setForm({ paciente_id: '', presupuesto_id: '', monto: '', metodo_pago: 'efectivo', fecha: new Date().toISOString().split('T')[0], numero_recibo: '', notas: '' }); setModal(true); }} className="btn-primary flex items-center gap-2">
             <FiPlus size={16} /> Registrar Pago
           </button>
