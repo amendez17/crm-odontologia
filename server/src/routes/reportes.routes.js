@@ -182,7 +182,7 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
   }
 });
 // GET /api/reportes/pacientes-deuda - Pacientes con deuda pendiente
-router.get('/pacientes-deuda', async (req, res) => {
+router.get('/pacientes-deuda', auth, async (req, res) => {
   try {
 
     const pacientes = await Paciente.findAll({
