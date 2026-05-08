@@ -36,7 +36,82 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+//reset password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
 
+    const usuario = await Usuario.findOne({
+      where: { email }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    const token = jwt.sign(
+      { id: usuario.id },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    const link =
+      `http://localhost:5173/reset-password/${token}`;
+
+    await enviarCorreoRecuperacion(
+      usuario.email,
+      link
+    );
+
+    res.json({
+      message: 'Correo enviado'
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      error: 'Error al enviar correo'
+    });
+  }
+});
+
+//Endo point reset password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    const usuario = await Usuario.findByPk(decoded.id);
+
+    if (!usuario) {
+      return res.status(404).json({
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    usuario.password = password;
+
+    await usuario.save();
+
+    res.json({
+      message: 'Contraseña actualizada'
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    res.status(400).json({
+      error: 'Token inválido o expirado'
+    });
+  }
+});
 // GET /api/auth/me
 router.get('/me', auth, async (req, res) => {
   res.json({
