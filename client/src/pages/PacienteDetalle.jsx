@@ -4,7 +4,7 @@ import api from '../api/axios';
 import Odontograma from '../components/Odontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward  } from 'react-icons/fi';
 
 export default function PacienteDetalle() {
   const { id } = useParams();
@@ -502,8 +502,8 @@ body{
       alt="Clinica Dental Almar"
     />
     <h1>Clínica Dental Almar</h1>
-     <h2>🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
-    <h2>📞 669 113 0990</h2>
+     <h2><FiMapPin className="text-[#c9a227]"/>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
+    <h2><FiPhone className="text-[#c9a227]" /> 669 113 0990</h2>
     <h2>Consentimiento Informado</h2>
 
     <div class="tipo">${c.tipo || ''}</div>
@@ -511,7 +511,7 @@ body{
 
   <div class="info">
     <strong>Paciente:</strong> ${pacienteData.nombre || '---'} ${pacienteData.apellido || ''}<br>
-    <strong>DNI:</strong> ${pacienteData.dni || '---'}<br>
+    <strong>Numero de paciente:</strong> ${pacienteData.dni || '---'}<br>
     <strong>Doctor:</strong> Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}<br>
     <strong>Fecha:</strong> ${c.createdAt?.split('T')[0] || ''}
   </div>
@@ -698,20 +698,20 @@ body{
       alt="Clinica Dental Almar"
     />
   <h1>Clínica Dental Almar</h1>
-   <h2>🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
-    <h2>📞 669 113 0990</h2>
+   <h2> <FiMapPin className="text-[#c9a227]"/>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
+    <h2><FiPhone className="text-[#c9a227]" /> 669 113 0990</h2>
   <h2>Historia Clínica</h2>
 </div>
 
 <div class="paciente-info">
   <div><strong>Paciente:</strong> ${paciente.apellido}, ${paciente.nombre}</div>
-  <div><strong>DNI:</strong> ${paciente.dni}</div>
+  <div><strong>Numero de paciente:</strong> ${paciente.dni}</div>
   <div><strong>Edad:</strong> ${edad !== null ? edad + ' años' : '-'}</div>
 </div>
 
 ${paciente.alergias ? `
   <div class="alerta alergia">
-    <strong>⚠ Alergias:</strong> ${paciente.alergias}
+    <strong><FiAlertTriangle className="text-[#c9a227]" /> Alergias:</strong> ${paciente.alergias}
   </div>
 ` : ''}
 
@@ -908,7 +908,7 @@ body{
     </div>
 
     <div class="info-row">
-      <span class="label">DNI</span>
+      <span class="label">Numero de paciente</span>
       <span class="value">${paciente.dni}</span>
     </div>
 
@@ -936,7 +936,7 @@ body{
   </div>
 
   <div class="footer">
-    Gracias por su confianza · Clínica Dental Almar<br/>
+    <FiAward className="text-[#c9a227]" />Gracias por su confianza · Clínica Dental Almar<br/>
     ${new Date().toLocaleDateString('es-MX')}
   </div>
 
