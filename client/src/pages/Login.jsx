@@ -101,7 +101,7 @@ export default function Login() {
   </div>
 </div>
 
-          <<div>
+          <div>
   <label className="block text-sm font-medium text-slate-600 mb-2 flex items-center gap-2">
     <FiLock className="text-[#c9a227]" />
     Contraseña
