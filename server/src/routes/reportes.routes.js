@@ -206,7 +206,13 @@ router.get('/pacientes-deuda', async (req, res) => {
     });
 
     const deudores = pacientes.map(p => {
-
+console.log(
+  p.nombre,
+  p.presupuestos.map(pr => ({
+    total: pr.total,
+    estado: pr.estado
+  }))
+);
       // solo presupuestos válidos
      const presupuestosValidos = p.presupuestos;
 
