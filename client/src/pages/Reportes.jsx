@@ -330,12 +330,13 @@ const exportarPagos = async () => {
 
           {/* TAB TRATAMIENTOS */}
           {tab === 'tratamientos' && dataTratamientos && (
-          <button onClick={() =>  descargarCSV( '/exportar/tratamientos','reporte-tratamientos.csv' ) }  className="btn-secondary flex items-center gap-2">
+          
+            <div className="card">
+              <h3 className="font-semibold text-primary-900 mb-4">Tratamientos más solicitados</h3>
+              <button onClick={() =>  descargarCSV( '/exportar/tratamientos','reporte-tratamientos.csv' ) }  className="btn-secondary flex items-center gap-2">
   <FiDownload size={14} />
   Exportar
 </button>
-            <div className="card">
-              <h3 className="font-semibold text-primary-900 mb-4">Tratamientos más solicitados</h3>
               {dataTratamientos.length === 0 ? (
                 <p className="text-gray-500 text-sm">Sin datos para el período</p>
               ) : (
