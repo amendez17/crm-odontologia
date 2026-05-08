@@ -121,6 +121,14 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
 
     const { desde, hasta } = req.query;
 
+    const whereCita = {};
+
+    if (desde && hasta) {
+      whereCita.fecha = {
+        [Op.between]: [desde, hasta]
+      };
+    }
+
     const populares = await DetallePresupuesto.findAll({
 
       attributes: [
@@ -140,19 +148,16 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
         {
           model: Presupuesto,
           as: 'presupuesto',
+          required: true,
           attributes: [],
 
           include: [
             {
               model: Cita,
               as: 'cita',
+              required: true,
               attributes: [],
-
-              where: desde && hasta ? {
-                fecha: {
-                  [Op.between]: [desde, hasta]
-                }
-              } : undefined
+              where: whereCita
             }
           ]
         }
@@ -174,6 +179,7 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
     res.json(populares);
 
   } catch (error) {
+
     console.error(error);
 
     res.status(500).json({
