@@ -227,14 +227,7 @@ const guardar = async (e) => {
     toast.error('Error cargando presupuesto');
   }
 };
-    try {
-      const { data } = await api.get(`/presupuestos/${id}`);
-      setModalDetalle(data);
-    } catch {
-      toast.error('Error al cargar detalle');
-    }
-  };
-
+   
  const imprimirPresupuesto = (p) => {
   const win = window.open('', '_blank', 'width=850,height=950');
 
