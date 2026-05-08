@@ -12,7 +12,7 @@ export default function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -25,7 +25,7 @@ export default function Login() {
       });
 
       // guardar sesión
-      login(data.token, data.usuario);
+      login(data.token, data.usuario || null);
 
       toast.success('Bienvenido 👋');
       navigate('/');
