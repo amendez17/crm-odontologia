@@ -184,17 +184,21 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
 // GET /api/reportes/pacientes-deuda - Pacientes con deuda pendiente
 router.get('/pacientes-deuda', auth, async (req, res) => {
   try {
+
     const pacientes = await Paciente.findAll({
       where: { activo: true },
+
       include: [
         {
-          model: Presupuesto, as: 'presupuestos',
-          where: { estado: { [Op.in]: ['aceptado', 'en_curso'] } },
-          required: true,
-          attributes: ['id', 'total']
+          model: Presupuesto,
+          as: 'presupuestos',
+          attributes: ['id', 'total', 'estado'],
+          required: false
         },
+
         {
-          model: Pago, as: 'pagos',
+          model: Pago,
+          as: 'pagos',
           attributes: ['monto'],
           required: false
         }
@@ -202,9 +206,24 @@ router.get('/pacientes-deuda', auth, async (req, res) => {
     });
 
     const deudores = pacientes.map(p => {
-      const totalPresupuestos = p.presupuestos.reduce((s, pr) => s + parseFloat(pr.total), 0);
-      const totalPagado = p.pagos.reduce((s, pa) => s + parseFloat(pa.monto), 0);
+
+      // solo presupuestos válidos
+      const presupuestosValidos = p.presupuestos.filter(pr =>
+        ['aceptado', 'en_curso'].includes(pr.estado)
+      );
+
+      const totalPresupuestos = presupuestosValidos.reduce(
+        (s, pr) => s + parseFloat(pr.total || 0),
+        0
+      );
+
+      const totalPagado = p.pagos.reduce(
+        (s, pa) => s + parseFloat(pa.monto || 0),
+        0
+      );
+
       const deuda = totalPresupuestos - totalPagado;
+
       return {
         id: p.id,
         nombre: p.nombre,
@@ -215,14 +234,22 @@ router.get('/pacientes-deuda', auth, async (req, res) => {
         totalPagado,
         deuda
       };
-    }).filter(p => p.deuda > 0).sort((a, b) => b.deuda - a.deuda);
+
+    })
+    .filter(p => p.deuda > 0)
+    .sort((a, b) => b.deuda - a.deuda);
 
     res.json(deudores);
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    console.log(error);
+
+    res.status(500).json({
+      error: error.message
+    });
   }
 });
-
 // GET /api/reportes/balance/:pacienteId - Balance individual de un paciente
 router.get('/balance/:pacienteId', auth, async (req, res) => {
   try {
