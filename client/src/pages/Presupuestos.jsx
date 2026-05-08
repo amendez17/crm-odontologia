@@ -454,8 +454,8 @@ print-color-adjust: exact;
 
     <h1>CLÍNICA DENTAL ALMAR</h1>
     <p>Presupuesto Odontológico Profesional</p>
-    <p>🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</p>
-    <p>📞 669 113 0990</p>
+    <p><span style="color:#c9a227;">🏢</span>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</p>
+    <p><span style="color:#c9a227;">📞</span> 669 113 0990</p>
   </div>
 
   <!-- INFO -->
@@ -464,7 +464,7 @@ print-color-adjust: exact;
     <div class="card">
       <div class="label">Paciente</div>
       <div class="value">${p.paciente?.nombre} ${p.paciente?.apellido}</div>
-      <div style="font-size:12px;color:#6b7280">DNI: ${p.paciente?.dni || ''}</div>
+      <div style="font-size:12px;color:#6b7280">Número de Paciente: ${p.paciente?.dni || ''}</div>
     </div>
 
     <div class="card">
