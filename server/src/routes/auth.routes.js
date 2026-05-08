@@ -4,6 +4,8 @@ const { Usuario } = require('../models');
 const { auth } = require('../middleware/auth');
 const { enviarCorreoRecuperacion } = require('../services/email');
 const router = express.Router();
+
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
@@ -146,4 +148,25 @@ router.post('/cambiar-password', auth, async (req, res) => {
   }
 });
 
+router.get('/test-email', async (req, res) => {
+  try {
+
+    await enviarCorreoRecuperacion(
+      'yulissaechamea@gmail.com',
+      'https://google.com'
+    );
+
+    res.json({
+      ok: true
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
 module.exports = router;
