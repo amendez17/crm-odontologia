@@ -190,21 +190,17 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
 // GET /api/reportes/pacientes-deuda - Pacientes con deuda pendiente
 router.get('/pacientes-deuda', auth, async (req, res) => {
   try {
-
     const pacientes = await Paciente.findAll({
       where: { activo: true },
-
       include: [
         {
-          model: Presupuesto,
-          as: 'presupuestos',
-          attributes: ['id', 'total', 'estado'],
-          required: false
+          model: Presupuesto, as: 'presupuestos',
+          where: { estado: { [Op.in]: ['aceptado', 'en_curso'] } },
+          required: true,
+          attributes: ['id', 'total']
         },
-
         {
-          model: Pago,
-          as: 'pagos',
+          model: Pago, as: 'pagos',
           attributes: ['monto'],
           required: false
         }
@@ -212,28 +208,9 @@ router.get('/pacientes-deuda', auth, async (req, res) => {
     });
 
     const deudores = pacientes.map(p => {
-console.log(
-  p.nombre,
-  p.presupuestos.map(pr => ({
-    total: pr.total,
-    estado: pr.estado
-  }))
-);
-      // solo presupuestos válidos
-     const presupuestosValidos = p.presupuestos;
-
-      const totalPresupuestos = presupuestosValidos.reduce(
-        (s, pr) => s + parseFloat(pr.total || 0),
-        0
-      );
-
-      const totalPagado = p.pagos.reduce(
-        (s, pa) => s + parseFloat(pa.monto || 0),
-        0
-      );
-
+      const totalPresupuestos = p.presupuestos.reduce((s, pr) => s + parseFloat(pr.total), 0);
+      const totalPagado = p.pagos.reduce((s, pa) => s + parseFloat(pa.monto), 0);
       const deuda = totalPresupuestos - totalPagado;
-
       return {
         id: p.id,
         nombre: p.nombre,
@@ -244,20 +221,11 @@ console.log(
         totalPagado,
         deuda
       };
-
-    })
-    .filter(p => p.deuda > 0)
-    .sort((a, b) => b.deuda - a.deuda);
+    }).filter(p => p.deuda > 0).sort((a, b) => b.deuda - a.deuda);
 
     res.json(deudores);
-
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      error: error.message
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 // GET /api/reportes/balance/:pacienteId - Balance individual de un paciente
