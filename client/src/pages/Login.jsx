@@ -89,7 +89,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3 text-base outline-none focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/20 transition"
-              placeholder="admin@clinica.com"
+              placeholder="user@clinica.com"
               required
             />
           </div>
@@ -128,7 +128,7 @@ export default function Login() {
         {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-xs text-slate-400">
-            Clínica Dental • Sistema seguro de gestión odontológica
+             🦷Clínica Dental • 🛡️Sistema seguro de gestión odontológica
           </p>
         </div>
 
