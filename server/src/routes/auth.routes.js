@@ -152,7 +152,7 @@ router.get('/test-email', async (req, res) => {
   try {
 
     await enviarCorreoRecuperacion(
-      'yulissaechamea@gmail.com',
+      'alanmendez530@gmail.com',
       'https://google.com'
     );
 
