@@ -552,7 +552,8 @@ body{
 win.onload = () => {
   win.focus();
   win.print();
-};}
+};
+  }:
  const imprimirHistoria = () => {
   const win = window.open('', '_blank', 'width=700,height=900');
 
