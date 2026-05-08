@@ -208,7 +208,15 @@ const pacientes = await Paciente.findAll({
   ]
 });
     const deudores = pacientes.map(p => {
-      const totalPresupuestos = p.presupuestos.reduce((s, pr) => s + parseFloat(pr.total), 0);
+      const presupuestosValidos = (p.presupuestos || []).filter(pr => {
+  const estado = (pr.estado || '').toLowerCase().trim();
+  return ['aceptado', 'en_curso', 'finalizado'].includes(estado);
+});
+
+const totalPresupuestos = presupuestosValidos.reduce(
+  (s, pr) => s + parseFloat(pr.total || 0),
+  0
+);
       const totalPagado = p.pagos.reduce((s, pa) => s + parseFloat(pa.monto), 0);
       const deuda = totalPresupuestos - totalPagado;
       return {
