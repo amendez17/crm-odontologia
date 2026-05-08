@@ -67,7 +67,7 @@ export default function Configuracion() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">CUIT</label>
+                <label className="block text-sm font-medium text-surface-600 mb-1">RFC</label>
                 <input
                   value={config.clinica_cuit || ''}
                   onChange={e => handleChange('clinica_cuit', e.target.value)}
