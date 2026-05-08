@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+console.log('API RESEND:', process.env.RESEND_API_KEY);
 
 const { sequelize, Usuario } = require('./models');
 
