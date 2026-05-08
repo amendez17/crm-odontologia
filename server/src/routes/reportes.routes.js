@@ -208,9 +208,7 @@ router.get('/pacientes-deuda', async (req, res) => {
     const deudores = pacientes.map(p => {
 
       // solo presupuestos válidos
-      const presupuestosValidos = p.presupuestos.filter(pr =>
-        ['aceptado', 'en_curso'].includes(pr.estado)
-      );
+     const presupuestosValidos = p.presupuestos;
 
       const totalPresupuestos = presupuestosValidos.reduce(
         (s, pr) => s + parseFloat(pr.total || 0),
