@@ -2,7 +2,15 @@ import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-import { FiPlus, FiEye, FiTrash2, FiPrinter, FiFilter, FiDownload } from 'react-icons/fi';
+import {
+  FiPlus,
+  FiEye,
+  FiTrash2,
+  FiPrinter,
+  FiFilter,
+  FiDownload,
+  FiEdit
+} from 'react-icons/fi';
 
 const ESTADOS = {
   pendiente: 'bg-yellow-100 text-yellow-700',
@@ -20,6 +28,7 @@ export default function Presupuestos() {
   const [citas, setCitas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
   const [modalDetalle, setModalDetalle] = useState(null);
   const [form, setForm] = useState({ paciente_id: '', doctor_id: '', cita_id: '', notas: '', descuento: '0'});
   const [detalles, setDetalles] = useState([]);
@@ -82,30 +91,79 @@ export default function Presupuestos() {
     setDetalles(detalles.filter((_, i) => i !== idx));
   };
 
-  const guardar = async (e) => {
-    e.preventDefault();
-    if (detalles.length === 0) {
-      toast.error('Agregue al menos un tratamiento');
-      return;
-    }
-    try {
-      await api.post('/presupuestos', {
-        ...form,
-        descuento: parseFloat(form.descuento) || 0,
-        detalles: detalles.map(d => ({
-          tratamiento_id: parseInt(d.tratamiento_id),
-          pieza_dental: d.pieza_dental ? parseInt(d.pieza_dental) : null,
-          precio: parseFloat(d.precio)
-        }))
-      });
-      toast.success('Presupuesto creado');
-      setModal(false);
-      cargar();
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Error al crear');
-    }
-  };
+const guardar = async (e) => {
 
+  e.preventDefault();
+
+  if (detalles.length === 0) {
+    toast.error('Agregue al menos un tratamiento');
+    return;
+  }
+
+  try {
+
+    const payload = {
+      ...form,
+      descuento: parseFloat(form.descuento) || 0,
+
+      detalles: detalles.map(d => ({
+        tratamiento_id: parseInt(d.tratamiento_id),
+
+        pieza_dental: d.pieza_dental
+          ? parseInt(d.pieza_dental)
+          : null,
+
+        precio: parseFloat(d.precio)
+      }))
+    };
+
+    // EDITAR
+    if (editandoId) {
+
+      await api.put(
+        `/presupuestos/${editandoId}`,
+        payload
+      );
+
+      toast.success('Presupuesto actualizado');
+
+    } else {
+
+      // CREAR
+      await api.post(
+        '/presupuestos',
+        payload
+      );
+
+      toast.success('Presupuesto creado');
+    }
+
+    setModal(false);
+
+    setEditandoId(null);
+
+    setForm({
+      paciente_id: '',
+      doctor_id: '',
+      cita_id: '',
+      notas: '',
+      descuento: '0'
+    });
+
+    setDetalles([]);
+
+    cargar();
+
+  } catch (err) {
+
+    console.error(err);
+
+    toast.error(
+      err.response?.data?.error ||
+      'Error guardando presupuesto'
+    );
+  }
+};
   const cambiarEstado = async (id, estado) => {
     try {
       await api.put(`/presupuestos/${id}`, { estado });
@@ -127,6 +185,40 @@ export default function Presupuestos() {
   };
 
   const verDetalle = async (id) => {
+    const editar = async (id) => {
+
+  try {
+
+    const { data } = await api.get(`/presupuestos/${id}`);
+
+    setEditandoId(id);
+
+    setForm({
+      paciente_id: data.paciente_id || '',
+      doctor_id: data.doctor_id || '',
+      cita_id: data.cita_id || '',
+      notas: data.notas || '',
+      descuento: data.descuento || '0',
+      estado: data.estado || 'pendiente'
+    });
+
+    setDetalles(
+      (data.detalles || []).map(d => ({
+        tratamiento_id: d.tratamiento_id,
+        pieza_dental: d.pieza_dental || '',
+        precio: d.precio
+      }))
+    );
+
+    setModal(true);
+
+  } catch (err) {
+
+    console.error(err);
+
+    toast.error('Error cargando presupuesto');
+  }
+};
     try {
       const { data } = await api.get(`/presupuestos/${id}`);
       setModalDetalle(data);
@@ -485,6 +577,7 @@ const exportarCSV = async () => {
 
   setDetalles([]);
   setModalDetalle(null);
+  setEditandoId(null);
   setModal(true);
 }} className="btn-primary flex items-center gap-2"> <FiPlus size={16} /> Nuevo Presupuesto </button>
         </div>
@@ -547,6 +640,7 @@ const exportarCSV = async () => {
                   <td className="text-surface-500">{p.createdAt?.split('T')[0]}</td>
                   <td>
                     <div className="flex items-center gap-1">
+                      <button onClick={() => editar(p.id)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors" title="Editar"> <FiEdit size={16} /></button>
                       <button onClick={() => verDetalle(p.id)} className="p-2 text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Ver detalle"><FiEye size={16} /></button>
                       <button onClick={async () => { const { data } = await api.get(`/presupuestos/${p.id}`); imprimirPresupuesto(data); }} className="p-2 text-surface-500 hover:bg-surface-100 rounded-xl transition-colors" title="Imprimir"><FiPrinter size={16} /></button>
                       <button onClick={() => eliminar(p.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Eliminar"><FiTrash2 size={16} /></button>
@@ -560,7 +654,7 @@ const exportarCSV = async () => {
       )}
 
       {/* Modal Nuevo Presupuesto */}
-      <Modal isOpen={modal} onClose={() => setModal(false)} title="Nuevo Presupuesto" size="xl">
+      <Modal isOpen={modal} onClose={() => setModal(false)} title={ editandoId ? `Editar Presupuesto #${editandoId}` : 'Nuevo Presupuesto'} size="xl">
         <form onSubmit={guardar} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> 
             <div>
@@ -655,7 +749,13 @@ const exportarCSV = async () => {
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setModal(false)} className="btn-secondary">Cancelar</button>
-              <button type="submit" className="btn-primary">Crear Presupuesto</button>
+              <button type="submit" className="btn-primary">
+  {
+    editandoId
+      ? 'Guardar Cambios'
+      : 'Crear Presupuesto'
+  }
+</button>
             </div>
           </div>
         </form>
