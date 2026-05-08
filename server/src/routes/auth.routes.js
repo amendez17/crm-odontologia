@@ -57,7 +57,7 @@ router.post('/forgot-password', async (req, res) => {
     );
 
     const link =
-      `http://localhost:5173/reset-password/${token}`;
+      `https://clinicadental-almar.vercel.app/reset-password/${token}`;
 
     await enviarCorreoRecuperacion(
       usuario.email,
