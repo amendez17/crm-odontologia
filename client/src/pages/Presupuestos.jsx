@@ -820,7 +820,7 @@ const exportarCSV = async () => {
                   <tr key={d.id}>
                     <td className="font-medium text-primary-900">{d.tratamiento?.nombre}</td>
                     <td className="text-surface-600">{d.pieza_dental || '-'}</td>
-                    <td><span className="badge bg-surface-100 text-surface-600">{d.estado}</span></td>
+                    <td><span className={`badge ${ESTADOS[modalDetalle.estado]}`}>{modalDetalle.estado.replace('_', ' ')}</span></td>
                     <td className="text-right font-medium text-dental-600">${Number(d.precio).toLocaleString()}</td>
                   </tr>
                 ))}
