@@ -71,25 +71,59 @@ router.get('/', auth, async (req, res) => {
       attributes: ['id', 'nombre', 'apellido', 'especialidad']
     });
 
-    const mesActual = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+    const { desde, hasta } = req.query;
+
+const filtroFechas = desde && hasta ? {  [Op.between]: [desde, hasta]  }: {  [Op.gte]: new Date(  new Date().getFullYear(), new Date().getMonth(),   1   ).toISOString().split('T')[0] };
     const doctorStats = await Promise.all(doctores.map(async (doc) => {
-      const [citasMes, citasCompletadas, ingresos] = await Promise.all([
-        Cita.count({ where: { doctor_id: doc.id, fecha: { [Op.gte]: mesActual } } }),
-        Cita.count({ where: { doctor_id: doc.id, fecha: { [Op.gte]: mesActual }, estado: 'completada' } }),
-        Pago.sum('monto', {
-          include: [{ model: Presupuesto, as: 'presupuesto', attributes: [], where: { doctor_id: doc.id }, required: true }],
-          where: { fecha: { [Op.gte]: mesActual } }
-        })
-      ]);
-      return {
-        id: doc.id,
-        nombre: `Dr. ${doc.nombre} ${doc.apellido}`,
-        especialidad: doc.especialidad || 'General',
-        citasMes,
-        citasCompletadas,
-        ingresos: ingresos || 0
-      };
-    }));
+
+  const [citasMes, citasCompletadas, ingresos] = await Promise.all([
+
+    Cita.count({
+      where: {
+        doctor_id: doc.id,
+        fecha: filtroFechas
+      }
+    }),
+
+    Cita.count({
+      where: {
+        doctor_id: doc.id,
+        fecha: filtroFechas,
+        estado: 'completada'
+      }
+    }),
+
+    Pago.sum('monto', {
+
+      include: [
+        {
+          model: Presupuesto,
+          as: 'presupuesto',
+          attributes: [],
+          where: {
+            doctor_id: doc.id
+          },
+          required: true
+        }
+      ],
+
+      where: {
+        fecha: filtroFechas
+      }
+    })
+
+  ]);
+
+  return {
+    id: doc.id,
+    nombre: `Dr. ${doc.nombre} ${doc.apellido}`,
+    especialidad: doc.especialidad || 'General',
+    citasMes,
+    citasCompletadas,
+    ingresos: ingresos || 0
+  };
+}));
+     
 
     res.json({
       estadisticas: {
