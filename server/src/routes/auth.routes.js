@@ -2,9 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { Usuario } = require('../models');
 const { auth } = require('../middleware/auth');
-const router = express.Router();
-const jwt = require('jsonwebtoken');
 const { enviarCorreoRecuperacion } = require('../services/email');
+const router = express.Router();
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
