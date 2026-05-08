@@ -275,6 +275,12 @@ const exportarPagos = async () => {
           {/* TAB CITAS */}
           {tab === 'citas' && dataCitas && (
             <div className="space-y-6">
+              <div className="flex justify-end mb-4">
+  <button onClick={() => descargarCSV('/exportar/citas', 'reporte-citas.csv')}className="btn-secondary flex items-center gap-2" >
+    <FiDownload size={14} />
+    Exportar
+  </button>
+</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="stat-card justify-center flex-col text-center">
                   <p className="text-3xl font-bold text-primary-700">{dataCitas.totalCitas}</p>
