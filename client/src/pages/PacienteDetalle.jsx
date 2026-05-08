@@ -502,8 +502,8 @@ body{
       alt="Clinica Dental Almar"
     />
     <h1>Clínica Dental Almar</h1>
-     <h2> <span style="color:#c9a227;">🏢</span>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
-    <h2><span style="color:#c9a227;">📞</span> 669 113 0990</h2>
+     <h2> 🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
+    <h2>📞 669 113 0990</h2>
     <h2>Consentimiento Informado</h2>
 
     <div class="tipo">${c.tipo || ''}</div>
@@ -575,7 +575,7 @@ win.onload = () => {
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Historia Clínica - ${paciente.apellido}, ${paciente.nombre}</title>
+<title>Historia Clínica - ${paciente.nombre}, ${paciente.apellido}</title>
 
 <style>
 
@@ -697,13 +697,13 @@ body{
       alt="Clinica Dental Almar"
     />
   <h1>Clínica Dental Almar</h1>
-   <h2> <span style="color:#c9a227;">🏢</span>Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
-    <h2><span style="color:#c9a227;">📞</span> 669 113 0990</h2>
+   <h2> 🏢 Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
+    <h2>📞 669 113 0990</h2>
   <h2>Historia Clínica</h2>
 </div>
 
 <div class="paciente-info">
-  <div><strong>Paciente:</strong> ${paciente.apellido}, ${paciente.nombre}</div>
+  <div><strong>Paciente:</strong> ${paciente.nombre}, ${paciente.apellido}</div>
   <div><strong>Numero de paciente:</strong> ${paciente.dni}</div>
   <div><strong>Edad:</strong> ${edad !== null ? edad + ' años' : '-'}</div>
 </div>
@@ -934,7 +934,7 @@ body{
   </div>
 
   <div class="footer">
-    <span style="color:#c9a227;">🔰</span>Gracias por su confianza · Clínica Dental Almar<br/>
+    🔰Gracias por su confianza · Clínica Dental Almar<br/>
     ${new Date().toLocaleDateString('es-MX')}
   </div>
 
