@@ -149,7 +149,24 @@ router.post('/pacientes/:id/recetas', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+//GET /api/pacientes/:id receta
+router.get('/pacientes/:id/recetas', auth, async (req, res) => {
+  try {
+    const recetas = await Receta.findAll({
+      where: { pacienteId: req.params.id },
+      include: [{
+        model: Usuario,
+        as: 'doctor',
+        attributes: ['id', 'nombre']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
 
+    res.json(recetas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // DELETE /api/pacientes/:id (soft delete)
 router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (req, res) => {
   try {
