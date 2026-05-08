@@ -86,7 +86,22 @@ export default function Pacientes() {
   };
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+const exportarPacientes = async () => {
+  try {
+    const res = await api.get('/pacientes/exportar', {
+      responseType: 'blob'
+    });
 
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'pacientes.csv');
+    document.body.appendChild(link);
+    link.click();
+  } catch (err) {
+    toast.error('Error al exportar');
+  }
+};
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -95,9 +110,9 @@ export default function Pacientes() {
           <p className="text-sm text-surface-500">{totalPacientes} pacientes registrados</p>
         </div>
         <div className="flex gap-2">
-          <a href="/api/exportar/pacientes" target="_blank" rel="noopener noreferrer" className="btn-secondary flex items-center gap-2">
-            <FiDownload size={16} /> CSV
-          </a>
+         <button onClick={exportarPacientes} className="btn-secondary flex items-center gap-2">
+  <FiDownload size={16} /> CSV
+</button>
           <button onClick={abrirNuevo} className="btn-primary flex items-center gap-2">
             <FiPlus size={16} /> Nuevo Paciente
           </button>
