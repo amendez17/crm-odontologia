@@ -975,8 +975,8 @@ window.onload = () => window.print();
       <div className="flex items-center gap-4">
         <Link to="/pacientes" className="p-2.5 hover:bg-white/80 rounded-xl border border-surface-200 transition-all hover:shadow-sm"><FiArrowLeft size={20} className="text-surface-600" /></Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-primary-800">{paciente.apellido}, {paciente.nombre}</h1>
-          <p className="text-surface-500">DNI: {paciente.dni} {edad !== null && `| ${edad} años`}</p>
+          <h1 className="text-2xl font-bold text-primary-800">{paciente.nombre}, {paciente.apellido}</h1>
+          <p className="text-surface-500">Número de paciente: {paciente.dni} {edad !== null && `| ${edad} años`}</p>
         </div>
         {balance && (
           <div className={`text-right px-5 py-3 rounded-2xl ${balance.saldo > 0 ? 'bg-red-50 border border-red-200' : 'bg-dental-50 border border-dental-200'}`}>
