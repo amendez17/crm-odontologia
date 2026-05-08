@@ -72,7 +72,33 @@ export default function Reportes() {
   const maxIngreso = dataIngresos?.ingresos?.length
     ? Math.max(...dataIngresos.ingresos.map(i => parseFloat(i.total)))
     : 0;
+const exportarPagos = async () => {
+  try {
 
+    const response = await api.get('/exportar/pagos', {
+      params: { desde, hasta },
+      responseType: 'blob'
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+
+    const link = document.createElement('a');
+
+    link.href = url;
+
+    link.setAttribute('download', `reporte-pagos-${desde}-${hasta}.csv`);
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+  } catch (error) {
+    console.error(error);
+    alert('Error al exportar reporte');
+  }
+};
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-primary-800">Reportes</h1>
@@ -139,14 +165,9 @@ export default function Reportes() {
                     <p className="text-4xl font-bold mt-1">${Number(dataIngresos.totalGeneral).toLocaleString()}</p>
                     <p className="text-dental-100 text-sm mt-1">{dataIngresos.ingresos.length} días con ingresos</p>
                   </div>
-                  <a
-                    href={`/api/exportar/pagos?desde=${desde}&hasta=${hasta}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    <FiDownload size={14} /> Exportar
-                  </a>
+                  <button onClick={exportarPagos} className="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                  <FiDownload size={14} /> Exportar
+                  </button>
                 </div>
               </div>
 
