@@ -130,6 +130,7 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
       ],
 
       include: [
+
         {
           model: Tratamiento,
           as: 'tratamiento',
@@ -141,14 +142,19 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
           as: 'presupuesto',
           attributes: [],
 
-          where: desde && hasta ? {
-            createdAt: {
-              [Op.between]: [
-                new Date(`${desde}T00:00:00`),
-                new Date(`${hasta}T23:59:59`)
-              ]
+          include: [
+            {
+              model: Cita,
+              as: 'cita',
+              attributes: [],
+
+              where: desde && hasta ? {
+                fecha: {
+                  [Op.between]: [desde, hasta]
+                }
+              } : undefined
             }
-          } : undefined
+          ]
         }
       ],
 
@@ -161,6 +167,7 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
 
       order: [[literal('cantidad'), 'DESC']],
       limit: 15,
+
       raw: true
     });
 
@@ -168,12 +175,12 @@ router.get('/tratamientos-populares', auth, async (req, res) => {
 
   } catch (error) {
     console.error(error);
+
     res.status(500).json({
       error: error.message
     });
   }
 });
-
 // GET /api/reportes/pacientes-deuda - Pacientes con deuda pendiente
 router.get('/pacientes-deuda', auth, async (req, res) => {
   try {
