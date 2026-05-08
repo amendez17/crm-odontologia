@@ -73,7 +73,18 @@ router.get('/', auth, async (req, res) => {
 
     const { desde, hasta } = req.query;
 
-const filtroFechas = desde && hasta ? {  [Op.between]: [desde, hasta]  }: {  [Op.gte]: new Date(  new Date().getFullYear(), new Date().getMonth(),   1   ).toISOString().split('T')[0] };
+const hoyDate = new Date();
+
+const inicioMes = new Date(
+  hoyDate.getFullYear(),
+  hoyDate.getMonth(),
+  1
+).toISOString().split('T')[0];
+
+const filtroFechas =
+  desde && hasta
+    ? { [Op.between]: [desde, hasta] }
+    : { [Op.gte]: inicioMes };
     const doctorStats = await Promise.all(doctores.map(async (doc) => {
 
   const [citasMes, citasCompletadas, pagos] = await Promise.all([
@@ -111,8 +122,7 @@ const filtroFechas = desde && hasta ? {  [Op.between]: [desde, hasta]  }: {  [Op
       fecha: filtroFechas
     },
 
-    attributes: ['monto'],
-    raw: true
+    attributes: ['monto']
   })
 ]);
 
