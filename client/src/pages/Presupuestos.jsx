@@ -165,13 +165,36 @@ const guardar = async (e) => {
   }
 };
   const cambiarEstado = async (id, estado) => {
-    try {
-      await api.put(`/presupuestos/${id}`, { estado });
-      cargar();
-    } catch {
-      toast.error('Error al cambiar estado');
-    }
-  };
+
+  try {
+
+    const { data } = await api.get(`/presupuestos/${id}`);
+
+    await api.put(`/presupuestos/${id}`, {
+      paciente_id: data.paciente_id,
+      doctor_id: data.doctor_id,
+      cita_id: data.cita_id,
+      descuento: data.descuento,
+      notas: data.notas,
+      detalles: data.detalles.map(d => ({
+        tratamiento_id: d.tratamiento_id,
+        pieza_dental: d.pieza_dental,
+        precio: d.precio
+      })),
+      estado
+    });
+
+    toast.success('Estado actualizado');
+
+    cargar();
+
+  } catch (err) {
+
+    console.error(err);
+
+    toast.error('Error al cambiar estado');
+  }
+};
 
   const eliminar = async (id) => {
     if (!confirm('¿Eliminar este presupuesto?')) return;
