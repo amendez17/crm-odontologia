@@ -738,6 +738,7 @@ ${registros || '<p style="text-align:center;color:#999">Sin registros</p>'}
   win.focus();
   win.print();
 };
+ };
   const crearCita = async (e) => {
     e.preventDefault();
     try {
