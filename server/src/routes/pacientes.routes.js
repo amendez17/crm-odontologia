@@ -168,10 +168,10 @@ router.get('/:id/recetas', auth, async (req, res) => {
 
     res.json(recetas);
   } catch (error) {
+    console.error("ERROR RECETAS:", error);
     res.status(500).json({ error: error.message });
   }
-});
-// DELETE /api/pacientes/:id (soft delete)
+});// DELETE /api/pacientes/:id (soft delete)
 router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (req, res) => {
   try {
     const paciente = await Paciente.findByPk(req.params.id);
