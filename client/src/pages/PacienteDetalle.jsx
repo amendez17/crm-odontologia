@@ -876,13 +876,20 @@ body{
     </div>
 
     <div class="card">
-      <div class="label">Doctor</div>
 
-      <div class="value">
-        Dr. ${r.doctor?.nombre || ''} ${r.doctor?.apellido || ''}
-      </div>
-    </div>
+  <div class="label">Doctor</div>
 
+  <div class="value">
+    Dr. ${r.doctor?.nombre || ''} ${r.doctor?.apellido || ''}
+  </div>
+
+  <div style="font-size:12px; color:#6b7280; margin-top:6px; line-height:1.5; ">
+    ${r.doctor?.especialidad || 'Cirujano Dentista'}
+    <br/>
+    Céd. Prof. ${r.doctor?.cedula || '0000000'}
+  </div>
+
+</div>
     <div class="card">
       <div class="label">Fecha</div>
 
@@ -943,9 +950,6 @@ body{
       Firma del Profesional
     </div>
 
-    <div class="linea">
-      Firma del Paciente
-    </div>
 
   </div>
 
