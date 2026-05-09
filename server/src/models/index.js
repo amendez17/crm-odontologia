@@ -12,6 +12,7 @@ const HistoriaClinica = require('./HistoriaClinica');
 const Configuracion = require('./Configuracion');
 const Consentimiento = require('./Consentimiento');
 const LogActividad = require('./LogActividad');
+const Receta = require('./Receta');
 
 // --- Asociaciones ---
 
@@ -85,5 +86,6 @@ module.exports = {
   HistoriaClinica,
   Configuracion,
   Consentimiento,
-  LogActividad
+  LogActividad,
+  Receta
 };
