@@ -1469,6 +1469,7 @@ window.onload = () => window.print();
             </div>
           )}
           </div>
+          )}
 
           {/* Modal Cita Rápida */}
           <Modal isOpen={modalCita} onClose={() => setModalCita(false)} title="Agendar Cita">
