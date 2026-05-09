@@ -110,7 +110,7 @@ export default function Citas() {
   const [usuario, setUsuario] = useState(null);
 
  const puedeUsarWhatsApp = useMemo(() => {
-  return ['admin', 'recepcionista'].includes(usuario?.rol);
+  return ['administrador', 'recepcionista'].includes(usuario?.rol);
 }, [usuario]);
   useEffect(() => {
   const cargarUsuario = async () => {
