@@ -12,7 +12,7 @@ const HistoriaClinica = require('./HistoriaClinica');
 const Configuracion = require('./Configuracion');
 const Consentimiento = require('./Consentimiento');
 const LogActividad = require('./LogActividad');
-const Receta = require('./Receta');
+const Receta = require('./Receta')(sequelize, require('sequelize').DataTypes);
 
 // --- Asociaciones ---
 
