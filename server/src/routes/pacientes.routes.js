@@ -188,12 +188,13 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-//POST /api/paciente/:id receta
-router.post('/', auth, async (req, res) => {
+// POST /api/pacientes/:id/recetas
+router.post('/pacientes/:id/recetas', auth, async (req, res) => {
   try {
     const receta = await Receta.create({
       ...req.body,
-      usuarioId: req.usuario.id // 👈 importante
+      pacienteId: req.params.id,   // 👈 importante
+      usuarioId: req.usuario.id    // doctor que la creó
     });
 
     res.status(201).json(receta);
@@ -201,7 +202,6 @@ router.post('/', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // GET /api/pacientes/:id/recetas
 router.get('/:id/recetas', auth, async (req, res) => {
 
