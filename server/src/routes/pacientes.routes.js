@@ -4,7 +4,7 @@ const { auth } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const { Op } = require('sequelize');
 const router = express.Router();
-const { Receta, Usuario } = require('../models');
+
 
 
 function toCSV(headers, rows) {
@@ -157,11 +157,12 @@ router.post('/:id/recetas', auth, async (req, res) => {
 });
 
 // GET /api/pacientes/:id/recetas
-router.get('/pacientes/:id/recetas', async (req, res) => {
+router.get('/:id/recetas', auth, async (req, res) => {
 
   try {
 
     const recetas = await Receta.findAll({
+
       where: {
         pacienteId: req.params.id
       },
@@ -179,13 +180,14 @@ router.get('/pacientes/:id/recetas', async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
+    console.error('ERROR OBTENER RECETAS:', error);
 
     res.status(500).json({
-      error: 'Error al obtener recetas'
+      error: error.message
     });
   }
 });
+
 // DELETE /api/pacientes/:id (soft delete)
 router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (req, res) => {
   try {
