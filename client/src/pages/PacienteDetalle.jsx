@@ -659,34 +659,312 @@ window.onload = () => window.print();
 };
 //Imprimir Reseta
   const imprimirReceta = (r) => {
-  const ventana = window.open('', '_blank');
+
+  const ventana = window.open('', '_blank', 'width=900,height=1000');
+
   ventana.document.write(`
-    <html>
-      <head>
-        <title>Receta médica</title>
-        <style>
-          body { font-family: Arial; padding: 20px; }
-          h2 { color: #0f172a; }
-          .box { margin-bottom: 10px; }
-        </style>
-      </head>
-      <body>
-        <h2>Receta Médica</h2>
+<!DOCTYPE html>
+<html>
 
-        <div class="box"><b>Folio:</b> ${r.folio}</div>
-        <div class="box"><b>Doctor:</b> ${r.doctor?.nombre} ${r.doctor?.apellido}</div>
+<head>
+<meta charset="UTF-8">
+<title>Receta Premium #${r.id}</title>
 
-        <hr />
+<style>
 
-        <div class="box"><b>Diagnóstico:</b><br/>${r.diagnostico}</div>
-        <div class="box"><b>Medicamentos:</b><br/>${r.medicamentos}</div>
-        <div class="box"><b>Indicaciones:</b><br/>${r.indicaciones}</div>
+body{
+  font-family: "Arial", sans-serif;
+  margin:0;
+  padding:0;
+  background:#f8fafc;
 
-      </body>
-    </html>
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* WATERMARK */
+.watermark{
+  position:fixed;
+  top:35%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  opacity:0.05;
+  font-size:100px;
+  font-weight:bold;
+  color:#c8a24a;
+  z-index:0;
+  pointer-events:none;
+}
+
+.container{
+  position:relative;
+  z-index:1;
+  max-width:850px;
+  margin:20px auto;
+  background:#fff;
+  padding:35px;
+  border-radius:14px;
+  box-shadow:0 15px 40px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+.header{
+  text-align:center;
+  border-bottom:3px solid #c8a24a;
+  padding-bottom:20px;
+  margin-bottom:25px;
+}
+
+.logo{
+  width:95px;
+  height:95px;
+  object-fit:contain;
+  margin-bottom:10px;
+}
+
+.header h1{
+  margin:0;
+  font-size:24px;
+  color:#c8a24a;
+  letter-spacing:2px;
+}
+
+.header p{
+  margin:4px 0;
+  color:#6b7280;
+  font-size:12px;
+}
+
+/* INFO */
+.info{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+  margin-bottom:25px;
+}
+
+.card{
+  background:#fffaf0;
+  border-left:4px solid #c8a24a;
+  padding:14px;
+  border-radius:10px;
+}
+
+.label{
+  font-size:10px;
+  text-transform:uppercase;
+  color:#6b7280;
+  letter-spacing:1px;
+}
+
+.value{
+  font-size:14px;
+  font-weight:bold;
+  color:#111827;
+  margin-top:4px;
+}
+
+/* SECTIONS */
+.section{
+  margin-top:18px;
+  border:1px solid #f1f5f9;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.section-header{
+  background:linear-gradient(90deg,#c8a24a,#e2c275);
+  color:white;
+  padding:12px 16px;
+  font-size:13px;
+  font-weight:bold;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.section-content{
+  padding:18px;
+  font-size:14px;
+  line-height:1.8;
+  color:#374151;
+  white-space:pre-wrap;
+  min-height:70px;
+}
+
+/* SIGNATURE */
+.firma{
+  margin-top:70px;
+  display:flex;
+  justify-content:space-around;
+}
+
+.linea{
+  border-top:1px solid #c8a24a;
+  width:220px;
+  text-align:center;
+  padding-top:6px;
+  font-size:12px;
+  color:#6b7280;
+}
+
+/* FOOTER */
+.footer{
+  margin-top:40px;
+  text-align:center;
+  font-size:11px;
+  color:#9ca3af;
+}
+
+/* PRINT */
+@media print{
+  body{
+    background:white;
+  }
+
+  .container{
+    box-shadow:none;
+  }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="watermark">ALMAR</div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+
+    <img 
+      src="/logo_clinica-removebg-preview.png"
+      class="logo"
+      alt="Clinica Dental Almar"
+    />
+
+    <h1>CLÍNICA DENTAL ALMAR</h1>
+
+    <p>Receta Médica Profesional</p>
+
+    <p>
+      🏢 Av Óscar Pérez Escobosa Local 36,
+      Fraccionamiento Hacienda del Seminario,
+      82129 Mazatlán, Sin.
+    </p>
+
+    <p>📞 669 113 0990</p>
+
+  </div>
+
+  <!-- INFO -->
+  <div class="info">
+
+    <div class="card">
+      <div class="label">Paciente</div>
+
+      <div class="value">
+        ${paciente.nombre} ${paciente.apellido}
+      </div>
+
+      <div style="font-size:12px;color:#6b7280">
+        Número de Paciente:
+        ${paciente.dni || ''}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Doctor</div>
+
+      <div class="value">
+        Dr. ${r.doctor?.nombre || ''} ${r.doctor?.apellido || ''}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Fecha</div>
+
+      <div class="value">
+        ${r.createdAt?.split('T')[0]}
+      </div>
+
+      <div style="font-size:12px;color:#6b7280">
+        Folio: ${r.folio || ''}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DIAGNOSTICO -->
+  <div class="section">
+
+    <div class="section-header">
+      Diagnóstico
+    </div>
+
+    <div class="section-content">
+      ${r.diagnostico || 'Sin diagnóstico'}
+    </div>
+
+  </div>
+
+  <!-- MEDICAMENTOS -->
+  <div class="section">
+
+    <div class="section-header">
+      Medicamentos
+    </div>
+
+    <div class="section-content">
+      ${r.medicamentos || 'Sin medicamentos'}
+    </div>
+
+  </div>
+
+  <!-- INDICACIONES -->
+  <div class="section">
+
+    <div class="section-header">
+      Indicaciones
+    </div>
+
+    <div class="section-content">
+      ${r.indicaciones || 'Sin indicaciones'}
+    </div>
+
+  </div>
+
+  <!-- FIRMAS -->
+  <div class="firma">
+
+    <div class="linea">
+      Firma del Profesional
+    </div>
+
+    <div class="linea">
+      Firma del Paciente
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Documento oficial · Clínica Dental Almar · Todos los derechos reservados®
+  </div>
+
+</div>
+
+<script>
+window.onload = () => window.print();
+</script>
+
+</body>
+</html>
   `);
 
-  ventana.print();
+  ventana.document.close();
 };
  //Eliminar Receta
   const eliminarReceta = async (idReceta) => {
