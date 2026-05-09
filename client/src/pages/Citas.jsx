@@ -108,6 +108,8 @@ export default function Citas() {
   const [dragInfo, setDragInfo]     = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [usuario, setUsuario] = useState(null);
+  const [modalPaciente, setModalPaciente] = useState(false);
+  const [formPaciente, setFormPaciente] = useState({ nombre: '', apellido: '', dni: '', telefono: ''});
   const abrirNuevoPaciente = () => { setFormPaciente({ nombre: '', apellido: '', dni: '', telefono: ''});setModalPaciente(true);};
 
  
