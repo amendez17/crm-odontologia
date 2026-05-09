@@ -71,7 +71,26 @@ Consentimiento.belongsTo(Usuario, { foreignKey: 'doctor_id', as: 'doctor' });
 // Log de Actividad
 Usuario.hasMany(LogActividad, { foreignKey: 'usuario_id', as: 'logs' });
 LogActividad.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+// Recetas
+Paciente.hasMany(Receta, {
+  foreignKey: 'pacienteId',
+  as: 'recetas'
+});
 
+Receta.belongsTo(Paciente, {
+  foreignKey: 'pacienteId',
+  as: 'paciente'
+});
+
+Usuario.hasMany(Receta, {
+  foreignKey: 'usuarioId',
+  as: 'recetas'
+});
+
+Receta.belongsTo(Usuario, {
+  foreignKey: 'usuarioId',
+  as: 'usuario'
+});
 module.exports = {
   sequelize,
   Usuario,
