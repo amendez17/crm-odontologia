@@ -161,7 +161,6 @@ router.get('/:id/recetas', auth, async (req, res) => {
       where: { pacienteId: req.params.id },
       include: [{
         model: Usuario,
-        as: 'doctor',
         attributes: ['id', 'nombre']
       }],
       order: [['createdAt', 'DESC']]
@@ -169,12 +168,8 @@ router.get('/:id/recetas', auth, async (req, res) => {
 
     res.json(recetas);
   } catch (error) {
-  console.error('ERROR RECETA:', error);
-  res.status(500).json({
-    error: error.message,
-    stack: error.stack
-  });
-}
+    res.status(500).json({ error: error.message });
+  }
 });
 // DELETE /api/pacientes/:id (soft delete)
 router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (req, res) => {
