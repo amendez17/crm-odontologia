@@ -3,11 +3,8 @@ import api from '../api/axios';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiFileText } from 'react-icons/fi';
-import {
-  FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,
-  FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar
-} from 'react-icons/fi';
-
+import {FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar} from 'react-icons/fi';
+import { useState, useEffect, useMemo } from 'react';
 
 
 const ESTADOS = {
@@ -113,7 +110,9 @@ export default function Citas() {
   const [dropTarget, setDropTarget] = useState(null);
   const [usuario, setUsuario] = useState(null);
 
-  const puedeUsarWhatsApp = ['admin', 'recepcionista'].includes(usuario?.rol);
+  const puedeUsarWhatsApp = useMemo(() => {
+  return ['admin', 'recepcionista'].includes(usuario?.rol);
+}, [usuario]);
   useEffect(() => { 
   const cargarUsuario = async () => {
     const { data } = await api.get('/auth/me');
