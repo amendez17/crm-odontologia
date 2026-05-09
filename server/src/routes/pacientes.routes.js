@@ -4,7 +4,7 @@ const { auth } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const { Op } = require('sequelize');
 const router = express.Router();
-const { Receta } = require('../models');
+
 
 function toCSV(headers, rows) {
   const escape = (val) => {
