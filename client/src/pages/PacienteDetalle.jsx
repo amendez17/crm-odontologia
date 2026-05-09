@@ -1024,7 +1024,7 @@ window.onload = () => window.print();
 
   } catch (error) {
     console.error(error);
-    toast.error('No tienes permisos para eliminar esta receta');
+    toast.error('No tienes permisos para actualizar esta receta');
   }
 };
   return (
