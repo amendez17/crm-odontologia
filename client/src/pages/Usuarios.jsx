@@ -28,7 +28,7 @@ export default function Usuarios() {
   useEffect(() => { cargar(); }, []);
 
   const abrirNuevo = () => {
-    setForm({ nombre: '', apellido: '', email: '', password: '', rol: 'recepcionista', especialidad: '', telefono: '' });
+    setForm({ nombre: '', apellido: '', email: '', password: '', rol: 'recepcionista', especialidad: '', telefono: '', cedula: '' });
     setEditando(null);
     setModal(true);
   };
@@ -124,7 +124,7 @@ export default function Usuarios() {
                   <td className="text-surface-600">{u.email}</td>
                   <td><span className={`badge ${ROLES_COLOR[u.rol]} capitalize`}>{u.rol}</span></td>
                   <td className="text-surface-600">{u.especialidad || '-'}</td>
-                  <td className="text-surface-600">{u.cedula} || '_'</td>
+                  <td className="text-surface-600">{u.cedula || '-'} </td>
                   <td>
                     <span className={`badge ${u.activo ? 'bg-dental-100 text-dental-700' : 'bg-red-100 text-red-700'}`}>
                       {u.activo ? 'Activo' : 'Inactivo'}
@@ -182,17 +182,18 @@ export default function Usuarios() {
               <input name="telefono" value={form.telefono} onChange={handleChange} className="input-field" />
             </div>
           </div>
-          {form.rol === 'doctor' && (
-            <div>
-              <label className="block text-sm font-medium text-surface-600 mb-1">Especialidad</label>
-              <input name="especialidad" value={form.especialidad} onChange={handleChange} className="input-field" placeholder="Ej: Ortodoncia, Endodoncia..." />
-            </div>
-              <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1"> Cédula Profesional</label>
-                <input name="cedula" value={form.cedula} onChange={handleChange} className="input-field" placeholder="Ej: 12345678" />
-                </div>
-          )}
-          <div className="flex justify-end gap-3">
+          {form.rol === 'doctor' && ( <>
+    <div>
+      <label className="block text-sm font-medium text-surface-600 mb-1">Especialidad</label>
+      <input name="especialidad" value={form.especialidad} onChange={handleChange} className="input-field" placeholder="Ej: Ortodoncia, Endodoncia..."/>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-surface-600 mb-1"> Cédula Profesional</label>
+      <input name="cedula" value={form.cedula} onChange={handleChange} className="input-field" placeholder="Ej: 12345678" />
+    </div>
+  </>
+)}          <div className="flex justify-end gap-3">
             <button type="button" onClick={() => setModal(false)} className="btn-secondary">Cancelar</button>
             <button type="submit" className="btn-primary">{editando ? 'Actualizar' : 'Crear Usuario'}</button>
           </div>
