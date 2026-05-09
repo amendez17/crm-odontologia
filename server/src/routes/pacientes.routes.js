@@ -135,7 +135,7 @@ router.put('/:id', auth, registrarActividad('actualizar', 'paciente'), async (re
   }
 });
 //Update /api/pacientes/id:/receta
-router.put('/:id', auth, async (req, res) => {
+router.put('/receta/:id', auth, async (req, res) => {
   try {
     const receta = await Receta.findByPk(req.params.id);
 
@@ -164,7 +164,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 //DELETE /api/paciente/:id receta
-router.delete('/recetas/:id', auth, async (req, res) => {
+router.delete('/:id/recetas', auth, async (req, res) => {
   try {
     const receta = await Receta.findByPk(req.params.id);
 
