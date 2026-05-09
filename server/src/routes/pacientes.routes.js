@@ -134,6 +134,33 @@ router.put('/:id', auth, registrarActividad('actualizar', 'paciente'), async (re
     res.status(400).json({ error: error.message });
   }
 });
+//Update /api/pacientes/id:/receta
+router.put('/recetas/:id', auth, async (req, res) => {
+  try {
+    const receta = await Receta.findByPk(req.params.id);
+
+    if (!receta) {
+      return res.status(404).json({
+        error: 'Receta no encontrada'
+      });
+    }
+
+    await receta.update({
+      diagnostico: req.body.diagnostico,
+      medicamentos: req.body.medicamentos,
+      indicaciones: req.body.indicaciones
+    });
+
+    res.json(receta);
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: 'Error actualizando receta'
+    });
+  }
+});
 //DELETE /api/paciente/:id receta
 router.delete('/recetas/:id', auth, async (req, res) => {
   try {
