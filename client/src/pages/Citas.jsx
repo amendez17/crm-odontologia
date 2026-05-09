@@ -395,18 +395,8 @@ export default function Citas() {
 
   const renderCitaChip = (cita) => {
     const color = doctorColorMap[cita.doctor_id] || DOCTOR_COLORS[0];
-    const dragging = dragInfo?.cita?.id === cita.id;};
-
-
-
-    //___validacion usuario____________
-    if (!usuario) {
-  return (
-    <div className="text-center py-10 text-gray-400">
-      Cargando usuario...
-    </div>
-  );
-}
+    const dragging = dragInfo?.cita?.id === cita.id;
+    
     return (
       <div
         key={cita.id}
@@ -686,7 +676,14 @@ export default function Citas() {
 
   const hoy = getFechaLocal();
   const diasSemana = getDiasSemana(fecha);
-
+ //___validacion usuario____________
+    if (!usuario) {
+  return (
+    <div className="text-center py-10 text-gray-400">
+      Cargando usuario...
+    </div>
+  );
+}
   return (
     <div className="space-y-5">
       {/* Encabezado */}
