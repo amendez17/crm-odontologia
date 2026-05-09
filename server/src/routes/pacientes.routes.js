@@ -191,14 +191,19 @@ router.delete('/recetas/:id', auth, async (req, res) => {
 // POST /api/pacientes/:id/recetas
 router.post('/pacientes/:id/recetas', auth, async (req, res) => {
   try {
+    console.log("BODY:", req.body);
+    console.log("USER:", req.usuario);
+    console.log("PACIENTE:", req.params.id);
+
     const receta = await Receta.create({
       ...req.body,
-      pacienteId: req.params.id,   // 👈 importante
-      usuarioId: req.usuario.id    // doctor que la creó
+      pacienteId: req.params.id,
+      usuarioId: req.usuario.id
     });
 
     res.status(201).json(receta);
   } catch (error) {
+    console.error("ERROR CREANDO RECETA:", error);
     res.status(500).json({ error: error.message });
   }
 });
