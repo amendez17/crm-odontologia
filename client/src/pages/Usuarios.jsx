@@ -105,6 +105,7 @@ export default function Usuarios() {
                 <th>Email</th>
                 <th>Rol</th>
                 <th>Especialidad</th>
+                <th>Cedula</th>
                 <th>Estado</th>
                 {esAdmin && <th>Acciones</th>}
               </tr>
