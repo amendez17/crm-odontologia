@@ -1239,7 +1239,7 @@ window.onload = () => window.print();
           </Modal>
         </div>
       )}
- {/* Tab Recetas */}
+{/* Tab Recetas */}
 {tab === 'recetas' && (
   <div className="space-y-4">
 
