@@ -35,6 +35,10 @@ const Usuario = sequelize.define('Usuario', {
     type: DataTypes.STRING(100),
     allowNull: true
   },
+  cedula: {
+  type: DataTypes.STRING,
+  allowNull: true
+  },
   telefono: {
     type: DataTypes.STRING(20),
     allowNull: true
