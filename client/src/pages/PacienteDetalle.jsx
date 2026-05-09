@@ -1272,111 +1272,124 @@ window.onload = () => window.print();
           </Modal>
         </div>
       )}
-{/* Tab Recetas */}
-{tab === 'recetas' && (
-  <div className="space-y-4">
 
-    <button
-      onClick={() => {
-        setFormReceta({ diagnostico: '', medicamentos: '', indicaciones: '' });
-        setModalReceta(true);
-      }}
-      className="btn-primary flex items-center gap-2"
-    >
-      <FiPlus size={16} /> Nueva Receta
-    </button>
+       {/* Tab Cita */}
+      {tab === 'citas' && (
+        <div className="space-y-4">
 
-    {recetas.length === 0 ? (
-      <div className="card text-center text-gray-500">
-        No hay recetas registradas
-      </div>
-    ) : recetas.map(r => (
-      <div key={r.id} className="card">
+          <button
+            onClick={() => setModalCita(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <FiCalendar size={16} /> Agendar Cita
+          </button>
 
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <h4 className="font-semibold text-primary-900">
-              Receta médica #{r.folio}
-            </h4>
+          <div className="card">
+            <h3 className="font-semibold text-primary-900 mb-4">
+              Historial de Citas
+            </h3>
 
-            <p className="text-sm text-surface-500">
-              {r.createdAt?.split('T')[0]} - Dr. {r.doctor?.nombre} {r.doctor?.apellido}
-            </p>
+            {!paciente.citas?.length ? (
+              <p className="text-gray-500 text-sm">
+                Sin citas registradas
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {paciente.citas.map(c => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between p-3.5 bg-surface-50 rounded-2xl text-sm border border-surface-100"
+                  >
+                    <div>
+                      <span className="font-semibold text-primary-800">
+                        {c.fecha}
+                      </span>{' '}
+                      - {c.hora_inicio?.slice(0,5)}
+
+                      <span className="ml-2 text-surface-500">
+                        {c.motivo || 'Consulta'}
+                      </span>
+
+                      {c.doctor && (
+                        <span className="ml-2 text-surface-400">
+                          - Dr. {c.doctor.apellido}
+                        </span>
+                      )}
+                    </div>
+
+                    <span
+                      className={`badge ${
+                        c.estado === 'completada'
+                          ? 'bg-green-100 text-green-700'
+                          : c.estado === 'cancelada'
+                          ? 'bg-red-100 text-red-700'
+                          : c.estado === 'no_asistio'
+                          ? 'bg-gray-100 text-gray-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}
+                    >
+                      {c.estado?.replace('_', ' ')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Modal Cita */}
+          <Modal
+            isOpen={modalCita}
+            onClose={() => setModalCita(false)}
+            title="Agendar Cita"
+          >
+            <form onSubmit={crearCita} className="space-y-4">
 
-            <button
-              onClick={() => imprimirReceta(r)}
-              className="p-1 text-primary-600 hover:bg-primary-50 rounded"
-              title="Imprimir"
-            >
-              <FiPrinter size={16} />
-            </button>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">
+                  Doctor *
+                </label>
 
-          </div>
+                <select
+                  value={formCita.doctor_id}
+                  onChange={e =>
+                    setFormCita({
+                      ...formCita,
+                      doctor_id: e.target.value
+                    })
+                  }
+                  className="input-field"
+                  required
+                >
+                  <option value="">Seleccionar doctor</option>
+
+                  {doctores.map(d => (
+                    <option key={d.id} value={d.id}>
+                      Dr. {d.nombre} {d.apellido}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setModalCita(false)}
+                  className="btn-secondary"
+                >
+                  Cancelar
+                </button>
+
+                <button type="submit" className="btn-primary">
+                  Agendar
+                </button>
+              </div>
+
+            </form>
+          </Modal>
+
         </div>
-
-        <div className="text-sm text-surface-700 space-y-1">
-          <p><b>Diagnóstico:</b> {r.diagnostico}</p>
-          <p><b>Medicamentos:</b> {r.medicamentos}</p>
-          <p><b>Indicaciones:</b> {r.indicaciones}</p>
-        </div>
-
-      </div>
-    ))}
-  </div>
-)}
-      {/*Modal receta*/}
-      <Modal
-  isOpen={modalReceta}
-  onClose={() => setModalReceta(false)}
-  title="Nueva Receta"
->
-  <div className="space-y-4">
-
-    <input
-      className="input-field"
-      placeholder="Diagnóstico"
-      value={formReceta.diagnostico}
-      onChange={e => setFormReceta({ ...formReceta, diagnostico: e.target.value })}
-    />
-
-    <textarea
-      className="input-field"
-      placeholder="Medicamentos"
-      value={formReceta.medicamentos}
-      onChange={e => setFormReceta({ ...formReceta, medicamentos: e.target.value })}
-    />
-
-    <textarea
-      className="input-field"
-      placeholder="Indicaciones"
-      value={formReceta.indicaciones}
-      onChange={e => setFormReceta({ ...formReceta, indicaciones: e.target.value })}
-    />
-
-    <div className="flex justify-end gap-2">
-      <button
-        className="btn-secondary"
-        onClick={() => setModalReceta(false)}
-      >
-        Cancelar
-      </button>
-
-      <button
-        className="btn-primary"
-        onClick={async () => {
-          await guardarReceta();
-          setModalReceta(false);
-        }}
-      >
-        Guardar
-      </button>
-    </div>
-
-  </div>
-</Modal>
+      )}
+      
       {/* Tab Balance / Cuenta Corriente */}
       {tab === 'balance' && balance && (
         <div className="space-y-6">
