@@ -153,25 +153,32 @@ router.post('/:id/recetas', auth, async (req, res) => {
     stack: error.stack
   });
 }
-});
-//GET /api/pacientes/:id receta
+});// GET /api/pacientes/:id/recetas
 router.get('/:id/recetas', auth, async (req, res) => {
   try {
     const recetas = await Receta.findAll({
-      where: { pacienteId: Number(req.params.id) },
+      where: {
+        pacienteId: Number(req.params.id)
+      },
       include: [{
         model: Usuario,
+        as: 'usuario',
         attributes: ['id', 'nombre']
       }],
       order: [['id', 'DESC']]
     });
 
     res.json(recetas);
+
   } catch (error) {
     console.error("ERROR RECETAS:", error);
-    res.status(500).json({ error: error.message });
+
+    res.status(500).json({
+      error: error.message
+    });
   }
-});// DELETE /api/pacientes/:id (soft delete)
+});
+// DELETE /api/pacientes/:id (soft delete)
 router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (req, res) => {
   try {
     const paciente = await Paciente.findByPk(req.params.id);
