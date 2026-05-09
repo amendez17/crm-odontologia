@@ -1275,7 +1275,7 @@ window.onload = () => window.print();
             </h4>
 
             <p className="text-sm text-surface-500">
-              {r.createdAt?.split('T')[0]} - Dr. {r.doctor?.nombre} {r.doctor?.apellido}
+              {r.createdAt?.split('T')[0]} - Dr. {h.doctor?.nombre} {h.doctor?.apellido}
             </p>
           </div>
 
