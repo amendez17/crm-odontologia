@@ -1206,7 +1206,7 @@ window.onload = () => window.print();
               <p className="text-sm text-surface-700 whitespace-pre-wrap line-clamp-3">{c.contenido}</p>
             </div>
           ))}
-         )}
+         
 
           <Modal isOpen={modalConsentimiento} onClose={() => setModalConsentimiento(false)} title="Nuevo Consentimiento Informado" size="lg">
             <form onSubmit={crearConsentimiento} className="space-y-4">
