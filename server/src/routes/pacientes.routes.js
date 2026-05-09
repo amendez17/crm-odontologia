@@ -163,7 +163,7 @@ router.get('/:id/recetas', auth, async (req, res) => {
         model: Usuario,
         attributes: ['id', 'nombre']
       }],
-      order: [['createdAt', 'DESC']]
+      order: [['id', 'DESC']]
     });
 
     res.json(recetas);
