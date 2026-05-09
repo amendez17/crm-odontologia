@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fi';
 
 
-const puedeUsarWhatsApp = ['admin', 'recepcionista'].includes(usuario?.rol);
+
 const ESTADOS = {
   programada:  { cls: 'bg-blue-100 text-blue-700',   label: 'Programada' },
   confirmada:  { cls: 'bg-indigo-100 text-indigo-700', label: 'Confirmada' },
@@ -112,7 +112,9 @@ export default function Citas() {
   const [dragInfo, setDragInfo]     = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [usuario, setUsuario] = useState(null);
-useEffect(() => { 
+
+  const puedeUsarWhatsApp = ['admin', 'recepcionista'].includes(usuario?.rol);
+  useEffect(() => { 
   const cargarUsuario = async () => {
     const { data } = await api.get('/auth/me');
     setUsuario(data);
