@@ -66,7 +66,7 @@ export default function PacienteDetalle() {
 
     toast.error('Error al cargar recetas');
 
-  }
+  };
   useEffect(() => {cargar();cargarRecetas();}, [id]);
   useEffect(() => {
     api.get('/usuarios/doctores').then(res => setDoctores(res.data)).catch(() => {});
@@ -76,39 +76,7 @@ export default function PacienteDetalle() {
   console.log("ODONTOGRAMA BACKEND:", odontograma);
 }, [odontograma]);
 
- /* const handleOdontograma = async (pieza, estado) => {
-    try {
-      await api.post('/odontograma', { paciente_id: parseInt(id), pieza_dental: pieza, estado, fecha: new Date().toISOString().split('T')[0] });
-      const { data } = await api.get(`/odontograma/${id}`);
-      setOdontograma(data);
-      toast.success(`Pieza ${pieza} actualizada`);
-    } catch {
-      toast.error('Error al actualizar odontograma');
-    }
-  };*/
-/*const handleOdontograma = async (pieza, data) => {
-  try {
-    const isPorCara = data.caras !== undefined;
-
-    const payload = isPorCara
-      ? {
-          pieza_dental: pieza,
-          caras: data.caras
-        }
-      : {
-          pieza_dental: pieza,
-          estado: data.estado
-        };
-
-    console.log("PAYLOAD:", payload);
-
-    await api.put(`/odontograma/${pieza}`, payload);
-
-  } catch (error) {
-    console.error("Error guardando odontograma:", error.response?.data || error);
-  }
-};*/
-  const handleOdontograma = async (pieza, data) => {
+   const handleOdontograma = async (pieza, data) => {
     try {
       // Normaliza: acepta tanto string ('caries') como objeto ({ estado, cara })
       const payload = typeof data === 'string'
@@ -138,16 +106,7 @@ export default function PacienteDetalle() {
       toast.error('Error al guardar odontograma');
     }
   };
-  /*  const handleOdontograma = async (pieza, estado, cara = null) => {
-  await axios.post('/api/odontograma', {
-    pieza_dental: pieza,
-    estado,
-    cara
-  });
-
-  obtenerOdontograma(); // refresca
-};*/
-
+ 
   const guardarHistoria = async (e) => {
     e.preventDefault();
     try {
@@ -183,192 +142,6 @@ export default function PacienteDetalle() {
     } catch { toast.error('Error al firmar'); }
   };
 
-/*const imprimirConsentimiento = (c) => {
-  const win = window.open('', '_blank', 'width=800,height=900');
-
-  win.document.write(`
-<!DOCTYPE html>
-<html>
-<head>
-<title>Consentimiento - ${c.tipo || ''}</title>
-
-<style>
-@page {
-  size: Letter;
-  margin: 10mm 12mm 12mm 12mm;
-}
-
-body{
-  font-family: Arial, sans-serif;
-  margin:0;
-  padding:10px 0 0 0;
-  background:#fff;
-}
-
- .header{
-  text-align:center;
-  border-bottom:2px solid #c8a24a;
-  padding-bottom:6px;
-  margin-bottom:10px;
-}
-
-
-  .logo{
-    width:85px;
-    height:85px;
-    object-fit:contain;
-    margin-bottom:10px;
-  }
-
-}
-
-.header h1{
-  margin:0;
-  font-size:16px;
-  color:#c8a24a;
-}
-
-.header h2{
-  margin:2px 0;
-  font-size:13px;
-}
-
-  .badge{
-    display:inline-block;
-    margin-top:8px;
-    padding:4px 12px;
-    font-size:11px;
-    background:#f5e6b3;
-    color:#7a5c1b;
-    border-radius:20px;
-    font-weight:bold;
-  }
-
-  .card{
-    margin:10px 0;
-    padding:10px;
-    border-left:4px solid #c8a24a;
-    background:#fffaf0;
-  }
-
-  .label{
-    font-size:11px;
-    color:#6b7280;
-  }
-
-  .value{
-    font-size:14px;
-    font-weight:bold;
-    color:#333;
-  }
-
- .container{
-  max-width:650px;
-  margin:0 auto;
-  padding:10px 15px 15px 15px;
-}
-
-  .estado{
-    font-size:13px;
-    margin:10px 0;
-    padding:10px;
-    background:#fef9c3;
-    border-left:4px solid #c8a24a;
-    border-radius:6px;
-    color:#7a5c1b;
-    font-weight:bold;
-  }
-
-  .firma-section{
-    margin-top:60px;
-    display:flex;
-    justify-content:space-around;
-  }
-
-  .linea{
-    border-top:1px solid #c8a24a;
-    margin-top:60px;
-    padding-top:5px;
-    font-size:12px;
-    color:#6b7280;
-  }
-
-  .footer{
-    margin-top:30px;
-    text-align:center;
-    font-size:11px;
-    color:#9ca3af;
-  }
-</style>
-
-</head>
-
-<body>
-
-  <div class="header">
-
-    <img src="/logo_clinica-removebg-preview.png" class="logo" />
-
-    <h1>Clínica Dental Almar</h1>
-    <h2>Consentimiento Informado</h2>
-
-    <div class="badge">${c.tipo || ''}</div>
-  </div>
-
-  <div class="card">
-    <div class="label">Paciente</div>
-    <div class="value">
-      ${paciente.nombre || ''} ${paciente.apellido || ''}
-    </div>
-    <div class="label">DNI:</div>
-     <div class="value">
-      ${paciente.dni || ''}
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="label">Doctor</div>
-    <div class="value">
-      Dr. ${c.doctor?.nombre || ''} ${c.doctor?.apellido || ''}
-    </div>
-  </div>
-
-  <div class="content">
-    ${c.contenido || ''}
-  </div>
-
-  ${
-    c.firmado
-      ? `<div class="estado">
-          ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-AR')}
-        </div>`
-      : ''
-  }
-
-  <div class="firma-section">
-    <div>
-      <div class="linea">Firma del Profesional</div>
-    </div>
-
-    <div>
-      <div class="linea">Firma del Paciente</div>
-    </div>
-  </div>
-
-  <div class="footer">
-    Clínica Dental Almar · Consentimiento Oficial
-  </div>
-
-  <script>
-    window.onload = () => window.print();
-  </script>
-
-</body>
-</html>
-  `);
-
-  win.document.close();
-};*/
   const imprimirConsentimiento = (c) => {
   const win = window.open('', '_blank', 'width=700,height=900');
 
@@ -601,109 +374,39 @@ win.onload = () => {
 <style>
 
 /* 📄 FORMATO CARTA */
-@page {
-  size: Letter;
-  margin: 10mm 12mm 12mm 12mm;
-}
+@page {size: Letter; margin: 10mm 12mm 12mm 12mm;}
 
-body{
-  font-family: 'Segoe UI', Arial, sans-serif;
-  padding:10px;
-  max-width:700px;
-  margin:auto;
-  color:#2c2c2c;
-  background:#fff;
-}
+body{font-family: 'Segoe UI', Arial, sans-serif; padding:10px; max-width:700px; margin:auto; color:#2c2c2c; background:#fff;}
 
 /* HEADER PREMIUM */
-.header{
-  text-align:center;
-  border-bottom:2px solid #c8a24a;
-  padding-bottom:10px;
-  margin-bottom:15px;
-}
+.header{ text-align:center; border-bottom:2px solid #c8a24a; padding-bottom:10px; margin-bottom:15px;}
 
-.logo{
-  width:70px;
-  margin-bottom:5px;
-}
+.logo{width:70px; margin-bottom:5px;}
 
-.header h1{
-  margin:0;
-  color:#c8a24a;
-  font-size:20px;
-}
+.header h1{ margin:0; color:#c8a24a; font-size:20px;}
 
-.header h2{
-  margin:3px 0;
-  font-size:14px;
-  color:#6b7280;
-}
+.header h2{ margin:3px 0; font-size:14px; color:#6b7280;}
 
 /* INFO PACIENTE */
-.paciente-info{
-  display:flex;
-  justify-content:space-between;
-  background:#fffaf0;
-  padding:10px 12px;
-  border-radius:8px;
-  margin-bottom:15px;
-  font-size:12px;
-  border-left:4px solid #c8a24a;
-}
+.paciente-info{ display:flex; justify-content:space-between; background:#fffaf0; padding:10px 12px; border-radius:8px; margin-bottom:15px; font-size:12px; border-left:4px solid #c8a24a;}
 
 /* ALERTAS */
-.alerta{
-  font-size:12px;
-  margin-bottom:10px;
-}
+.alerta{ font-size:12px;  margin-bottom:10px;}
 
-.alerta.alergia{
-  color:#b91c1c;
-}
-
-.alerta.normal{
-  color:#333;
-}
+.alerta.alergia{ color:#b91c1c;}
+.alerta.normal{ color:#333;}
 
 /* REGISTROS */
-.registro{
-  border:1px solid #f0e6c8;
-  border-radius:10px;
-  padding:14px;
-  margin-bottom:10px;
-  page-break-inside:avoid;
-  background:#fff;
-}
+.registro{ border:1px solid #f0e6c8; border-radius:10px; padding:14px; margin-bottom:10px; page-break-inside:avoid; background:#fff;}
 
-.registro-header{
-  font-weight:bold;
-  color:#c8a24a;
-  margin-bottom:6px;
-  font-size:12px;
-  border-bottom:1px solid #f5e6b3;
-  padding-bottom:4px;
-}
+.registro-header{ font-weight:bold; color:#c8a24a; margin-bottom:6px; font-size:12px; border-bottom:1px solid #f5e6b3;  padding-bottom:4px;}
 
-.registro p{
-  margin:3px 0;
-  font-size:12px;
-}
+.registro p{ margin:3px 0; font-size:12px;}
 
-.notas{
-  color:#6b7280;
-  font-style:italic;
-}
+.notas{ color:#6b7280; font-style:italic;}
 
 /* FOOTER */
-.footer{
-  text-align:center;
-  margin-top:20px;
-  font-size:10px;
-  color:#9ca3af;
-  border-top:1px solid #eee;
-  padding-top:8px;
-}
+.footer{ text-align:center; margin-top:20px; font-size:10px; color:#9ca3af; border-top:1px solid #eee; padding-top:8px;}
 
 </style>
 
@@ -804,104 +507,40 @@ ${registros || '<p style="text-align:center;color:#999">Sin registros</p>'}
 <title>Recibo de Pago</title>
 
 <style>
-@page {
-  size: A5;
-  margin: 10mm;
-}
+@page { size: A5; margin: 10mm;}
 
-body{
-  font-family: Arial, sans-serif;
-  margin:0;
-  padding:0;
-  background:#fff;
-  color:#2c2c2c;
-}
+body{font-family: Arial, sans-serif; margin:0; padding:0; background:#fff;color:#2c2c2c;}
 
 /* CONTENEDOR */
-.container{
-  padding:20px;
-  border:1px solid #f0e6c8;
-  border-radius:12px;
-}
+.container{ padding:20px; border:1px solid #f0e6c8; border-radius:12px;}
 
 /* HEADER */
-.header{
-  text-align:center;
-  border-bottom:2px solid #c8a24a;
-  padding-bottom:10px;
-  margin-bottom:15px;
-}
+.header{ text-align:center; border-bottom:2px solid #c8a24a; padding-bottom:10px; margin-bottom:15px;}
 
-.logo{
-  width:70px;
-  margin-bottom:8px;
-}
+.logo{ width:70px; margin-bottom:8px;}
 
-.header h1{
-  margin:0;
-  font-size:18px;
-  color:#b8962e;
-}
+.header h1{ margin:0; font-size:18px; color:#b8962e;}
 
-.header p{
-  margin:2px 0;
-  font-size:12px;
-  color:#6b7280;
-}
+.header p{ margin:2px 0; font-size:12px; color:#6b7280;}
 
 /* MONTO */
-.total{
-  text-align:center;
-  margin:15px 0;
-  padding:15px;
-  background:#fffaf0;
-  border-left:4px solid #c8a24a;
-  border-radius:8px;
-}
+.total{ text-align:center; margin:15px 0; padding:15px; background:#fffaf0; border-left:4px solid #c8a24a; border-radius:8px;}
 
-.total .label{
-  font-size:11px;
-  color:#6b7280;
-}
+.total .label{ font-size:11px; color:#6b7280;}
 
-.total .amount{
-  font-size:28px;
-  font-weight:bold;
-  color:#b8962e;
-  margin-top:5px;
-}
+.total .amount{ font-size:28px; font-weight:bold; color:#b8962e; margin-top:5px;}
 
 /* INFO */
-.info{
-  margin-top:15px;
-}
+.info{ margin-top:15px;}
 
-.info-row{
-  display:flex;
-  justify-content:space-between;
-  padding:8px 0;
-  border-bottom:1px dotted #e5e7eb;
-  font-size:13px;
-}
+.info-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dotted #e5e7eb; font-size:13px;}
 
-.label{
-  color:#6b7280;
-}
+.label{ color:#6b7280;}
 
-.value{
-  font-weight:bold;
-  color:#2c2c2c;
-}
+.value{ font-weight:bold; color:#2c2c2c; }
 
 /* FOOTER */
-.footer{
-  margin-top:20px;
-  text-align:center;
-  font-size:11px;
-  color:#9ca3af;
-  border-top:1px solid #eee;
-  padding-top:10px;
-}
+.footer{margin-top:20px;text-align:center;font-size:11px;color:#9ca3af;border-top:1px solid #eee;padding-top:10px;}
 </style>
 
 </head>
@@ -989,11 +628,7 @@ window.onload = () => window.print();
   const edad = paciente.fecha_nacimiento
     ? Math.floor((Date.now() - new Date(paciente.fecha_nacimiento)) / 31557600000)
     : null;
-//Cargar recetas
-  finally {
-    setLoadingRecetas(false);
-  }
-};
+   
   //Crea Receta
  const guardarReceta = async (e) => {
   e.preventDefault();
