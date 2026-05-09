@@ -135,7 +135,7 @@ router.put('/:id', auth, registrarActividad('actualizar', 'paciente'), async (re
   }
 });
 //Update /api/pacientes/id:/receta
-router.put('/:id/recetas', auth, async (req, res) => {
+router.put('/recetas/:id', auth, async (req, res) => {
   try {
     const receta = await Receta.findByPk(req.params.id);
 
@@ -143,14 +143,12 @@ router.put('/:id/recetas', auth, async (req, res) => {
       return res.status(404).json({ error: 'Receta no encontrada' });
     }
 
-    // 🔐 SEGURIDAD: solo el creador puede editar
-   if (
+    if (
       receta.usuarioId !== req.usuario.id &&
       req.usuario.rol !== 'administrador'
     ) {
       return res.status(403).json({ error: 'Sin permisos' });
     }
-
 
     await receta.update({
       diagnostico: req.body.diagnostico,
@@ -161,12 +159,11 @@ router.put('/:id/recetas', auth, async (req, res) => {
     res.json(receta);
 
   } catch (error) {
-    res.status(500).json({ error: 'No tienes permisos para editar esta receta' });
+    res.status(500).json({ error: error.message });
   }
 });
-
 //DELETE /api/paciente/:id receta
-router.delete('/:id/recetas', auth, async (req, res) => {
+router.delete('/recetas/:id', auth, async (req, res) => {
   try {
     const receta = await Receta.findByPk(req.params.id);
 
@@ -174,7 +171,6 @@ router.delete('/:id/recetas', auth, async (req, res) => {
       return res.status(404).json({ error: 'Receta no encontrada' });
     }
 
-    // 🔐 seguridad (solo creador o admin)
     if (
       receta.usuarioId !== req.usuario.id &&
       req.usuario.rol !== 'administrador'
@@ -182,15 +178,14 @@ router.delete('/:id/recetas', auth, async (req, res) => {
       return res.status(403).json({ error: 'Sin permisos' });
     }
 
-
     await receta.destroy();
 
     res.json({ message: 'Receta eliminada' });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
 // POST /api/pacientes/:id/recetas
 router.post('/:id/recetas', auth, async (req, res) => {
   try {
