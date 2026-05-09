@@ -185,25 +185,17 @@ router.delete('/recetas/:id', auth, async (req, res) => {
   }
 });
 //POST /api/paciente/:id receta
-router.post('/:id/recetas', auth, async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const receta = await Receta.create({
-      pacienteId: req.params.id,
-      usuarioId: req.usuario.id,
-      diagnostico: req.body.diagnostico,
-      medicamentos: req.body.medicamentos,
-      indicaciones: req.body.indicaciones,
-      folio: `REC-${Date.now()}`
+      ...req.body,
+      usuarioId: req.usuario.id // 👈 importante
     });
 
-    res.json(receta);
+    res.status(201).json(receta);
   } catch (error) {
-  console.error('ERROR RECETA:', error);
-  res.status(500).json({
-    error: error.message,
-    stack: error.stack
-  });
-}
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // GET /api/pacientes/:id/recetas
