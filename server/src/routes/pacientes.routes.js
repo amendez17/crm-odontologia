@@ -147,8 +147,12 @@ router.post('/:id/recetas', auth, async (req, res) => {
 
     res.json(receta);
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  console.error('ERROR RECETA:', error);
+  res.status(500).json({
+    error: error.message,
+    stack: error.stack
+  });
+}
 });
 //GET /api/pacientes/:id receta
 router.get('/:id/recetas', auth, async (req, res) => {
@@ -165,8 +169,12 @@ router.get('/:id/recetas', auth, async (req, res) => {
 
     res.json(recetas);
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  console.error('ERROR RECETA:', error);
+  res.status(500).json({
+    error: error.message,
+    stack: error.stack
+  });
+}
 });
 // DELETE /api/pacientes/:id (soft delete)
 router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (req, res) => {
