@@ -29,7 +29,7 @@ export default function PacienteDetalle() {
   const [recetas, setRecetas] = useState([]);
   const [formReceta, setFormReceta] = useState({diagnostico: '',medicamentos: '', indicaciones: '' });
   const [modalReceta, setModalReceta] = useState(false);
-  const { Paciente, Cita, Presupuesto, Pago, Odontograma, HistoriaClinica, Usuario, Receta } = require('../models');
+  
 
   const cargar = async () => {
     try {
