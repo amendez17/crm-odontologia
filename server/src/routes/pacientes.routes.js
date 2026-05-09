@@ -135,76 +135,69 @@ router.put('/:id', auth, registrarActividad('actualizar', 'paciente'), async (re
   }
 });
 //Update /api/pacientes/id:/receta
-router.put('/recetas/:id', auth, async (req, res) => {
-  try {
-    const receta = await Receta.findByPk(req.params.id);
+router.put( '/recetas/:id', auth, esDoctor, async (req, res) => {
+    try {
+      const receta = await Receta.findByPk(req.params.id);
 
-    if (!receta) {
-      return res.status(404).json({ error: 'Receta no encontrada' });
+      if (!receta) {
+        return res.status(404).json({ error: 'Receta no encontrada' });
+      }
+
+      if (
+        receta.usuarioId !== req.usuario.id &&
+        req.usuario.rol !== 'administrador'
+      ) {
+        return res.status(403).json({ error: 'Sin permisos' });
+      }
+
+      await receta.update(req.body);
+
+      res.json(receta);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-
-    if (
-      receta.usuarioId !== req.usuario.id &&
-      req.usuario.rol !== 'administrador'
-    ) {
-      return res.status(403).json({ error: 'Sin permisos' });
-    }
-
-    await receta.update({
-      diagnostico: req.body.diagnostico,
-      medicamentos: req.body.medicamentos,
-      indicaciones: req.body.indicaciones
-    });
-
-    res.json(receta);
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-});
+);
 //DELETE /api/paciente/:id receta
-router.delete('/recetas/:id', auth, async (req, res) => {
-  try {
-    const receta = await Receta.findByPk(req.params.id);
+router.delete( '/recetas/:id',  auth,  esDoctor, async (req, res) => {
+    try {
+      const receta = await Receta.findByPk(req.params.id);
 
-    if (!receta) {
-      return res.status(404).json({ error: 'Receta no encontrada' });
+      if (!receta) {
+        return res.status(404).json({ error: 'Receta no encontrada' });
+      }
+
+      if (
+        receta.usuarioId !== req.usuario.id &&
+        req.usuario.rol !== 'administrador'
+      ) {
+        return res.status(403).json({ error: 'Sin permisos' });
+      }
+
+      await receta.destroy();
+
+      res.json({ message: 'Receta eliminada' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-
-    if (
-      receta.usuarioId !== req.usuario.id &&
-      req.usuario.rol !== 'administrador'
-    ) {
-      return res.status(403).json({ error: 'Sin permisos' });
-    }
-
-    await receta.destroy();
-
-    res.json({ message: 'Receta eliminada' });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-});
+);
 // POST /api/pacientes/:id/recetas
-router.post('/:id/recetas', auth, async (req, res) => {
-  try {
-    console.log("BODY:", req.body);
-    console.log("USER:", req.usuario);
-    console.log("PACIENTE:", req.params.id);
+router.post( '/:id/recetas', auth,  esDoctor, 
+  async (req, res) => {
+    try {
+      const receta = await Receta.create({
+        ...req.body,
+        pacienteId: req.params.id,
+        usuarioId: req.usuario.id
+      });
 
-    const receta = await Receta.create({
-      ...req.body,
-      pacienteId: req.params.id,
-      usuarioId: req.usuario.id
-    });
-
-    res.status(201).json(receta);
-  } catch (error) {
-    console.error("ERROR CREANDO RECETA:", error);
-    res.status(500).json({ error: error.message });
+      res.status(201).json(receta);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
-});
+);
 // GET /api/pacientes/:id/recetas
 router.get('/:id/recetas', auth, async (req, res) => {
 
