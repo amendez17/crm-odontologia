@@ -166,7 +166,7 @@ router.put('/receta/:id', auth, async (req, res) => {
 });
 
 //DELETE /api/paciente/:id receta
-router.delete('/:id/recetas', auth, async (req, res) => {
+router.delete('paciente/:id/resetas', auth, async (req, res) => {
   try {
     const receta = await Receta.findByPk(req.params.id);
 
