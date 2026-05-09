@@ -405,7 +405,7 @@ export default function Citas() {
           </div>
           <div className="flex flex-col gap-0.5 flex-shrink-0">
             {puedeUsarWhatsApp && ( <button onClick={(e) => { e.stopPropagation(); enviarWhatsApp(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle size={11} /></button>)}
-           {puedeUsarWhatsApp && ( <button onClick={(e) => { e.stopPropagation(); enviarWhatsApprecordatorio(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle className="text-[#f5a60a]" size={11} /></button> }
+           {puedeUsarWhatsApp && ( <button onClick={(e) => { e.stopPropagation(); enviarWhatsApprecordatorio(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle className="text-[#f5a60a]" size={11} /></button> )}
             <button onClick={() => crearPresupuestoDesdeCita(cita)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Crear presupuesto">  <FiFileText size={11} /> </button>
             <button onClick={(e) => { e.stopPropagation(); abrirEditar(cita); }} className="p-0.5 text-yellow-600 hover:bg-yellow-100 rounded"><FiEdit2 size={11} /></button>
             <button onClick={(e) => { e.stopPropagation(); eliminar(cita.id); }} className="p-0.5 text-red-600 hover:bg-red-100 rounded"><FiTrash2 size={11} /></button>
