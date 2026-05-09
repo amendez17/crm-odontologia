@@ -1532,40 +1532,7 @@ window.onload = () => window.print();
         </div>
       )}
 
-      {/* Tab Citas */}
-      {tab === 'citas' && (
-        <div className="space-y-4">
-          <button onClick={() => setModalCita(true)} className="btn-primary flex items-center gap-2">
-            <FiCalendar size={16} /> Agendar Cita
-          </button>
-          <div className="card">
-          <h3 className="font-semibold text-primary-900 mb-4">Historial de Citas</h3>
-          {!paciente.citas?.length ? (
-            <p className="text-gray-500 text-sm">Sin citas registradas</p>
-          ) : (
-            <div className="space-y-2">
-              {paciente.citas.map(c => (
-                <div key={c.id} className="flex items-center justify-between p-3.5 bg-surface-50 rounded-2xl text-sm border border-surface-100">
-                  <div>
-                    <span className="font-semibold text-primary-800">{c.fecha}</span> - {c.hora_inicio?.slice(0,5)}
-                    <span className="ml-2 text-surface-500">{c.motivo || 'Consulta'}</span>
-                    {c.doctor && <span className="ml-2 text-surface-400">- Dr. {c.doctor.apellido}</span>}
-                  </div>
-                  <span className={`badge ${
-                    c.estado === 'completada' ? 'bg-green-100 text-green-700' :
-                    c.estado === 'cancelada' ? 'bg-red-100 text-red-700' :
-                    c.estado === 'no_asistio' ? 'bg-gray-100 text-gray-700' :
-                    'bg-blue-100 text-blue-700'
-                  }`}>
-                    {c.estado?.replace('_', ' ')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-          </div>
-          )}
-
+     
           {/* Modal Cita Rápida */}
           <Modal isOpen={modalCita} onClose={() => setModalCita(false)} title="Agendar Cita">
             <form onSubmit={crearCita} className="space-y-4">
