@@ -123,8 +123,8 @@ export default function Usuarios() {
                   </td>
                   <td className="text-surface-600">{u.email}</td>
                   <td><span className={`badge ${ROLES_COLOR[u.rol]} capitalize`}>{u.rol}</span></td>
-                  <td className="text-surface-600">{u.especialidad || '-'}</td>
-                  <td className="text-surface-600">{u.cedula || '-'} </td>
+                  <td className="text-surface-600">{u.especialidad ? u.especialidad : <span className="text-gray-400">Sin especialidad</span>}</td>
+                  <td className="text-surface-600">{u.cedula ? u.cedula : <span className="text-gray-400">Sin cédula</span>} </td>
                   <td>
                     <span className={`badge ${u.activo ? 'bg-dental-100 text-dental-700' : 'bg-red-100 text-red-700'}`}>
                       {u.activo ? 'Activo' : 'Inactivo'}
