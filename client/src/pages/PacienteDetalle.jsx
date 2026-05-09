@@ -53,8 +53,8 @@ export default function PacienteDetalle() {
     }
   };
 
-  useEffect(() => { cargar(); }, [id]);
-  useEffect(() => {cargarPaciente();cargarRecetas();}, [id]);
+ 
+  useEffect(() => {cargar();cargarRecetas();}, [id]);
   useEffect(() => {
     api.get('/usuarios/doctores').then(res => setDoctores(res.data)).catch(() => {});
     api.get('/consentimiento/plantillas').then(res => setPlantillas(res.data)).catch(() => {});
