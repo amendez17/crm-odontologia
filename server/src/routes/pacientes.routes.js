@@ -158,7 +158,7 @@ router.post('/:id/recetas', auth, async (req, res) => {
 router.get('/:id/recetas', auth, async (req, res) => {
   try {
     const recetas = await Receta.findAll({
-      where: { pacienteId: req.params.id },
+      where: { pacienteId: Number(req.params.id) },
       include: [{
         model: Usuario,
         attributes: ['id', 'nombre']
