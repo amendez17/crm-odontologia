@@ -959,16 +959,16 @@ window.onload = () => window.print();
   if (loading) return <div className="text-center py-10 text-surface-400">Cargando...</div>;
   if (!paciente) return <div className="text-center py-10 text-surface-400">Paciente no encontrado</div>;
 
-  const tabs = [
-    { key: 'info', label: 'Información' },
-    { key: 'odontograma', label: 'Odontograma' },
-    { key: 'historia', label: 'Historia Clínica' },
-    { key: 'consentimientos', label: 'Consentimientos' },
-    { key: 'balance', label: 'Cuenta Corriente' },
-    { key: 'citas', label: 'Citas' },
-    { key: 'pagos', label: 'Pagos' }
-  ];
-
+ const tabs = [
+  { key: 'info', label: 'Información' },
+  { key: 'odontograma', label: 'Odontograma' },
+  { key: 'historia', label: 'Historia Clínica' },
+  { key: 'consentimientos', label: 'Consentimientos' },
+  { key: 'recetas', label: 'Recetas' }, // 👈 AQUÍ
+  { key: 'balance', label: 'Cuenta Corriente' },
+  { key: 'citas', label: 'Citas' },
+  { key: 'pagos', label: 'Pagos' }
+];
   const edad = paciente.fecha_nacimiento
     ? Math.floor((Date.now() - new Date(paciente.fecha_nacimiento)) / 31557600000)
     : null;
