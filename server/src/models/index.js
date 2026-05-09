@@ -88,8 +88,8 @@ Usuario.hasMany(Receta, {
 });
 
 Receta.belongsTo(Usuario, {
-  foreignKey: 'usuarioId',
-  as: 'usuario'
+  foreignKey: 'doctor_id',
+  as: 'doctor'
 });
 module.exports = {
   sequelize,
