@@ -1027,6 +1027,150 @@ window.onload = () => window.print();
 
         </div>
       )}
+      {/* Tab Recetas */}
+{tab === 'recetas' && (
+  <div className="space-y-4">
+
+    <button
+      onClick={() => setModalReceta(true)}
+      className="btn-primary flex items-center gap-2"
+    >
+      <FiPlus size={16} />
+      Nueva Receta
+    </button>
+
+    {loadingRecetas ? (
+      <div className="card text-center text-gray-500">
+        Cargando recetas...
+      </div>
+    ) : recetas.length === 0 ? (
+      <div className="card text-center text-gray-500">
+        No hay recetas registradas
+      </div>
+    ) : (
+      recetas.map(r => (
+        <div key={r.id} className="card">
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="font-semibold text-primary-900">
+                Receta #{r.folio}
+              </h4>
+
+              <p className="text-sm text-surface-500">
+                Dr. {r.doctor?.nombre} {r.doctor?.apellido}
+              </p>
+            </div>
+
+            <button
+              onClick={() => imprimirReceta(r)}
+              className="p-2 rounded-lg hover:bg-primary-50 text-primary-600"
+            >
+              <FiPrinter size={16} />
+            </button>
+          </div>
+
+          <div className="mt-3 space-y-2 text-sm">
+            <p>
+              <span className="font-medium">Diagnóstico:</span>
+              {' '}{r.diagnostico}
+            </p>
+
+            <p>
+              <span className="font-medium">Medicamentos:</span>
+              {' '}{r.medicamentos}
+            </p>
+
+            <p>
+              <span className="font-medium">Indicaciones:</span>
+              {' '}{r.indicaciones}
+            </p>
+          </div>
+        </div>
+      ))
+    )}
+
+    <Modal
+      isOpen={modalReceta}
+      onClose={() => setModalReceta(false)}
+      title="Nueva Receta"
+    >
+      <form onSubmit={guardarReceta} className="space-y-4">
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Diagnóstico
+          </label>
+
+          <textarea
+            value={formReceta.diagnostico}
+            onChange={(e) =>
+              setFormReceta({
+                ...formReceta,
+                diagnostico: e.target.value
+              })
+            }
+            className="input-field"
+            rows={2}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Medicamentos
+          </label>
+
+          <textarea
+            value={formReceta.medicamentos}
+            onChange={(e) =>
+              setFormReceta({
+                ...formReceta,
+                medicamentos: e.target.value
+              })
+            }
+            className="input-field"
+            rows={4}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Indicaciones
+          </label>
+
+          <textarea
+            value={formReceta.indicaciones}
+            onChange={(e) =>
+              setFormReceta({
+                ...formReceta,
+                indicaciones: e.target.value
+              })
+            }
+            className="input-field"
+            rows={3}
+            required
+          />
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setModalReceta(false)}
+            className="btn-secondary"
+          >
+            Cancelar
+          </button>
+
+          <button type="submit" className="btn-primary">
+            Guardar Receta
+          </button>
+        </div>
+
+      </form>
+    </Modal>
+  </div>
+)}
       
       {/* Tab Balance / Cuenta Corriente */}
       {tab === 'balance' && balance && (
