@@ -144,7 +144,7 @@ router.put('/:id', auth, async (req, res) => {
     }
 
     // 🔐 SEGURIDAD: solo el creador puede editar
-    if (receta.usuarioId !== req.usuario.id) {
+    if (receta.usuarioId !== req.usuario.id &&  req.usuario.rol !== 'administrador') {
       return res.status(403).json({
         error: 'No tienes permiso para editar esta receta'
       });
@@ -159,7 +159,7 @@ router.put('/:id', auth, async (req, res) => {
     res.json(receta);
 
   } catch (error) {
-    res.status(500).json({ error: 'Error actualizando receta' });
+    res.status(500).json({ error: 'No tienes permisos para editar esta receta' });
   }
 });
 
