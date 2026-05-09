@@ -16,6 +16,7 @@ useEffect(() => {
 
   cargarUsuario();
 }, []);
+const { usuario } = useAuth(); // o Redux / props
 const puedeUsarWhatsApp = ['admin', 'recepcionista'].includes(usuario?.rol);
 const ESTADOS = {
   programada:  { cls: 'bg-blue-100 text-blue-700',   label: 'Programada' },
