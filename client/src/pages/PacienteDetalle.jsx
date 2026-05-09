@@ -4,6 +4,7 @@ import api from '../api/axios';
 import Odontograma from '../components/Odontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
+
 import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward  } from 'react-icons/fi';
 
 export default function PacienteDetalle() {
@@ -28,6 +29,7 @@ export default function PacienteDetalle() {
   const [recetas, setRecetas] = useState([]);
   const [formReceta, setFormReceta] = useState({diagnostico: '',medicamentos: '', indicaciones: '' });
   const [modalReceta, setModalReceta] = useState(false);
+  const { Paciente, Cita, Presupuesto, Pago, Odontograma, HistoriaClinica, Usuario, Receta } = require('../models');
 
   const cargar = async () => {
     try {
