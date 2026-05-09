@@ -189,7 +189,7 @@ router.delete('/recetas/:id', auth, async (req, res) => {
 });
 
 // POST /api/pacientes/:id/recetas
-router.post('/pacientes/:id/recetas', auth, async (req, res) => {
+router.post('/:id/recetas', auth, async (req, res) => {
   try {
     console.log("BODY:", req.body);
     console.log("USER:", req.usuario);
