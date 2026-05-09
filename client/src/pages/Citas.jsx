@@ -108,6 +108,32 @@ export default function Citas() {
   const [dragInfo, setDragInfo]     = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [usuario, setUsuario] = useState(null);
+  const abrirNuevoPaciente = () => { setFormPaciente({ nombre: '', apellido: '', dni: '', telefono: ''});setModalPaciente(true);};
+
+ 
+//Guardar paciente
+  const guardarPaciente = async (e) => {
+  e.preventDefault();
+
+  try {
+    const { data } = await api.post('/pacientes', formPaciente);
+
+    toast.success('Paciente creado');
+
+    // refrescar lista
+    setPacientes(prev => [...prev, data]);
+
+    // seleccionar automáticamente en cita
+    setForm(prev => ({
+      ...prev,
+      paciente_id: data.id
+    }));
+
+    setModalPaciente(false);
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Error al crear paciente');
+  }
+};
 
  const puedeUsarWhatsApp = useMemo(() => {
   return ['administrador', 'recepcionista'].includes(usuario?.rol);
@@ -792,10 +818,11 @@ export default function Citas() {
         <form onSubmit={guardar} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-surface-600 mb-1">Paciente *</label>
-            <select name="paciente_id" value={form.paciente_id} onChange={handleChange} className="input-field" required>
-              <option value="">Seleccionar paciente</option>
-              {pacientes.map(p => <option key={p.id} value={p.id}>{p.nombre}, {p.apellido} — {p.dni}</option>)}
-            </select>
+             <div className="flex gap-2 items-center">
+              <select name="paciente_id" value={form.paciente_id} onChange={handleChange} className="input-field flex-1"  required>
+              <option value="">Seleccionar paciente</option> {pacientes.map(p => ( <option key={p.id} value={p.id}> {p.nombre}, {p.apellido} — {p.dni} </option> ))}
+              </select> <button type="button" onClick={abrirNuevoPaciente} className="btn-secondary px-3" title="Nuevo paciente">  <FiPlus /> </button>
+              </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-surface-600 mb-1">Doctor *</label>
@@ -838,6 +865,60 @@ export default function Citas() {
           </div>
         </form>
       </Modal>
+      <Modal
+  isOpen={modalPaciente}
+  onClose={() => setModalPaciente(false)}
+  title="Nuevo Paciente"
+>
+  <form onSubmit={guardarPaciente} className="space-y-4">
+    <input
+      name="nombre"
+      value={formPaciente.nombre}
+      onChange={(e) => setFormPaciente({ ...formPaciente, nombre: e.target.value })}
+      className="input-field"
+      placeholder="Nombre"
+      required
+    />
+
+    <input
+      name="apellido"
+      value={formPaciente.apellido}
+      onChange={(e) => setFormPaciente({ ...formPaciente, apellido: e.target.value })}
+      className="input-field"
+      placeholder="Apellido"
+      required
+    />
+
+    <input
+      name="dni"
+      value={formPaciente.dni}
+      onChange={(e) => setFormPaciente({ ...formPaciente, dni: e.target.value })}
+      className="input-field"
+      placeholder="DNI"
+    />
+
+    <input
+      name="telefono"
+      value={formPaciente.telefono}
+      onChange={(e) => setFormPaciente({ ...formPaciente, telefono: e.target.value })}
+      className="input-field"
+      placeholder="Teléfono"
+    />
+
+    <div className="flex justify-end gap-2">
+      <button
+        type="button"
+        onClick={() => setModalPaciente(false)}
+        className="btn-secondary"
+      >
+        Cancelar
+      </button>
+      <button type="submit" className="btn-primary">
+        Crear
+      </button>
+    </div>
+  </form>
+</Modal>
     </div>
   );
 }
