@@ -11,7 +11,7 @@ export default function Usuarios() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState(null);
-  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', password: '', rol: 'recepcionista', especialidad: '', telefono: '' });
+  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', password: '', rol: 'recepcionista', especialidad: '', telefono: '',cedula: '' });
 
   const cargar = async () => {
     setLoading(true);
@@ -34,7 +34,7 @@ export default function Usuarios() {
   };
 
   const abrirEditar = (u) => {
-    setForm({ nombre: u.nombre, apellido: u.apellido, email: u.email, password: '', rol: u.rol, especialidad: u.especialidad || '', telefono: u.telefono || '' });
+    setForm({ nombre: u.nombre, apellido: u.apellido, email: u.email, password: '', rol: u.rol, especialidad: u.especialidad || '', telefono: u.telefono || '',cedula: u.cedula || ''  });
     setEditando(u.id);
     setModal(true);
   };
@@ -123,6 +123,7 @@ export default function Usuarios() {
                   <td className="text-surface-600">{u.email}</td>
                   <td><span className={`badge ${ROLES_COLOR[u.rol]} capitalize`}>{u.rol}</span></td>
                   <td className="text-surface-600">{u.especialidad || '-'}</td>
+                  <td className="text-surface-600">{u.cedula} || '_'</td>
                   <td>
                     <span className={`badge ${u.activo ? 'bg-dental-100 text-dental-700' : 'bg-red-100 text-red-700'}`}>
                       {u.activo ? 'Activo' : 'Inactivo'}
@@ -185,6 +186,10 @@ export default function Usuarios() {
               <label className="block text-sm font-medium text-surface-600 mb-1">Especialidad</label>
               <input name="especialidad" value={form.especialidad} onChange={handleChange} className="input-field" placeholder="Ej: Ortodoncia, Endodoncia..." />
             </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1"> Cédula Profesional</label>
+                <input name="cedula" value={form.cedula} onChange={handleChange} className="input-field" placeholder="Ej: 12345678" />
+                </div>
           )}
           <div className="flex justify-end gap-3">
             <button type="button" onClick={() => setModal(false)} className="btn-secondary">Cancelar</button>
