@@ -1372,11 +1372,11 @@ window.onload = () => window.print();
   <div className="space-y-6">
 
     {/* HEADER PREMIUM */}
-    <div className="flex items-center justify-between bg-gradient-to-r from-amber-50 via-white to-yellow-50 border border-amber-100 rounded-3xl p-6 shadow-sm">
+    <div className="flex items-center justify-between bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
 
       <div className="flex items-center gap-4">
 
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center shadow-lg">
+        <div className="flex items-center justify-between bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
           <FiFileText className="text-white" size={24} />
         </div>
 
@@ -1394,7 +1394,7 @@ window.onload = () => window.print();
 
       <button
         onClick={() => setModalReceta(true)}
-        className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-semibold shadow-lg hover:scale-[1.02] transition-all flex items-center gap-2"
+        className="px-5 py-3 rounded-2xl bg-amber-500 text-white font-semibold shadow-sm hover:bg-amber-600 transition-all flex items-center gap-2"
       >
         <FiPlus size={18} />
         Nueva Receta
