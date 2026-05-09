@@ -1422,8 +1422,8 @@ window.onload = () => window.print();
                       <div className="bg-gradient-to-r from-dental-500 to-dental-400 h-full rounded-full" style={{ width: `${Math.min(100, pctPagado)}%` }} />
                     </div>
                     {pendiente > 0 && (
-                      <p className="text-sm text-red-600">Pendiente: ${Number(pendiente).toLocaleString()}</p>
-                    )}
+                      <p className="text-sm text-red-600">Pendiente: ${Number(pendiente).toLocaleString(</p>
+                    
                     {p.detalles?.length > 0 && (
                       <div className="mt-3 space-y-1">
                         {p.detalles.map(d => (
