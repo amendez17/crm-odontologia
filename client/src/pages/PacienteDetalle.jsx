@@ -5,7 +5,7 @@ import Odontograma from '../components/Odontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 
-import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward  } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock } from 'react-icons/fi';
 
 export default function PacienteDetalle() {
   const { id } = useParams();
@@ -30,6 +30,8 @@ export default function PacienteDetalle() {
   const [modalReceta, setModalReceta] = useState(false);
   const [recetas, setRecetas] = useState([]);
   const [loadingRecetas, setLoadingRecetas] = useState(true);
+  const [editandoReceta, setEditandoReceta] = useState(null);
+  const [modalEditarReceta, setModalEditarReceta] = useState(false);
   
 
   const cargar = async () => {
@@ -658,7 +660,6 @@ window.onload = () => window.print();
 //Imprimir Reseta
   const imprimirReceta = (r) => {
   const ventana = window.open('', '_blank');
-
   ventana.document.write(`
     <html>
       <head>
@@ -686,6 +687,63 @@ window.onload = () => window.print();
   `);
 
   ventana.print();
+};
+ //Eliminar Receta
+  const eliminarReceta = async (idReceta) => {
+  if (!window.confirm('¿Eliminar esta receta?')) return;
+
+  try {
+    await api.delete(`/pacientes/recetas/${idReceta}`);
+
+    toast.success('Receta eliminada');
+
+    cargarRecetas();
+
+  } catch (error) {
+    console.error(error);
+    toast.error('Error al eliminar receta');
+  }
+};
+  //Editar Receta
+  const abrirEditarReceta = (receta) => {
+  setEditandoReceta(receta);
+
+  setFormReceta({
+    diagnostico: receta.diagnostico || '',
+    medicamentos: receta.medicamentos || '',
+    indicaciones: receta.indicaciones || ''
+  });
+
+  setModalEditarReceta(true);
+};
+  //Actualizr receta
+  const actualizarReceta = async (e) => {
+  e.preventDefault();
+
+  try {
+    await api.put(
+      `/pacientes/recetas/${editandoReceta.id}`,
+      formReceta
+    );
+
+    toast.success('Receta actualizada');
+
+    setModalEditarReceta(false);
+
+    setEditandoReceta(null);
+
+    setFormReceta({
+      diagnostico: '',
+      medicamentos: '',
+      indicaciones: ''
+    });
+
+    cargarRecetas();
+
+  } catch (error) {
+    console.error(error);
+    toast.error('Error al actualizar receta');
+  }
 };
   return (
     <div className="space-y-6">
@@ -1029,90 +1087,6 @@ window.onload = () => window.print();
       )}
       {/* Tab Recetas */}
 {tab === 'recetas' && (
-  <div className="space-y-4">
-
-    <button
-      onClick={() => setModalReceta(true)}
-      className="btn-primary flex items-center gap-2"
-    >
-      <FiPlus size={16} />
-      Nueva Receta
-    </button>
-
-    {loadingRecetas ? (
-      <div className="card text-center text-gray-500">
-        Cargando recetas...
-      </div>
-    ) : recetas.length === 0 ? (
-      <div className="card text-center text-gray-500">
-        No hay recetas registradas
-      </div>
-    ) : (
-      recetas.map(r => (
-        <div key={r.id} className="card">
-          <div className="flex justify-between items-start">
-            <div>
-              <h4 className="font-semibold text-primary-900">
-                Receta #{r.folio}
-              </h4>
-
-              <p className="text-sm text-surface-500">
-                Dr. {r.doctor?.nombre} {r.doctor?.apellido}
-              </p>
-            </div>
-
-            <button
-              onClick={() => imprimirReceta(r)}
-              className="p-2 rounded-lg hover:bg-primary-50 text-primary-600"
-            >
-              <FiPrinter size={16} />
-            </button>
-          </div>
-
-          <div className="mt-3 space-y-2 text-sm">
-            <p>
-              <span className="font-medium">Diagnóstico:</span>
-              {' '}{r.diagnostico}
-            </p>
-
-            <p>
-              <span className="font-medium">Medicamentos:</span>
-              {' '}{r.medicamentos}
-            </p>
-
-            <p>
-              <span className="font-medium">Indicaciones:</span>
-              {' '}{r.indicaciones}
-            </p>
-          </div>
-        </div>
-      ))
-    )}
-
-    <Modal
-      isOpen={modalReceta}
-      onClose={() => setModalReceta(false)}
-      title="Nueva Receta"
-    >
-      <form onSubmit={guardarReceta} className="space-y-4">
-
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Diagnóstico
-          </label>
-
-          <textarea
-            value={formReceta.diagnostico}
-            onChange={(e) =>
-              setFormReceta({
-                ...formReceta,
-                diagnostico: e.target.value
-              })
-            }
-            className="input-field"
-            rows={2}
-            required
-          />
         </div>
 
         <div>
@@ -1122,7 +1096,7 @@ window.onload = () => window.print();
 
           <textarea
             value={formReceta.medicamentos}
-            onChange={(e) =>
+            onChange={e =>
               setFormReceta({
                 ...formReceta,
                 medicamentos: e.target.value
@@ -1141,14 +1115,14 @@ window.onload = () => window.print();
 
           <textarea
             value={formReceta.indicaciones}
-            onChange={(e) =>
+            onChange={e =>
               setFormReceta({
                 ...formReceta,
                 indicaciones: e.target.value
               })
             }
             className="input-field"
-            rows={3}
+            rows={4}
             required
           />
         </div>
@@ -1156,23 +1130,21 @@ window.onload = () => window.print();
         <div className="flex justify-end gap-3">
           <button
             type="button"
-            onClick={() => setModalReceta(false)}
+            onClick={() => setModalEditarReceta(false)}
             className="btn-secondary"
           >
             Cancelar
           </button>
 
           <button type="submit" className="btn-primary">
-            Guardar Receta
+            Guardar Cambios
           </button>
         </div>
-
       </form>
     </Modal>
   </div>
 )}
-      
-      {/* Tab Balance / Cuenta Corriente */}
+  {/* Tab Balance / Cuenta Corriente */}
       {tab === 'balance' && balance && (
         <div className="space-y-6">
           {/* Resumen */}
