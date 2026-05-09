@@ -110,13 +110,16 @@ export default function Citas() {
   const [dropTarget, setDropTarget] = useState(null);
   const [usuario, setUsuario] = useState(null);
 
-  const puedeUsarWhatsApp = useMemo(() => {
-  return ['admin', 'recepcionista'].includes(usuario?.rol);
-}, [usuario]);
-  useEffect(() => { 
+  const puedeUsarWhatsApp = ['admin', 'recepcionista'].includes(usuario?.rol);
+  useEffect(() => {
   const cargarUsuario = async () => {
-    const { data } = await api.get('/auth/me');
-    setUsuario(data);
+    try {
+      const { data } = await api.get('/auth/me');
+      setUsuario(data);
+    } catch (err) {
+      console.error('Error cargando usuario', err);
+      setUsuario(null);
+    }
   };
 
   cargarUsuario();
@@ -392,6 +395,17 @@ export default function Citas() {
   const renderCitaChip = (cita) => {
     const color = doctorColorMap[cita.doctor_id] || DOCTOR_COLORS[0];
     const dragging = dragInfo?.cita?.id === cita.id;
+
+
+
+    //___validacion usuario____________
+    if (!usuario) {
+  return (
+    <div className="text-center py-10 text-gray-400">
+      Cargando usuario...
+    </div>
+  );
+}
     return (
       <div
         key={cita.id}
