@@ -4,6 +4,7 @@ const { auth } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const { Op } = require('sequelize');
 const router = express.Router();
+const { Receta } = require('../models');
 
 function toCSV(headers, rows) {
   const escape = (val) => {
@@ -133,7 +134,7 @@ router.put('/:id', auth, registrarActividad('actualizar', 'paciente'), async (re
   }
 });
 //POST /api/paciente/:id receta
-router.post('/pacientes/:id/recetas', auth, async (req, res) => {
+router.post('/:id/recetas', auth, async (req, res) => {
   try {
     const receta = await Receta.create({
       pacienteId: req.params.id,
@@ -150,7 +151,7 @@ router.post('/pacientes/:id/recetas', auth, async (req, res) => {
   }
 });
 //GET /api/pacientes/:id receta
-router.get('/pacientes/:id/recetas', auth, async (req, res) => {
+router.get('/:id/recetas', auth, async (req, res) => {
   try {
     const recetas = await Receta.findAll({
       where: { pacienteId: req.params.id },
