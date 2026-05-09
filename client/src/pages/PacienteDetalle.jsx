@@ -1528,12 +1528,11 @@ window.onload = () => window.print();
                 <button type="submit" className="btn-primary">Registrar Pago</button>
               </div>
             </form>
-          </Modal>
+                    </Modal>
         </div>
       )}
 
-     
-          {/* Modal Cita Rápida */}
+      {/* Modal Cita Rápida */}
           <Modal isOpen={modalCita} onClose={() => setModalCita(false)} title="Agendar Cita">
             <form onSubmit={crearCita} className="space-y-4">
               <div>
@@ -1567,8 +1566,8 @@ window.onload = () => window.print();
               </div>
             </form>
           </Modal>
-        </div>
-      )}
+        
+      
 
       {/* Tab Pagos */}
       {tab === 'pagos' && (
