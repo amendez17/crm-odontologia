@@ -66,7 +66,10 @@ export default function PacienteDetalle() {
 
     toast.error('Error al cargar recetas');
 
-  };
+  } finally {
+    setLoadingRecetas(false);
+  }
+};
   useEffect(() => {cargar();cargarRecetas();}, [id]);
   useEffect(() => {
     api.get('/usuarios/doctores').then(res => setDoctores(res.data)).catch(() => {});
