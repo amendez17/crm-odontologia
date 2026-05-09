@@ -1207,7 +1207,39 @@ window.onload = () => window.print();
             </div>
           ))}
          )}
-          {/* Tab Recetas */}
+
+          <Modal isOpen={modalConsentimiento} onClose={() => setModalConsentimiento(false)} title="Nuevo Consentimiento Informado" size="lg">
+            <form onSubmit={crearConsentimiento} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Plantilla</label>
+                <select
+                  className="input-field"
+                  onChange={e => {
+                    const p = plantillas.find(pl => pl.tipo === e.target.value);
+                    if (p) setFormConsent({ tipo: p.tipo, contenido: p.contenido });
+                  }}
+                >
+                  <option value="">Seleccionar plantilla...</option>
+                  {plantillas.map(p => <option key={p.tipo} value={p.tipo}>{p.tipo}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Tipo *</label>
+                <input value={formConsent.tipo} onChange={e => setFormConsent({ ...formConsent, tipo: e.target.value })} className="input-field" required placeholder="Ej: Extracción Dental" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Contenido *</label>
+                <textarea value={formConsent.contenido} onChange={e => setFormConsent({ ...formConsent, contenido: e.target.value })} className="input-field" rows={10} required />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setModalConsentimiento(false)} className="btn-secondary">Cancelar</button>
+                <button type="submit" className="btn-primary">Crear Consentimiento</button>
+              </div>
+            </form>
+          </Modal>
+        </div>
+      )}
+ {/* Tab Recetas */}
 {tab === 'recetas' && (
   <div className="space-y-4">
 
@@ -1261,40 +1293,7 @@ window.onload = () => window.print();
       </div>
     ))}
   </div>
-
-
-          <Modal isOpen={modalConsentimiento} onClose={() => setModalConsentimiento(false)} title="Nuevo Consentimiento Informado" size="lg">
-            <form onSubmit={crearConsentimiento} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Plantilla</label>
-                <select
-                  className="input-field"
-                  onChange={e => {
-                    const p = plantillas.find(pl => pl.tipo === e.target.value);
-                    if (p) setFormConsent({ tipo: p.tipo, contenido: p.contenido });
-                  }}
-                >
-                  <option value="">Seleccionar plantilla...</option>
-                  {plantillas.map(p => <option key={p.tipo} value={p.tipo}>{p.tipo}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Tipo *</label>
-                <input value={formConsent.tipo} onChange={e => setFormConsent({ ...formConsent, tipo: e.target.value })} className="input-field" required placeholder="Ej: Extracción Dental" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Contenido *</label>
-                <textarea value={formConsent.contenido} onChange={e => setFormConsent({ ...formConsent, contenido: e.target.value })} className="input-field" rows={10} required />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setModalConsentimiento(false)} className="btn-secondary">Cancelar</button>
-                <button type="submit" className="btn-primary">Crear Consentimiento</button>
-              </div>
-            </form>
-          </Modal>
-        </div>
-      )}
-
+)}
       {/* Tab Balance / Cuenta Corriente */}
       {tab === 'balance' && balance && (
         <div className="space-y-6">
