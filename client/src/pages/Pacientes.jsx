@@ -131,9 +131,7 @@ const exportarPacientes = async () => {
           <p className="text-sm text-surface-500">{totalPacientes} pacientes registrados</p>
         </div>
         <div className="flex gap-2">
-     /*    <button onClick={exportarPacientes} className="btn-secondary flex items-center gap-2">
-  <FiDownload size={16} /> CSV
-</button>*/
+       
           <button onClick={abrirNuevo} className="btn-primary flex items-center gap-2">
             <FiPlus size={16} /> Nuevo Paciente
           </button>
