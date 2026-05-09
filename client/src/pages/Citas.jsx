@@ -7,6 +7,15 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,
   FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar
 } from 'react-icons/fi';
+const [usuario, setUsuario] = useState(null);
+useEffect(() => { 
+  const cargarUsuario = async () => {
+    const { data } = await api.get('/auth/me');
+    setUsuario(data);
+  };
+
+  cargarUsuario();
+}, []);
 const puedeUsarWhatsApp = ['admin', 'recepcionista'].includes(usuario?.rol);
 const ESTADOS = {
   programada:  { cls: 'bg-blue-100 text-blue-700',   label: 'Programada' },
