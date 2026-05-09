@@ -7,15 +7,7 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,
   FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar
 } from 'react-icons/fi';
-const [usuario, setUsuario] = useState(null);
-useEffect(() => { 
-  const cargarUsuario = async () => {
-    const { data } = await api.get('/auth/me');
-    setUsuario(data);
-  };
 
-  cargarUsuario();
-}, []);
 
 const puedeUsarWhatsApp = ['admin', 'recepcionista'].includes(usuario?.rol);
 const ESTADOS = {
@@ -119,6 +111,15 @@ export default function Citas() {
   const [showFiltros, setShowFiltros]   = useState(false);
   const [dragInfo, setDragInfo]     = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
+  const [usuario, setUsuario] = useState(null);
+useEffect(() => { 
+  const cargarUsuario = async () => {
+    const { data } = await api.get('/auth/me');
+    setUsuario(data);
+  };
+
+  cargarUsuario();
+}, []);
 
   // Mapa doctor_id → color
   const doctorColorMap = {};
