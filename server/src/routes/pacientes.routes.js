@@ -144,11 +144,13 @@ router.put('/receta/:id', auth, async (req, res) => {
     }
 
     // 🔐 SEGURIDAD: solo el creador puede editar
-    if (receta.usuarioId !== req.usuario.id &&  req.usuario.rol !== 'administrador') {
-      return res.status(403).json({
-        error: 'No tienes permiso para editar esta receta'
-      });
+   if (
+      receta.usuarioId !== req.usuario.id &&
+      req.usuario.rol !== 'administrador'
+    ) {
+      return res.status(403).json({ error: 'Sin permisos' });
     }
+
 
     await receta.update({
       diagnostico: req.body.diagnostico,
@@ -179,6 +181,7 @@ router.delete('/:id/recetas', auth, async (req, res) => {
     ) {
       return res.status(403).json({ error: 'Sin permisos' });
     }
+
 
     await receta.destroy();
 
