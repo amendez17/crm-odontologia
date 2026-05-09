@@ -983,7 +983,7 @@ window.onload = () => window.print();
 
   } catch (error) {
     console.error(error);
-    toast.error('Error al eliminar receta');
+    toast.error('No tienes permiso para eliminar receta');
   }
 };
   //Editar Receta
@@ -1024,7 +1024,7 @@ window.onload = () => window.print();
 
   } catch (error) {
     console.error(error);
-    toast.error('Error al actualizar receta');
+    toast.error('No tienes permisos para eliminar esta receta');
   }
 };
   return (
