@@ -395,7 +395,7 @@ export default function Citas() {
 
   const renderCitaChip = (cita) => {
     const color = doctorColorMap[cita.doctor_id] || DOCTOR_COLORS[0];
-    const dragging = dragInfo?.cita?.id === cita.id;
+    const dragging = dragInfo?.cita?.id === cita.id;};
 
 
 
