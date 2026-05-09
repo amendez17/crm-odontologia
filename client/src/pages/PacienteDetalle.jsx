@@ -26,9 +26,10 @@ export default function PacienteDetalle() {
   const [modalConsentimiento, setModalConsentimiento] = useState(false);
   const [formConsent, setFormConsent] = useState({ tipo: '', contenido: '' });
   const [loading, setLoading] = useState(true);
-  const [recetas, setRecetas] = useState([]);
   const [formReceta, setFormReceta] = useState({diagnostico: '',medicamentos: '', indicaciones: '' });
   const [modalReceta, setModalReceta] = useState(false);
+  const [recetas, setRecetas] = useState([]);
+  const [loadingRecetas, setLoadingRecetas] = useState(true);
   
 
   const cargar = async () => {
@@ -976,8 +977,21 @@ window.onload = () => window.print();
     : null;
 //Cargar recetas
  const cargarRecetas = async () => {
-  const { data } = await api.get(`/pacientes/${id}/recetas`);
-  setRecetas(data);
+  try {
+    setLoadingRecetas(true);
+
+    const { data } = await api.get(`/pacientes/${id}/recetas`);
+
+    setRecetas(data || []);
+
+  } catch (error) {
+    console.error('ERROR RECETAS:', error);
+
+    toast.error('Error al cargar recetas');
+
+  } finally {
+    setLoadingRecetas(false);
+  }
 };
   //Crea Receta
   const guardarReceta = async () => {
