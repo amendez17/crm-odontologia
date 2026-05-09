@@ -53,7 +53,20 @@ export default function PacienteDetalle() {
     }
   };
 
- 
+ const cargarRecetas = async () => {
+  try {
+    setLoadingRecetas(true);
+
+    const { data } = await api.get(`/pacientes/${id}/recetas`);
+
+    setRecetas(data || []);
+
+  } catch (error) {
+    console.error('ERROR RECETAS:', error);
+
+    toast.error('Error al cargar recetas');
+
+  }
   useEffect(() => {cargar();cargarRecetas();}, [id]);
   useEffect(() => {
     api.get('/usuarios/doctores').then(res => setDoctores(res.data)).catch(() => {});
@@ -977,20 +990,7 @@ window.onload = () => window.print();
     ? Math.floor((Date.now() - new Date(paciente.fecha_nacimiento)) / 31557600000)
     : null;
 //Cargar recetas
- const cargarRecetas = async () => {
-  try {
-    setLoadingRecetas(true);
-
-    const { data } = await api.get(`/pacientes/${id}/recetas`);
-
-    setRecetas(data || []);
-
-  } catch (error) {
-    console.error('ERROR RECETAS:', error);
-
-    toast.error('Error al cargar recetas');
-
-  } finally {
+  finally {
     setLoadingRecetas(false);
   }
 };
