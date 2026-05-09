@@ -54,6 +54,7 @@ export default function PacienteDetalle() {
   };
 
   useEffect(() => { cargar(); }, [id]);
+  useEffect(() => {cargarPaciente();cargarRecetas();}, [id]);
   useEffect(() => {
     api.get('/usuarios/doctores').then(res => setDoctores(res.data)).catch(() => {});
     api.get('/consentimiento/plantillas').then(res => setPlantillas(res.data)).catch(() => {});
@@ -994,16 +995,26 @@ window.onload = () => window.print();
   }
 };
   //Crea Receta
-  const guardarReceta = async () => {
-  try {console.log("ENVIANDO RECETA:", formReceta);
-  const res = await api.post(`/pacientes/${id}/recetas`, formReceta);
-  console.log("RESPUESTA:", res.data);
-  toast.success("Receta guardada");
-  cargarRecetas();
-  setModalReceta(false);
-  } catch (err) {
-    console.error("ERROR GUARDANDO RECETA:", err.response?.data || err);
-    toast.error(err.response?.data?.error || "Error al guardar receta");
+ const guardarReceta = async (e) => {
+  e.preventDefault();
+
+  try { await api.post(`/pacientes/${id}/recetas`, formReceta);
+
+    toast.success('Receta creada');
+
+    setFormReceta({
+      diagnostico: '',
+      medicamentos: '',
+      indicaciones: ''
+    });
+
+    cargarRecetas(); // ← recarga automáticamente
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast.error('Error al guardar receta');
   }
 };
 //Imprimir Reseta
