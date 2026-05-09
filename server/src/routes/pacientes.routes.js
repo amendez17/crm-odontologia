@@ -164,7 +164,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 //DELETE /api/paciente/:id receta
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/recetas/:id', auth, async (req, res) => {
   try {
     const receta = await Receta.findByPk(req.params.id);
 
@@ -172,19 +172,19 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ error: 'Receta no encontrada' });
     }
 
-    // 🔐 SOLO EL CREADOR
-    if (receta.usuarioId !== req.usuario.id &&  req.usuario.rol !== 'administrador') {
-      return res.status(403).json({
-        error: 'No tienes permiso para eliminar esta receta'
-      });
+    // 🔐 seguridad (solo creador o admin)
+    if (
+      receta.usuarioId !== req.usuario.id &&
+      req.usuario.rol !== 'administrador'
+    ) {
+      return res.status(403).json({ error: 'Sin permisos' });
     }
 
     await receta.destroy();
 
     res.json({ message: 'Receta eliminada' });
-
   } catch (error) {
-    res.status(500).json({ error: 'No tienes permisos para eliminar' });
+    res.status(500).json({ error: error.message });
   }
 });
 
