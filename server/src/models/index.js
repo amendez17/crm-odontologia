@@ -82,10 +82,7 @@ Receta.belongsTo(Paciente, {
   as: 'paciente'
 });
 
-Usuario.hasMany(Receta, {
-  foreignKey: 'usuarioId',
-  as: 'recetas'
-});
+
 Usuario.hasMany(Receta, {
   foreignKey: 'doctor_id',
   as: 'recetas'
