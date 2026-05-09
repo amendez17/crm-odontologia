@@ -979,10 +979,16 @@ window.onload = () => window.print();
 };
   //Crea Receta
   const guardarReceta = async () => {
-  await api.post(`/pacientes/${id}/recetas`, formReceta);
-
+  try {console.log("ENVIANDO RECETA:", formReceta);
+  const res = await api.post(`/pacientes/${id}/recetas`, formReceta);
+  console.log("RESPUESTA:", res.data);
+  toast.success("Receta guardada");
   cargarRecetas();
   setModalReceta(false);
+  } catch (err) {
+    console.error("ERROR GUARDANDO RECETA:", err.response?.data || err);
+    toast.error(err.response?.data?.error || "Error al guardar receta");
+  }
 };
 //Imprimir Reseta
   const imprimirReceta = (r) => {
