@@ -81,16 +81,6 @@ Receta.belongsTo(Paciente, {
   foreignKey: 'pacienteId',
   as: 'paciente'
 });
-
-
-Usuario.hasMany(Receta, {
-  foreignKey: 'doctor_id',
-  as: 'recetas'
-});
-Receta.belongsTo(Usuario, {
-  foreignKey: 'doctor_id',
-  as: 'doctor'
-});
 module.exports = {
   sequelize,
   Usuario,
