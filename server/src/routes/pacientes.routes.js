@@ -138,7 +138,7 @@ router.post('/:id/recetas', auth, async (req, res) => {
   try {
     const receta = await Receta.create({
       pacienteId: req.params.id,
-      usuarioId: req.user.id,
+      usuarioId: req.usuario.id,
       diagnostico: req.body.diagnostico,
       medicamentos: req.body.medicamentos,
       indicaciones: req.body.indicaciones,
