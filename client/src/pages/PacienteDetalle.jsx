@@ -25,6 +25,9 @@ export default function PacienteDetalle() {
   const [modalConsentimiento, setModalConsentimiento] = useState(false);
   const [formConsent, setFormConsent] = useState({ tipo: '', contenido: '' });
   const [loading, setLoading] = useState(true);
+  const [recetas, setRecetas] = useState([]);
+  const [formReceta, setFormReceta] = useState({diagnostico: '',medicamentos: '', indicaciones: '' });
+  const [modalReceta, setModalReceta] = useState(false);
 
   const cargar = async () => {
     try {
@@ -969,7 +972,50 @@ window.onload = () => window.print();
   const edad = paciente.fecha_nacimiento
     ? Math.floor((Date.now() - new Date(paciente.fecha_nacimiento)) / 31557600000)
     : null;
+//Cargar recetas
+ const cargarRecetas = async () => {
+  const { data } = await api.get(`/pacientes/${id}/recetas`);
+  setRecetas(data);
+};
+  //Crea Receta
+  const guardarReceta = async () => {
+  await api.post(`/pacientes/${id}/recetas`, formReceta);
 
+  cargarRecetas();
+  setModalReceta(false);
+};
+//Imprimir Reseta
+  const imprimirReceta = (r) => {
+  const ventana = window.open('', '_blank');
+
+  ventana.document.write(`
+    <html>
+      <head>
+        <title>Receta médica</title>
+        <style>
+          body { font-family: Arial; padding: 20px; }
+          h2 { color: #0f172a; }
+          .box { margin-bottom: 10px; }
+        </style>
+      </head>
+      <body>
+        <h2>Receta Médica</h2>
+
+        <div class="box"><b>Folio:</b> ${r.folio}</div>
+        <div class="box"><b>Doctor:</b> ${r.doctor?.nombre} ${r.doctor?.apellido}</div>
+
+        <hr />
+
+        <div class="box"><b>Diagnóstico:</b><br/>${r.diagnostico}</div>
+        <div class="box"><b>Medicamentos:</b><br/>${r.medicamentos}</div>
+        <div class="box"><b>Indicaciones:</b><br/>${r.indicaciones}</div>
+
+      </body>
+    </html>
+  `);
+
+  ventana.print();
+};
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -1160,6 +1206,61 @@ window.onload = () => window.print();
               <p className="text-sm text-surface-700 whitespace-pre-wrap line-clamp-3">{c.contenido}</p>
             </div>
           ))}
+          {/* Tab Recetas */}
+{tab === 'recetas' && (
+  <div className="space-y-4">
+
+    <button
+      onClick={() => {
+        setFormReceta({ diagnostico: '', medicamentos: '', indicaciones: '' });
+        setModalReceta(true);
+      }}
+      className="btn-primary flex items-center gap-2"
+    >
+      <FiPlus size={16} /> Nueva Receta
+    </button>
+
+    {recetas.length === 0 ? (
+      <div className="card text-center text-gray-500">
+        No hay recetas registradas
+      </div>
+    ) : recetas.map(r => (
+      <div key={r.id} className="card">
+
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h4 className="font-semibold text-primary-900">
+              Receta médica #{r.folio}
+            </h4>
+
+            <p className="text-sm text-surface-500">
+              {r.createdAt?.split('T')[0]} - Dr. {r.doctor?.nombre} {r.doctor?.apellido}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+
+            <button
+              onClick={() => imprimirReceta(r)}
+              className="p-1 text-primary-600 hover:bg-primary-50 rounded"
+              title="Imprimir"
+            >
+              <FiPrinter size={16} />
+            </button>
+
+          </div>
+        </div>
+
+        <div className="text-sm text-surface-700 space-y-1">
+          <p><b>Diagnóstico:</b> {r.diagnostico}</p>
+          <p><b>Medicamentos:</b> {r.medicamentos}</p>
+          <p><b>Indicaciones:</b> {r.indicaciones}</p>
+        </div>
+
+      </div>
+    ))}
+  </div>
+)}
 
           <Modal isOpen={modalConsentimiento} onClose={() => setModalConsentimiento(false)} title="Nuevo Consentimiento Informado" size="lg">
             <form onSubmit={crearConsentimiento} className="space-y-4">
