@@ -1372,12 +1372,12 @@ window.onload = () => window.print();
   <div className="space-y-6">
 
     {/* HEADER PREMIUM */}
-    <div className="flex items-center justify-between bg-gradient-to-r from-white via-slate-50 to-white border border-amber-100/40 rounded-3xl p-6 shadow-sm">
+    <div className="flex items-center justify-between bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
 
       <div className="flex items-center gap-4">
 
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center border border-amber-200/50 shadow-sm">
-          <FiFileText className="text-amber-700" size={22} />
+        <div className="flex items-center justify-between bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
+          <FiFileText className="text-white" size={24} />
         </div>
 
         <div>
@@ -1394,7 +1394,7 @@ window.onload = () => window.print();
 
       <button
         onClick={() => setModalReceta(true)}
-        className="px-5 py-3 rounded-2xl bg-[#c8a24a] hover:bg-[#b8923f] text-white font-semibold shadow-sm transition-all flex items-center gap-2"
+        className="px-5 py-3 rounded-2xl bg-amber-500 text-white font-semibold shadow-sm hover:bg-amber-600 transition-all flex items-center gap-2"
       >
         <FiPlus size={18} />
         Nueva Receta
@@ -1404,10 +1404,10 @@ window.onload = () => window.print();
 
     {/* SIN RECETAS */}
     {!loadingRecetas && recetas.length === 0 && (
-      <div className="bg-white rounded-3xl border border-slate-200/60 p-14 text-center shadow-sm">
+      <div className="bg-white rounded-3xl border border-slate-200 p-14 text-center shadow-sm">
 
-        <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-5 border border-amber-100">
-          <FiFileText className="text-amber-700" size={34} />
+        <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-5">
+          <FiFileText className="text-amber-600" size={34} />
         </div>
 
         <h3 className="text-lg font-bold text-slate-700">
@@ -1435,11 +1435,11 @@ window.onload = () => window.print();
 
         <div
           key={r.id}
-          className="relative overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm hover:shadow-xl transition-all"
+          className="relative overflow-hidden rounded-3xl border border-amber-100 bg-white shadow-sm hover:shadow-xl transition-all"
         >
 
           {/* DECORACIÓN */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#f3e7c3] via-[#e0c98a] to-[#c8a24a]" />
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600" />
 
           <div className="p-6">
 
@@ -1448,15 +1448,15 @@ window.onload = () => window.print();
 
               <div className="flex items-start gap-4">
 
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center shadow-sm border border-amber-200/50">
-                  <FiAward className="text-amber-700" size={22} />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-md">
+                  <FiAward className="text-white" size={22} />
                 </div>
 
                 <div>
 
                   <div className="flex items-center gap-2 flex-wrap">
 
-                    <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-wide border border-amber-100">
+                    <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold uppercase tracking-wide">
                       Folio {r.folio}
                     </span>
 
@@ -1480,7 +1480,7 @@ window.onload = () => window.print();
 
                 <button
                   onClick={() => imprimirReceta(r)}
-                  className="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 transition-all flex items-center justify-center"
+                  className="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-700 transition-all flex items-center justify-center"
                   title="Imprimir"
                 >
                   <FiPrinter size={18} />
@@ -1488,7 +1488,7 @@ window.onload = () => window.print();
 
                 <button
                   onClick={() => abrirEditarReceta(r)}
-                  className="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-700 transition-all flex items-center justify-center"
+                  className="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-700 transition-all flex items-center justify-center"
                   title="Editar"
                 >
                   <FiEdit2 size={18} />
@@ -1496,7 +1496,7 @@ window.onload = () => window.print();
 
                 <button
                   onClick={() => eliminarReceta(r.id)}
-                  className="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 transition-all flex items-center justify-center"
+                  className="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-red-100 text-slate-700 hover:text-red-700 transition-all flex items-center justify-center"
                   title="Eliminar"
                 >
                   <FiTrash2 size={18} />
@@ -1509,8 +1509,8 @@ window.onload = () => window.print();
             {/* CONTENIDO */}
             <div className="grid md:grid-cols-3 gap-4">
 
-              <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200/60 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-3 text-[#b8923f] font-semibold">
+              <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-3 text-amber-700 font-semibold">
                   <FiAlertTriangle size={16} />
                   Diagnóstico
                 </div>
@@ -1520,8 +1520,8 @@ window.onload = () => window.print();
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200/60 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-3 text-[#b8923f] font-semibold">
+              <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-3 text-amber-700 font-semibold">
                   <FiFileText size={16} />
                   Medicamentos
                 </div>
@@ -1531,8 +1531,8 @@ window.onload = () => window.print();
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200/60 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-3 text-[#b8923f] font-semibold">
+              <div className="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-3 text-amber-700 font-semibold">
                   <FiClock size={16} />
                   Indicaciones
                 </div>
@@ -1552,9 +1552,7 @@ window.onload = () => window.print();
 
     </div>
 
-  </div>
-)}
-      {/* MODAL CREAR */}
+    {/* MODAL CREAR */}
     <Modal
       isOpen={modalReceta}
       onClose={() => setModalReceta(false)}
