@@ -173,7 +173,7 @@ router.delete('/:id', auth, async (req, res) => {
     }
 
     // 🔐 SOLO EL CREADOR
-    if (receta.usuarioId !== req.usuario.id) {
+    if (receta.usuarioId !== req.usuario.id &&  req.usuario.rol !== 'administrador') {
       return res.status(403).json({
         error: 'No tienes permiso para eliminar esta receta'
       });
@@ -184,7 +184,7 @@ router.delete('/:id', auth, async (req, res) => {
     res.json({ message: 'Receta eliminada' });
 
   } catch (error) {
-    res.status(500).json({ error: 'Error eliminando receta' });
+    res.status(500).json({ error: 'No tienes permisos para eliminar' });
   }
 });
 
