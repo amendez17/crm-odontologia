@@ -1294,6 +1294,56 @@ window.onload = () => window.print();
     ))}
   </div>
 )}
+      {/*Modal receta*/}
+      <Modal
+  isOpen={modalReceta}
+  onClose={() => setModalReceta(false)}
+  title="Nueva Receta"
+>
+  <div className="space-y-4">
+
+    <input
+      className="input-field"
+      placeholder="Diagnóstico"
+      value={formReceta.diagnostico}
+      onChange={e => setFormReceta({ ...formReceta, diagnostico: e.target.value })}
+    />
+
+    <textarea
+      className="input-field"
+      placeholder="Medicamentos"
+      value={formReceta.medicamentos}
+      onChange={e => setFormReceta({ ...formReceta, medicamentos: e.target.value })}
+    />
+
+    <textarea
+      className="input-field"
+      placeholder="Indicaciones"
+      value={formReceta.indicaciones}
+      onChange={e => setFormReceta({ ...formReceta, indicaciones: e.target.value })}
+    />
+
+    <div className="flex justify-end gap-2">
+      <button
+        className="btn-secondary"
+        onClick={() => setModalReceta(false)}
+      >
+        Cancelar
+      </button>
+
+      <button
+        className="btn-primary"
+        onClick={async () => {
+          await guardarReceta();
+          setModalReceta(false);
+        }}
+      >
+        Guardar
+      </button>
+    </div>
+
+  </div>
+</Modal>
       {/* Tab Balance / Cuenta Corriente */}
       {tab === 'balance' && balance && (
         <div className="space-y-6">
