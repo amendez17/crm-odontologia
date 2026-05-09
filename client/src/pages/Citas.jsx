@@ -7,7 +7,7 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,
   FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar
 } from 'react-icons/fi';
-
+const puedeUsarWhatsApp = ['admin', 'recepcionista'].includes(usuario?.rol);
 const ESTADOS = {
   programada:  { cls: 'bg-blue-100 text-blue-700',   label: 'Programada' },
   confirmada:  { cls: 'bg-indigo-100 text-indigo-700', label: 'Confirmada' },
@@ -394,8 +394,8 @@ export default function Citas() {
             <p className="text-[10px] text-gray-500 truncate">{cita.motivo || `Dr. ${cita.doctor?.apellido}`}</p>
           </div>
           <div className="flex flex-col gap-0.5 flex-shrink-0">
-            <button onClick={(e) => { e.stopPropagation(); enviarWhatsApp(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle size={11} /></button>
-            <button onClick={(e) => { e.stopPropagation(); enviarWhatsApprecordatorio(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle className="text-[#f5a60a]" size={11} /></button>
+            {puedeUsarWhatsApp && ( <button onClick={(e) => { e.stopPropagation(); enviarWhatsApp(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle size={11} /></button>)}
+           {puedeUsarWhatsApp && ( <button onClick={(e) => { e.stopPropagation(); enviarWhatsApprecordatorio(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle className="text-[#f5a60a]" size={11} /></button> }
             <button onClick={() => crearPresupuestoDesdeCita(cita)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Crear presupuesto">  <FiFileText size={11} /> </button>
             <button onClick={(e) => { e.stopPropagation(); abrirEditar(cita); }} className="p-0.5 text-yellow-600 hover:bg-yellow-100 rounded"><FiEdit2 size={11} /></button>
             <button onClick={(e) => { e.stopPropagation(); eliminar(cita.id); }} className="p-0.5 text-red-600 hover:bg-red-100 rounded"><FiTrash2 size={11} /></button>
