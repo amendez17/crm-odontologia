@@ -135,13 +135,18 @@ router.put('/:id', auth, registrarActividad('actualizar', 'paciente'), async (re
   }
 });
 //Update /api/pacientes/id:/receta
-router.put('/recetas/:id', auth, async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   try {
     const receta = await Receta.findByPk(req.params.id);
 
     if (!receta) {
-      return res.status(404).json({
-        error: 'Receta no encontrada'
+      return res.status(404).json({ error: 'Receta no encontrada' });
+    }
+
+    // 🔐 SEGURIDAD: solo el creador puede editar
+    if (receta.usuarioId !== req.usuario.id) {
+      return res.status(403).json({
+        error: 'No tienes permiso para editar esta receta'
       });
     }
 
@@ -154,13 +159,10 @@ router.put('/recetas/:id', auth, async (req, res) => {
     res.json(receta);
 
   } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: 'Error actualizando receta'
-    });
+    res.status(500).json({ error: 'Error actualizando receta' });
   }
 });
+
 //DELETE /api/paciente/:id receta
 router.delete('/recetas/:id', auth, async (req, res) => {
   try {
