@@ -228,7 +228,7 @@ const exportarPacientes = async () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Numero de Paciente *</label>
-              <input name="dni" value={form.dni} onChange={handleChange} className="input-field" required />
+              <input name="dni" value={form.dni} onChange={handleChange} className="input-field" disable />
             </div>
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Fecha de Nacimiento</label>
