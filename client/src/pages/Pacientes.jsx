@@ -38,7 +38,7 @@ export default function Pacientes() {
 
   useEffect(() => { cargar(); }, [buscar, pagina]);
 const abrirNuevo = () => {
-  setForm(formInicial);
+  setForm({formInicial,dni: data.nextDni});
   setEditando(null);
   setModal(true);
 };
