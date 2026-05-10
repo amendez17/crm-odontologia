@@ -104,41 +104,59 @@ function calcularOverlaps(citas) {
       timeToMinutes(b.hora_inicio)
   );
 
-  const groups = [];
-
   sorted.forEach(cita => {
+    cita.column = 0;
+    cita.totalColumns = 1;
+  });
 
-    let placed = false;
+  for (let i = 0; i < sorted.length; i++) {
 
-    for (const group of groups) {
+    const actual = sorted[i];
 
-      const last = group[group.length - 1];
+    const overlaps = [actual];
+
+    for (let j = 0; j < sorted.length; j++) {
+
+      if (i === j) continue;
+
+      const other = sorted[j];
+
+      const actualInicio =
+        timeToMinutes(actual.hora_inicio);
+
+      const actualFin =
+        timeToMinutes(actual.hora_fin);
+
+      const otherInicio =
+        timeToMinutes(other.hora_inicio);
+
+      const otherFin =
+        timeToMinutes(other.hora_fin);
 
       const overlap =
-        timeToMinutes(cita.hora_inicio) <
-        timeToMinutes(last.hora_fin);
+        actualInicio < otherFin &&
+        actualFin > otherInicio;
 
-      if (!overlap) {
-        group.push(cita);
-        placed = true;
-        break;
+      if (overlap) {
+        overlaps.push(other);
       }
     }
 
-    if (!placed) {
-      groups.push([cita]);
-    }
-  });
+    overlaps.sort(
+      (a, b) =>
+        timeToMinutes(a.hora_inicio) -
+        timeToMinutes(b.hora_inicio)
+    );
 
-  groups.forEach((group, colIndex) => {
-    group.forEach(cita => {
-      cita.column = colIndex;
-      cita.totalColumns = groups.length;
+    overlaps.forEach((c, idx) => {
+      c.column = idx;
+      c.totalColumns = overlaps.length;
     });
-  });
+  }
 
   return sorted;
 }
+
 function getFechaLocal() {
   const hoy = new Date();
   const year = hoy.getFullYear();
