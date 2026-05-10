@@ -1,12 +1,12 @@
 const express = require('express');
-const { Paciente, Cita, Presupuesto, Pago, Odontograma, HistoriaClinica, Usuario, Receta } = require('../models');
+const router = express.Router();
+
+const { sequelize, Paciente, Cita, Presupuesto, Pago, Odontograma, HistoriaClinica, Usuario, Receta } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const { Op } = require('sequelize');
-const router = express.Router();
 
 const Contador = require('../models/Contador');
-const { sequelize, Paciente } = require('../models');
 
 
 function toCSV(headers, rows) {
@@ -127,7 +127,6 @@ router.post('/', auth, registrarActividad('crear', 'paciente'), async (req, res)
 
     const anioActual = new Date().getFullYear();
 
-    // reset anual
     if (contador.anio !== anioActual) {
       contador.anio = anioActual;
       contador.pacientes = 0;
