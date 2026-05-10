@@ -519,22 +519,21 @@ const topLinea =
       onDragStart={(e) => handleDragStart(e, cita)}
       style={style}
       className={`
-        absolute
-        rounded-lg
-        border-l-4
-        ${color.border}
-        ${color.light}
-        p-2
-        overflow-hidden
-        cursor-pointer
-        shadow-sm
-        hover:shadow-md
-        transition-all
-        flex
-        flex-col
-        gap-1
-      `}
-    >
+  rounded-lg
+  border-l-4
+  ${color.border}
+  ${color.light}
+  p-1
+  overflow-y-auto
+  cursor-pointer
+  shadow-sm
+  hover:shadow-md
+  transition-all
+  flex
+  flex-col
+  gap-1
+  h-full
+`}    >
 
       {/* HEADER */}
 
