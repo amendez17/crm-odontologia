@@ -891,13 +891,7 @@ export default function Citas() {
       required
     />
 
-    <input
-      name="dni"
-      value={formPaciente.dni}
-      onChange={(e) => setFormPaciente({ ...formPaciente, dni: e.target.value })}
-      className="input-field"
-      placeholder="DNI"
-    />
+    <input name="dni" value={form.dni || ''} className="input-field bg-gray-100" readOnly/>
 
     <input
       name="telefono"
