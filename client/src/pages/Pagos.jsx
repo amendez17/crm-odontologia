@@ -202,7 +202,7 @@ const exportarPagos = async () => {
             <label className="block text-sm font-medium text-surface-600 mb-1">Paciente *</label>
             <select name="paciente_id" value={form.paciente_id} onChange={handleChange} className="input-field" required>
               <option value="">Seleccionar</option>
-              {pacientes.map(p => <option key={p.id} value={p.id}>{p.apellido}, {p.nombre}</option>)}
+              {pacientes.map(p => <option key={p.id} value={p.id}>{p.nombre}, {p.apellido}</option>)}
             </select>
           </div>
           {presupuestosPaciente.length > 0 && (
