@@ -37,12 +37,21 @@ export default function Pacientes() {
   };
 
   useEffect(() => { cargar(); }, [buscar, pagina]);
+const abrirNuevo = async () => {
+  try {
+    const { data } = await api.get('/pacientes/ultimo-dni');
 
-  const abrirNuevo = () => {
-    setForm(formInicial);
+    setForm({
+      ...formInicial,
+      dni: data.nextDni
+    });
+
     setEditando(null);
     setModal(true);
-  };
+  } catch (err) {
+    toast.error('Error al generar número de paciente');
+  }
+};
 
   const abrirEditar = (pac) => {
     setForm({
