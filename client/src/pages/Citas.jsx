@@ -877,7 +877,7 @@ export default function Citas() {
       value={formPaciente.nombre}
       onChange={(e) => setFormPaciente({ ...formPaciente, nombre: e.target.value })}
       className="input-field"
-      placeholder="Nombre"
+      placeholder="Ingrese Nombre"
       required
     />
     <label>Apellido</label>
@@ -886,19 +886,19 @@ export default function Citas() {
       value={formPaciente.apellido}
       onChange={(e) => setFormPaciente({ ...formPaciente, apellido: e.target.value })}
       className="input-field"
-      placeholder="Apellido"
+      placeholder="Ingrese Apellido"
       required
     />
-
-    <input name="dni" value={form.dni || ''} className="input-field "placeholder="Numero de Paciente Automatico" readOnly/>
+    <label>Número de paciente</label>
+    <input name="dni" value={form.dni || ''} className="input-field "placeholder="Número de Paciente Automático" readOnly/>
 
     <label>Telefono</label>
     <input
-      name="telefono"
+      name="Teléfono"
       value={formPaciente.telefono}
       onChange={(e) => setFormPaciente({ ...formPaciente, telefono: e.target.value })}
       className="input-field"
-      placeholder="Teléfono"
+      placeholder="Ingrese Número de Teléfono"
     />
 
     <div className="flex justify-end gap-2">
