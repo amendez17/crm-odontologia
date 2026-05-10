@@ -551,57 +551,7 @@ const topLinea =
 
         </div>
 
-        <div className="flex flex-col gap-1">
-
-          {puedeUsarWhatsApp && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                enviarWhatsApp(cita);
-              }}
-              className="
-                p-1
-                rounded
-                hover:bg-green-100
-                text-green-600
-              "
-            >
-              <FiMessageCircle size={11} />
-            </button>
-          )}
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              abrirEditar(cita);
-            }}
-            className="
-              p-1
-              rounded
-              hover:bg-yellow-100
-              text-yellow-600
-            "
-          >
-            <FiEdit2 size={11} />
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              eliminar(cita.id);
-            }}
-            className="
-              p-1
-              rounded
-              hover:bg-red-100
-              text-red-600
-            "
-          >
-            <FiTrash2 size={11} />
-          </button>
-
-        </div>
-
+        
       </div>
 
       {/* MOTIVO */}
@@ -629,33 +579,6 @@ const topLinea =
           {cita.notas}
         </div>
       )}
-
-      {/* ESTADO */}
-
-      <select
-        value={cita.estado}
-        onChange={(e) => {
-          e.stopPropagation();
-          cambiarEstado(cita.id, e.target.value);
-        }}
-        onClick={(e) => e.stopPropagation()}
-        className={`
-          mt-auto
-          text-[10px]
-          rounded
-          px-1
-          py-1
-          border-0
-          w-full
-          ${ESTADOS[cita.estado]?.cls || ''}
-        `}
-      >
-        {Object.entries(ESTADOS).map(([k, v]) => (
-          <option key={k} value={k}>
-            {v.label}
-          </option>
-        ))}
-      </select>
 
     </div>
   );
