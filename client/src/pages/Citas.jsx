@@ -28,8 +28,8 @@ const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const HORA_INICIO = 7;
 const HORA_FIN = 20;
-
-const PIXELS_POR_MINUTO = 1.5;
+const ALTURA_HORA = 90;
+const PIXELS_POR_MINUTO = ALTURA_HORA / 60;
 
 const TOTAL_MINUTOS =
   (HORA_FIN - HORA_INICIO) * 60;const ALTURA_HORA = 60; // px por hora
@@ -96,52 +96,46 @@ function calcularPosicionCita(cita) {
       * PIXELS_POR_MINUTO
   };
 }
+
 function calcularOverlaps(citas) {
 
-  const sorted =
-    [...citas].sort(
-      (a, b) =>
-        timeToMinutes(a.hora_inicio)
-        -
-        timeToMinutes(b.hora_inicio)
-    );
+  const sorted = [...citas].sort(
+    (a, b) =>
+      timeToMinutes(a.hora_inicio) -
+      timeToMinutes(b.hora_inicio)
+  );
 
-  sorted.forEach(c => {
-    c.column = 0;
-    c.totalColumns = 1;
-  });
+  const groups = [];
 
-  for (let i = 0; i < sorted.length; i++) {
+  sorted.forEach(cita => {
 
-    const actual = sorted[i];
+    let placed = false;
 
-    for (let j = 0; j < i; j++) {
+    for (const group of groups) {
 
-      const otra = sorted[j];
+      const last = group[group.length - 1];
 
       const overlap =
-        timeToMinutes(
-          actual.hora_inicio
-        )
-        <
-        timeToMinutes(
-          otra.hora_fin
-        );
+        timeToMinutes(cita.hora_inicio) <
+        timeToMinutes(last.hora_fin);
 
-      if (overlap) {
-        actual.column =
-          otra.column + 1;
+      if (!overlap) {
+        group.push(cita);
+        placed = true;
+        break;
       }
     }
-  }
 
-  const total =
-    Math.max(
-      ...sorted.map(c => c.column)
-    ) + 1;
+    if (!placed) {
+      groups.push([cita]);
+    }
+  });
 
-  sorted.forEach(c => {
-    c.totalColumns = total;
+  groups.forEach((group, colIndex) => {
+    group.forEach(cita => {
+      cita.column = colIndex;
+      cita.totalColumns = groups.length;
+    });
   });
 
   return sorted;
@@ -762,7 +756,7 @@ const renderVistaSemana = () => {
 
         {diasSemana.map((dia) => {
 
-          const citasDia = citasSemana[dia] || [];
+         const citasDia = calcularOverlaps( [...(citasSemana[dia] || [])]);
 
           return (
             <div
@@ -823,9 +817,8 @@ const renderVistaSemana = () => {
                   calcularPosicionCita(cita);
 
                 return (
-                  <div key={cita.id} style={{   position: 'absolute', top,  height,  left: '2px',  right: '2px' }}>
-                    {renderCitaChip(cita)}
-                  </div>
+                  <div key={cita.id} style={{ position: 'absolute', top, height, width: `calc(${100 / cita.totalColumns}% - 4px)`, left: `calc(${(100 / cita.totalColumns) * cita.column}% + 2px)`, }}>
+                    {renderCitaChip(cita)} </div>
                 );
               })}
             </div>
