@@ -122,13 +122,23 @@ router.post('/', auth, registrarActividad('crear', 'paciente'), async (req, res)
   const t = await sequelize.transaction();
 
   try {
-    const contador = await Contador.findByPk(1, {
+    let contador = await Contador.findByPk(1, {
       transaction: t,
       lock: t.LOCK.UPDATE
     });
 
     const anioActual = new Date().getFullYear();
 
+    // 🔴 si no existe lo crea
+    if (!contador) {
+      contador = await Contador.create({
+        id: 1,
+        anio: anioActual,
+        pacientes: 0
+      }, { transaction: t });
+    }
+
+    // reset anual
     if (contador.anio !== anioActual) {
       contador.anio = anioActual;
       contador.pacientes = 0;
@@ -149,11 +159,11 @@ router.post('/', auth, registrarActividad('crear', 'paciente'), async (req, res)
 
     await t.commit();
 
-    res.status(201).json(paciente);
+    return res.status(201).json(paciente);
 
   } catch (error) {
     await t.rollback();
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 });
 // PUT /api/pacientes/:id
