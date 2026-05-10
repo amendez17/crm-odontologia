@@ -114,29 +114,27 @@ export default function Citas() {
 
  
 //Guardar paciente
-  const guardarPaciente = async (e) => {
+ const guardarPaciente = async (e) => {
   e.preventDefault();
 
   try {
     const { data } = await api.post('/pacientes', formPaciente);
 
-    toast.success('Paciente creado');
+    toast.success(`Paciente creado: ${data.dni}`);
 
-    // refrescar lista
     setPacientes(prev => [...prev, data]);
 
-    // seleccionar automáticamente en cita
     setForm(prev => ({
       ...prev,
       paciente_id: data.id
     }));
 
     setModalPaciente(false);
+
   } catch (err) {
     toast.error(err.response?.data?.error || 'Error al crear paciente');
   }
 };
-
  const puedeUsarWhatsApp = useMemo(() => {
   return ['administrador', 'recepcionista'].includes(usuario?.rol);
 }, [usuario]);
