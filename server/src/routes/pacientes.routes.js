@@ -8,45 +8,6 @@ const router = express.Router();
 const Contador = require('../models/Contador');
 const { sequelize, Paciente } = require('../models');
 
-router.post('/', auth, async (req, res) => {
-  const t = await sequelize.transaction();
-
-  try {
-    const contador = await Contador.findByPk(1, {
-      transaction: t,
-      lock: t.LOCK.UPDATE
-    });
-
-    const anioActual = new Date().getFullYear();
-
-    // 🔁 reinicio automático por año
-    if (contador.anio !== anioActual) {
-      contador.anio = anioActual;
-      contador.pacientes = 0;
-    }
-
-    contador.pacientes += 1;
-
-    const numero = contador.pacientes;
-
-    const dni = `PAC-${anioActual}-${String(numero).padStart(6, '0')}`;
-
-    await contador.save({ transaction: t });
-
-    const paciente = await Paciente.create({
-      ...req.body,
-      dni
-    }, { transaction: t });
-
-    await t.commit();
-
-    res.status(201).json(paciente);
-
-  } catch (error) {
-    await t.rollback();
-    res.status(400).json({ error: error.message });
-  }
-});
 
 function toCSV(headers, rows) {
   const escape = (val) => {
