@@ -26,7 +26,7 @@ const DOCTOR_COLORS = [
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const HORAS = Array.from({ length: 23 }, (_, i) => i + 1); // 7:00 – 19:00
+const HORAS = Array.from({ length: 15 }, (_, i) => i + 7); // 7:00 – 19:00
 const ALTURA_HORA = 60; // px por hora
 
 function getLunesDeSemana(fecha) {
