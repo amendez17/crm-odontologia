@@ -450,6 +450,9 @@ const topLinea =
     `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
     `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
     `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
+    `Le recordamos llegar 10 minutos antes.\n`+
+    `Será un gusto atenderle.\n`+
+    `Cualquier duda estamos a sus órdenes.\n`+
     `Por favor confirme su asistencia. ¡Gracias!`
   );
 
