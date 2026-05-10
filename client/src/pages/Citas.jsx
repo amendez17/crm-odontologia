@@ -1234,11 +1234,21 @@ const renderVistaSemana = () => {
             }
             className="btn-secondary"
           >
-            <FiMessageCircle className="inline mr-1" />
-            WhatsApp
+            <FiMessageCircle  />
+           Confirmacion cita
           </button>
         )}
-
+ {puedeUsarWhatsApp && (
+          <button
+            onClick={() =>
+             enviarWhatsApprecordatorio(cita)
+            }
+            className="btn-secondary"
+          >
+            <FiMessageCircle className="text-[#f5a60a]" />
+            Recordatorio cita
+          </button>
+        )}
         <button
           onClick={() =>
             crearPresupuestoDesdeCita(
