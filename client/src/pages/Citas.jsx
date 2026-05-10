@@ -1288,6 +1288,9 @@ const renderVistaSemana = () => {
     </div>
   )}
 </Modal>
+
+      <button onClick={() => abrirNuevo()} className=" fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-xl flex items-center justify-center transition-all hover:scale-105  " title="Nueva cita">
+  <FiPlus size={26} /></button>
     </div>
   );
 }
