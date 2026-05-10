@@ -545,8 +545,6 @@ const topLinea =
 
           <p className="text-xs font-semibold text-gray-800 truncate">
             {cita.paciente?.nombre}
-            {' '}
-            {cita.paciente?.apellido}
           </p>
 
         </div>
