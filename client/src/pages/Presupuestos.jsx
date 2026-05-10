@@ -730,7 +730,7 @@ const exportarCSV = async () => {
               <label className="block text-sm font-medium text-surface-600 mb-1">Paciente *</label>
               <select value={form.paciente_id} onChange={e => setForm({ ...form, paciente_id: e.target.value, cita_id: '' })} className="input-field" required>
                 <option value="">Seleccionar</option>
-                {pacientes.map(p => <option key={p.id} value={p.id}> {p.nombre},{p.apellido}</option>)}
+                {pacientes.map(p => <option key={p.id} value={p.id}> {p.nombre} {p.apellido}</option>)}
               </select>
             </div>
             <div>
