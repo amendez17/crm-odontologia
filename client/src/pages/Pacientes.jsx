@@ -158,7 +158,7 @@ const exportarPacientes = async () => {
           <thead>
             <tr>
               <th>Paciente</th>
-              <th>Numero de paciente</th>
+              <th>Número de paciente</th>
               <th>Teléfono</th>
               <th>Obra Social</th>
               <th>Acciones</th>
