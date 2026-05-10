@@ -104,59 +104,50 @@ function calcularOverlaps(citas) {
       timeToMinutes(b.hora_inicio)
   );
 
+  const activas = [];
+
   sorted.forEach(cita => {
-    cita.column = 0;
-    cita.totalColumns = 1;
-  });
 
-  for (let i = 0; i < sorted.length; i++) {
+    const inicio =
+      timeToMinutes(cita.hora_inicio);
 
-    const actual = sorted[i];
+    // eliminar citas que ya terminaron
+    for (let i = activas.length - 1; i >= 0; i--) {
 
-    const overlaps = [actual];
+      const activaFin =
+        timeToMinutes(activas[i].hora_fin);
 
-    for (let j = 0; j < sorted.length; j++) {
-
-      if (i === j) continue;
-
-      const other = sorted[j];
-
-      const actualInicio =
-        timeToMinutes(actual.hora_inicio);
-
-      const actualFin =
-        timeToMinutes(actual.hora_fin);
-
-      const otherInicio =
-        timeToMinutes(other.hora_inicio);
-
-      const otherFin =
-        timeToMinutes(other.hora_fin);
-
-      const overlap =
-        actualInicio < otherFin &&
-        actualFin > otherInicio;
-
-      if (overlap) {
-        overlaps.push(other);
+      if (activaFin <= inicio) {
+        activas.splice(i, 1);
       }
     }
 
-    overlaps.sort(
-      (a, b) =>
-        timeToMinutes(a.hora_inicio) -
-        timeToMinutes(b.hora_inicio)
-    );
+    // detectar columnas ocupadas
+    const usadas = activas.map(c => c.column);
 
-    overlaps.forEach((c, idx) => {
-      c.column = idx;
-      c.totalColumns = overlaps.length;
+    let columna = 0;
+
+    while (usadas.includes(columna)) {
+      columna++;
+    }
+
+    cita.column = columna;
+
+    activas.push(cita);
+
+    // total de columnas SOLO del grupo activo
+    const total = Math.max(
+      ...activas.map(c => c.column)
+    ) + 1;
+
+    activas.forEach(c => {
+      c.totalColumns = total;
     });
-  }
+
+  });
 
   return sorted;
 }
-
 function getFechaLocal() {
   const hoy = new Date();
   const year = hoy.getFullYear();
