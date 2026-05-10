@@ -236,8 +236,8 @@ const exportarPacientes = async () => {
               <input name="apellido" value={form.apellido} onChange={handleChange} className="input-field" required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-surface-600 mb-1">Numero de Paciente *</label>
-              <input  name="dni" value={form.dni} className="input-field" disabled />
+              <label className="block text-sm font-medium text-surface-600 mb-1">Número de Paciente * </label>
+              <input name="dni" value={form.dni || ''} className="input-field bg-gray-100" readOnly/>
             </div>
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Fecha de Nacimiento</label>
