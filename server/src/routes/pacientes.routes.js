@@ -28,7 +28,7 @@ function toCSV(headers, rows) {
   return '\ufeff' + lines.join('\r\n');
 }
 
-//
+//ultimo-dni
 router.get('/ultimo-dni', auth, async (req, res) => {
   try {
     const ultimo = await Paciente.max('id') || 0;
