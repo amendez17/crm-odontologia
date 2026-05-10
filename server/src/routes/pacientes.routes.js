@@ -1,6 +1,6 @@
 const express = require('express');
 const { Paciente, Cita, Presupuesto, Pago, Odontograma, HistoriaClinica, Usuario, Receta } = require('../models');
-const { auth } = require('../middleware/auth');
+const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const { Op } = require('sequelize');
 const router = express.Router();
