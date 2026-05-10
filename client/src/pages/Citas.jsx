@@ -860,7 +860,7 @@ const renderVistaSemana = () => {
                     <span className="text-xs text-surface-400">{horaStr}</span>
                   </div>
                   <div className="flex-1 p-1 space-y-1">
-                    {citasHora.map(cita => renderCitaChip(cita))}
+                    {citasHora.map(cita => renderCitaCard(cita))}
                     {isTarget && !citasHora.length && (
                       <div className="text-xs text-primary-500 text-center py-2 border-2 border-dashed border-primary-300 rounded-lg">
                         Soltar aquí
