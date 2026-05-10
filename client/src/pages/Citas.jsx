@@ -32,7 +32,7 @@ const ALTURA_HORA = 90;
 const PIXELS_POR_MINUTO = ALTURA_HORA / 60;
 
 const TOTAL_MINUTOS =
-  (HORA_FIN - HORA_INICIO) * 60;const ALTURA_HORA = 60; // px por hora
+  (HORA_FIN - HORA_INICIO) * 60;
 
 function getLunesDeSemana(fecha) {
   const d = new Date(fecha + 'T12:00:00');
