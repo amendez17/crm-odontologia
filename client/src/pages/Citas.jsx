@@ -871,6 +871,7 @@ export default function Citas() {
   title="Nuevo Paciente"
 >
   <form onSubmit={guardarPaciente} className="space-y-4">
+    <label>Nombre</label>
     <input
       name="nombre"
       value={formPaciente.nombre}
@@ -879,7 +880,7 @@ export default function Citas() {
       placeholder="Nombre"
       required
     />
-
+    <label>Apellido</label>
     <input
       name="apellido"
       value={formPaciente.apellido}
@@ -889,8 +890,9 @@ export default function Citas() {
       required
     />
 
-    <input name="dni" value={form.dni || ''} className="input-field bg-gray-100" readOnly/>
+    <input name="dni" value={form.dni || ''} className="input-field bg-gray-100"placeholder="Numero de Paciente Automatico" readOnly/>
 
+    <label>Telefono</label>
     <input
       name="telefono"
       value={formPaciente.telefono}
