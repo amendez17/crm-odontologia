@@ -26,8 +26,13 @@ const DOCTOR_COLORS = [
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const HORAS = Array.from({ length: 15 }, (_, i) => i + 7); // 7:00 – 19:00
-const ALTURA_HORA = 60; // px por hora
+const HORA_INICIO = 7;
+const HORA_FIN = 20;
+
+const PIXELS_POR_MINUTO = 1.5;
+
+const TOTAL_MINUTOS =
+  (HORA_FIN - HORA_INICIO) * 60;const ALTURA_HORA = 60; // px por hora
 
 function getLunesDeSemana(fecha) {
   const d = new Date(fecha + 'T12:00:00');
@@ -77,6 +82,70 @@ function timeToMinutes(t) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
 }
+function calcularPosicionCita(cita) {
+  const inicio = timeToMinutes(cita.hora_inicio);
+  const fin = timeToMinutes(cita.hora_fin);
+
+  return {
+    top:
+      (inicio - HORA_INICIO * 60)
+      * PIXELS_POR_MINUTO,
+
+    height:
+      (fin - inicio)
+      * PIXELS_POR_MINUTO
+  };
+}
+function calcularOverlaps(citas) {
+
+  const sorted =
+    [...citas].sort(
+      (a, b) =>
+        timeToMinutes(a.hora_inicio)
+        -
+        timeToMinutes(b.hora_inicio)
+    );
+
+  sorted.forEach(c => {
+    c.column = 0;
+    c.totalColumns = 1;
+  });
+
+  for (let i = 0; i < sorted.length; i++) {
+
+    const actual = sorted[i];
+
+    for (let j = 0; j < i; j++) {
+
+      const otra = sorted[j];
+
+      const overlap =
+        timeToMinutes(
+          actual.hora_inicio
+        )
+        <
+        timeToMinutes(
+          otra.hora_fin
+        );
+
+      if (overlap) {
+        actual.column =
+          otra.column + 1;
+      }
+    }
+  }
+
+  const total =
+    Math.max(
+      ...sorted.map(c => c.column)
+    ) + 1;
+
+  sorted.forEach(c => {
+    c.totalColumns = total;
+  });
+
+  return sorted;
+}
 function getFechaLocal() {
   const hoy = new Date();
   const year = hoy.getFullYear();
@@ -111,7 +180,18 @@ export default function Citas() {
   const [modalPaciente, setModalPaciente] = useState(false);
   const [formPaciente, setFormPaciente] = useState({ nombre: '', apellido: '', dni: '', telefono: ''});
   const abrirNuevoPaciente = () => { setFormPaciente({ nombre: '', apellido: '', dni: '', telefono: ''});setModalPaciente(true);};
-
+  const [horaActual, setHoraActual] = useState(new Date());
+  const [citaSeleccionada, setCitaSeleccionada] = useState(null);
+  const minutosActuales =
+  horaActual.getHours() * 60
+  + horaActual.getMinutes();
+  const HORAS = Array.from(
+  { length: HORA_FIN - HORA_INICIO + 1 },
+  (_, i) => HORA_INICIO + i
+);
+const topLinea =
+  (minutosActuales - HORA_INICIO * 60)
+  * PIXELS_POR_MINUTO;
  
 //Guardar paciente
  const guardarPaciente = async (e) => {
@@ -153,8 +233,13 @@ export default function Citas() {
 }, []);
 
   // Mapa doctor_id → color
-  const doctorColorMap = {};
-  doctores.forEach((d, i) => { doctorColorMap[d.id] = DOCTOR_COLORS[i % DOCTOR_COLORS.length]; });
+  const doctorColorMap = useMemo(() => {
+  const map = {};
+  doctores.forEach((d, i) => {
+    map[d.id] = DOCTOR_COLORS[i % DOCTOR_COLORS.length];
+  });
+  return map;
+}, [doctores]);
 
   // ── Carga de datos ──────────────────────────────────────────────────────────
 
@@ -227,6 +312,11 @@ export default function Citas() {
 
   useEffect(() => { cargar(); }, [fecha, vista, filtroDoctor, filtroEstado]);
   useEffect(() => { cargarDatos(); }, []);
+  useEffect(() => { const interval = setInterval(() => { setHoraActual(new Date()); }, 60000);
+  
+  return () => clearInterval(interval);
+
+}, []);
 
   // ── Navegación ──────────────────────────────────────────────────────────────
 
@@ -288,7 +378,7 @@ export default function Citas() {
   };
 
   const eliminar = async (id) => {
-    if (!confirm('¿Eliminar esta cita?')) return;
+    if (!window.confirm('¿Eliminar esta cita?')) return;
     try { await api.delete(`/citas/${id}`); toast.success('Cita eliminada'); cargar(); }
     catch { toast.error('Error al eliminar'); }
   };
@@ -331,17 +421,16 @@ export default function Citas() {
     });
 
   const msg = encodeURIComponent(
-    `Hola ${cita.paciente?.nombre || ''} ${cita.paciente?.apellido || ''}\n` +
-    `Le recordamos su cita programada para mañana.\n\n` +
-    `📅 ${fechaFmt}\n` +
-    `🕐 ${cita.hora_inicio?.slice(0, 5)} hs\n` +
-    `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
-    `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
-    `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
-    `Si necesita reprogramar, por favor avísenos con anticipación.\n\n'+
-    ' Por favor confirme su asistencia. ¡Gracias!`
-  );
-
+  `Hola ${cita.paciente?.nombre || ''} ${cita.paciente?.apellido || ''}\n` +
+  `Le recordamos su cita programada para mañana.\n\n` +
+  `📅 ${fechaFmt}\n` +
+  `🕐 ${cita.hora_inicio?.slice(0, 5)} hs\n` +
+  `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
+  `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
+  `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
+  `Si necesita reprogramar, por favor avísenos con anticipación.\n\n` +
+  `Por favor confirme su asistencia. ¡Gracias!`
+);
   window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
 };
 
@@ -416,46 +505,167 @@ export default function Citas() {
       cargar();
     } catch { toast.error('Error al reprogramar la cita'); }
   };
-
+ const hoy = getFechaLocal();
   // ── Render helpers ──────────────────────────────────────────────────────────
 
-  const renderCitaChip = (cita) => {
-    const color = doctorColorMap[cita.doctor_id] || DOCTOR_COLORS[0];
-    const dragging = dragInfo?.cita?.id === cita.id;
-    
-    return (
-      <div
-        key={cita.id}
-        draggable
-        onDragStart={(e) => handleDragStart(e, cita)}
-        className={`rounded-lg border-l-4 ${color.light} ${color.border} px-2 py-1.5 cursor-grab active:cursor-grabbing select-none transition-all ${dragging ? 'opacity-30' : 'hover:shadow-sm'}`}
-      >
-        <div className="flex items-center justify-between gap-1">
-          <div className="min-w-0 flex-1">
-            <p className={`font-bold text-xs ${color.text}`}>{cita.hora_inicio?.slice(0, 5)}</p>
-            <p className="text-xs text-gray-800 font-medium truncate">{cita.paciente?.nombre}, {cita.paciente?.apellido?.charAt(0)}.</p>
-            <p className="text-[10px] text-gray-500 truncate">{cita.motivo || `Dr. ${cita.doctor?.apellido}`}</p>
-          </div>
-          <div className="flex flex-col gap-0.5 flex-shrink-0">
-            {puedeUsarWhatsApp && ( <button onClick={(e) => { e.stopPropagation(); enviarWhatsApp(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle size={11} /></button>)}
-           {puedeUsarWhatsApp && ( <button onClick={(e) => { e.stopPropagation(); enviarWhatsApprecordatorio(cita); }} className="p-0.5 text-green-600 hover:bg-green-100 rounded" title="WhatsApp"><FiMessageCircle className="text-[#f5a60a]" size={11} /></button> )}
-            <button onClick={() => crearPresupuestoDesdeCita(cita)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="Crear presupuesto">  <FiFileText size={11} /> </button>
-            <button onClick={(e) => { e.stopPropagation(); abrirEditar(cita); }} className="p-0.5 text-yellow-600 hover:bg-yellow-100 rounded"><FiEdit2 size={11} /></button>
-            <button onClick={(e) => { e.stopPropagation(); eliminar(cita.id); }} className="p-0.5 text-red-600 hover:bg-red-100 rounded"><FiTrash2 size={11} /></button>
-          </div>
-        </div>
-        <select
-          value={cita.estado}
-          onChange={(e) => { e.stopPropagation(); cambiarEstado(cita.id, e.target.value); }}
-          onClick={(e) => e.stopPropagation()}
-          className={`mt-1 w-full text-[10px] rounded px-1 border-0 cursor-pointer ${ESTADOS[cita.estado]?.cls || ''}`}
-        >
-          {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-        </select>
-      </div>
-    );
-  };
+  const renderCitaChip = (cita, style = {}) => {
 
+  const color =
+    doctorColorMap[cita.doctor_id]
+    || DOCTOR_COLORS[0];
+
+  return (
+    <div
+  key={cita.id}
+  draggable
+  onClick={() => setCitaSeleccionada(cita)}
+      onDragStart={(e) => handleDragStart(e, cita)}
+      style={style}
+      className={`
+        absolute
+        rounded-lg
+        border-l-4
+        ${color.border}
+        ${color.light}
+        p-2
+        overflow-hidden
+        cursor-pointer
+        shadow-sm
+        hover:shadow-md
+        transition-all
+        flex
+        flex-col
+        gap-1
+      `}
+    >
+
+      {/* HEADER */}
+
+      <div className="flex items-start justify-between gap-1">
+
+        <div className="min-w-0">
+
+          <p className={`font-bold text-xs ${color.text}`}>
+            {cita.hora_inicio?.slice(0,5)}
+          </p>
+
+          <p className="text-xs font-semibold text-gray-800 truncate">
+            {cita.paciente?.nombre}
+            {' '}
+            {cita.paciente?.apellido}
+          </p>
+
+        </div>
+
+        <div className="flex flex-col gap-1">
+
+          {puedeUsarWhatsApp && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                enviarWhatsApp(cita);
+              }}
+              className="
+                p-1
+                rounded
+                hover:bg-green-100
+                text-green-600
+              "
+            >
+              <FiMessageCircle size={11} />
+            </button>
+          )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              abrirEditar(cita);
+            }}
+            className="
+              p-1
+              rounded
+              hover:bg-yellow-100
+              text-yellow-600
+            "
+          >
+            <FiEdit2 size={11} />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              eliminar(cita.id);
+            }}
+            className="
+              p-1
+              rounded
+              hover:bg-red-100
+              text-red-600
+            "
+          >
+            <FiTrash2 size={11} />
+          </button>
+
+        </div>
+
+      </div>
+
+      {/* MOTIVO */}
+
+      {cita.motivo && (
+        <div className="
+          text-[11px]
+          text-gray-700
+          leading-tight
+          line-clamp-2
+        ">
+          {cita.motivo}
+        </div>
+      )}
+
+      {/* NOTAS */}
+
+      {cita.notas && (
+        <div className="
+          text-[10px]
+          text-gray-500
+          leading-tight
+          line-clamp-2
+        ">
+          {cita.notas}
+        </div>
+      )}
+
+      {/* ESTADO */}
+
+      <select
+        value={cita.estado}
+        onChange={(e) => {
+          e.stopPropagation();
+          cambiarEstado(cita.id, e.target.value);
+        }}
+        onClick={(e) => e.stopPropagation()}
+        className={`
+          mt-auto
+          text-[10px]
+          rounded
+          px-1
+          py-1
+          border-0
+          w-full
+          ${ESTADOS[cita.estado]?.cls || ''}
+        `}
+      >
+        {Object.entries(ESTADOS).map(([k, v]) => (
+          <option key={k} value={k}>
+            {v.label}
+          </option>
+        ))}
+      </select>
+
+    </div>
+  );
+};
   const renderCitaCard = (cita) => {
     const color = doctorColorMap[cita.doctor_id] || DOCTOR_COLORS[0];
     return (
@@ -490,62 +700,131 @@ export default function Citas() {
 
   // ── Vista Semana (grilla horaria + DnD) ─────────────────────────────────────
 
-  const renderVistaSemana = () => (
-    <div className="overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-card">
-      {/* Cabecera días */}
-      <div className="grid border-b border-surface-200 bg-surface-50 sticky top-0 z-10" style={{ gridTemplateColumns: '64px repeat(7, 1fr)' }}>
-        <div className="border-r border-surface-200 p-2" />
+
+const renderVistaSemana = () => {
+
+  return (
+    <div className="overflow-auto bg-white rounded-2xl border">
+
+      <div
+        className="grid min-w-[900px]"
+        style={{
+          gridTemplateColumns: '70px repeat(7, 1fr)'
+        }}
+      >
+
+        {/* CABECERA */}
+
+        <div />
+
         {diasSemana.map((dia, i) => {
-          const esHoy = dia === hoy;
+
           const d = new Date(dia + 'T12:00:00');
+
           return (
             <div
               key={dia}
-              onClick={() => { setFecha(dia); setVista('dia'); }}
-              className={`p-2 text-center border-r border-surface-200 last:border-r-0 cursor-pointer hover:bg-primary-50 transition-colors ${esHoy ? 'bg-primary-50/60' : ''}`}
+              className="border-l p-2 text-center sticky top-0 bg-white z-20"
             >
-              <p className="text-xs text-surface-500">{DIAS_SEMANA[i]}</p>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto text-sm font-bold mt-0.5 ${esHoy ? 'bg-primary-600 text-white' : 'text-surface-700 hover:bg-primary-100'}`}>
+              <div className="text-xs text-gray-500">
+                {DIAS_SEMANA[i]}
+              </div>
+
+              <div className="font-bold">
                 {d.getDate()}
               </div>
             </div>
           );
         })}
-      </div>
-      {/* Grilla horaria */}
-      <div className="overflow-y-auto" style={{ maxHeight: '580px' }}>
-        {HORAS.map(hora => {
-          const horaStr = `${String(hora).padStart(2, '0')}:00`;
+
+        {/* HORAS */}
+
+        <div className="relative">
+
+          {Array.from({
+            length: HORA_FIN - HORA_INICIO
+          }).map((_, i) => {
+
+            const hora = HORA_INICIO + i;
+
+            return (
+              <div
+                key={hora}
+                className="h-[90px] border-t text-xs text-gray-400 pr-2 text-right"
+              >
+                {String(hora).padStart(2,'0')}:00
+              </div>
+            );
+          })}
+        </div>
+
+        {/* COLUMNAS DIAS */}
+
+        {diasSemana.map((dia) => {
+
+          const citasDia = citasSemana[dia] || [];
+
           return (
             <div
-              key={hora}
-              className="grid border-b border-surface-100"
-              style={{ gridTemplateColumns: '64px repeat(7, 1fr)', minHeight: `${ALTURA_HORA}px` }}
+              key={dia}
+              className="relative border-l"
+              style={{
+                height:
+                  TOTAL_MINUTOS
+                  * PIXELS_POR_MINUTO
+              }}
             >
-              <div className="border-r border-surface-200 flex items-start justify-end pr-2 pt-1.5 flex-shrink-0">
-                <span className="text-xs text-surface-400">{horaStr}</span>
-              </div>
-              {diasSemana.map(dia => {
-                const citasHora = (citasSemana[dia] || []).filter(c => {
-                  if (!c.hora_inicio) return false;
-                  return parseInt(c.hora_inicio.split(':')[0]) === hora;
-                });
-                const isTarget = dropTarget?.fecha === dia && dropTarget?.hora === horaStr;
+
+              {/* LINEAS */}
+
+              {Array.from({
+                length: TOTAL_MINUTOS / 30
+              }).map((_, i) => (
+
+                <div
+                  key={i}
+                  className="
+                    absolute
+                    left-0
+                    right-0
+                    border-t
+                    border-gray-100
+                  "
+                  style={{
+                    top:
+                      i * 30
+                      * PIXELS_POR_MINUTO
+                  }}
+                />
+              ))}
+              {/* LINEA HORA ACTUAL */}
+
+{dia === getFechaLocal() && (
+  <div
+    className="
+      absolute
+      left-0
+      right-0
+      h-[2px]
+      bg-red-500
+      z-30
+    "
+    style={{
+      top: topLinea
+    }}
+  />
+)}
+
+              {/* CITAS */}
+
+              {citasDia.map((cita) => {
+
+                const { top, height } =
+                  calcularPosicionCita(cita);
+
                 return (
-                  <div
-                    key={dia}
-                    className={`border-r border-surface-100 last:border-r-0 p-0.5 space-y-0.5 transition-colors ${isTarget ? 'bg-primary-100 ring-1 ring-inset ring-primary-400' : 'hover:bg-surface-50/70'}`}
-                    onDragOver={(e) => handleDragOver(e, dia, horaStr)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, dia, horaStr)}
-                    onClick={() => !citasHora.length && abrirNuevo(dia, horaStr)}
-                  >
-                    {citasHora.map(cita => renderCitaChip(cita))}
-                    {isTarget && !citasHora.length && (
-                      <div className="text-[10px] text-primary-500 text-center py-2 border-2 border-dashed border-primary-300 rounded-lg">
-                        Soltar aquí
-                      </div>
-                    )}
+                  <div key={cita.id} style={{   position: 'absolute', top,  height,  left: '2px',  right: '2px' }}>
+                    {renderCitaChip(cita)}
                   </div>
                 );
               })}
@@ -555,7 +834,7 @@ export default function Citas() {
       </div>
     </div>
   );
-
+};
   // ── Vista Día (grilla horaria + DnD) ─────────────────────────────────────────
 
   const renderVistaDia = () => {
@@ -700,7 +979,7 @@ export default function Citas() {
 
   // ── Render principal ─────────────────────────────────────────────────────────
 
-  const hoy = getFechaLocal();
+ 
   const diasSemana = getDiasSemana(fecha);
  //___validacion usuario____________
     if (!usuario) {
@@ -914,6 +1193,173 @@ export default function Citas() {
       </button>
     </div>
   </form>
+</Modal>
+      <Modal
+  isOpen={!!citaSeleccionada}
+  onClose={() => setCitaSeleccionada(null)}
+  title="Detalle de cita"
+>
+  {citaSeleccionada && (
+    <div className="space-y-4">
+
+      {/* PACIENTE */}
+
+      <div>
+        <p className="text-sm text-gray-500">
+          Paciente
+        </p>
+
+        <p className="font-semibold text-lg">
+          {citaSeleccionada.paciente?.nombre}
+          {' '}
+          {citaSeleccionada.paciente?.apellido}
+        </p>
+      </div>
+
+      {/* DOCTOR */}
+
+      <div>
+        <p className="text-sm text-gray-500">
+          Doctor
+        </p>
+
+        <p>
+          Dr.
+          {' '}
+          {citaSeleccionada.doctor?.nombre}
+          {' '}
+          {citaSeleccionada.doctor?.apellido}
+        </p>
+      </div>
+
+      {/* HORARIO */}
+
+      <div>
+        <p className="text-sm text-gray-500">
+          Horario
+        </p>
+
+        <p>
+          {citaSeleccionada.hora_inicio?.slice(0,5)}
+          {' - '}
+          {citaSeleccionada.hora_fin?.slice(0,5)}
+        </p>
+      </div>
+
+      {/* MOTIVO */}
+
+      {citaSeleccionada.motivo && (
+        <div>
+          <p className="text-sm text-gray-500">
+            Motivo
+          </p>
+
+          <p>
+            {citaSeleccionada.motivo}
+          </p>
+        </div>
+      )}
+
+      {/* NOTAS */}
+
+      {citaSeleccionada.notas && (
+        <div>
+          <p className="text-sm text-gray-500">
+            Notas
+          </p>
+
+          <p className="whitespace-pre-line">
+            {citaSeleccionada.notas}
+          </p>
+        </div>
+      )}
+
+      {/* ESTADO */}
+
+      <div>
+        <p className="text-sm text-gray-500 mb-1">
+          Estado
+        </p>
+
+        <select
+          value={citaSeleccionada.estado}
+          onChange={(e) => {
+            cambiarEstado(
+              citaSeleccionada.id,
+              e.target.value
+            );
+
+            setCitaSeleccionada({
+              ...citaSeleccionada,
+              estado: e.target.value
+            });
+          }}
+          className={`
+            input-field
+            ${ESTADOS[citaSeleccionada.estado]?.cls || ''}
+          `}
+        >
+          {Object.entries(ESTADOS).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* BOTONES */}
+
+      <div className="flex gap-2 flex-wrap pt-2">
+
+        {puedeUsarWhatsApp && (
+          <button
+            onClick={() =>
+              enviarWhatsApp(citaSeleccionada)
+            }
+            className="btn-secondary"
+          >
+            <FiMessageCircle className="inline mr-1" />
+            WhatsApp
+          </button>
+        )}
+
+        <button
+          onClick={() =>
+            crearPresupuestoDesdeCita(
+              citaSeleccionada
+            )
+          }
+          className="btn-secondary"
+        >
+          <FiFileText className="inline mr-1" />
+          Presupuesto
+        </button>
+
+        <button
+          onClick={() => {
+            setCitaSeleccionada(null);
+            abrirEditar(citaSeleccionada);
+          }}
+          className="btn-secondary"
+        >
+          <FiEdit2 className="inline mr-1" />
+          Editar
+        </button>
+
+        <button
+          onClick={() => {
+            eliminar(citaSeleccionada.id);
+            setCitaSeleccionada(null);
+          }}
+          className="btn-danger"
+        >
+          <FiTrash2 className="inline mr-1" />
+          Eliminar
+        </button>
+
+      </div>
+    </div>
+  )}
 </Modal>
     </div>
   );
