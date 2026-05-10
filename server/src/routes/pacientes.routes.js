@@ -28,6 +28,24 @@ function toCSV(headers, rows) {
   return '\ufeff' + lines.join('\r\n');
 }
 
+//
+router.get('/ultimo-dni', auth, async (req, res) => {
+  try {
+    const ultimo = await Paciente.max('id') || 0;
+
+    const anio = new Date().getFullYear();
+    const siguiente = ultimo + 1;
+
+    const dni = `PAC-${anio}-${String(siguiente).padStart(6, '0')}`;
+
+    res.json({
+      nextDni: dni
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // GET /api/pacientes
 router.get('/', auth, async (req, res) => {
