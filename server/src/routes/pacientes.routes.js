@@ -116,7 +116,13 @@ router.get('/:id', auth, async (req, res) => {
 // POST /api/pacientes
 router.post('/', auth, registrarActividad('crear', 'paciente'), async (req, res) => {
   try {
-    const paciente = await Paciente.create(req.body);
+    const ultimo = await Paciente.max('dni') || 0;
+
+    const paciente = await Paciente.create({
+      ...req.body,
+      dni: ultimo + 1
+    });
+
     res.status(201).json(paciente);
   } catch (error) {
     res.status(400).json({ error: error.message });
