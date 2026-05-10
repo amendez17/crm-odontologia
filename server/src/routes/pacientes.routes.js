@@ -27,6 +27,19 @@ function toCSV(headers, rows) {
 
   return '\ufeff' + lines.join('\r\n');
 }
+
+// GET ultimo dni (DEBE IR ARRIBA)
+router.get('/ultimo-dni', auth, async (req, res) => {
+  try {
+    const ultimo = await Paciente.max('dni') || 0;
+
+    res.json({
+      nextDni: ultimo + 1
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 // GET /api/pacientes
 router.get('/', auth, async (req, res) => {
   try {
