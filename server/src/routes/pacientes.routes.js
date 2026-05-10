@@ -235,6 +235,14 @@ router.get('/:id/recetas', auth, async (req, res) => {
     });
   }
 });
+//obtener el ultino dni
+router.get('/ultimo-dni', async (req, res) => {
+  const ultimo = await Paciente.max('dni') || 0;
+
+  res.json({
+    nextDni: ultimo + 1
+  });
+});
 
 // DELETE /api/pacientes/:id (soft delete)
 router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (req, res) => {
