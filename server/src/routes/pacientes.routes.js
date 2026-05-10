@@ -5,7 +5,48 @@ const { registrarActividad } = require('../middleware/logger');
 const { Op } = require('sequelize');
 const router = express.Router();
 
+const Contador = require('../models/Contador');
+const { sequelize, Paciente } = require('../models');
 
+router.post('/', auth, async (req, res) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const contador = await Contador.findByPk(1, {
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
+
+    const anioActual = new Date().getFullYear();
+
+    // 🔁 reinicio automático por año
+    if (contador.anio !== anioActual) {
+      contador.anio = anioActual;
+      contador.pacientes = 0;
+    }
+
+    contador.pacientes += 1;
+
+    const numero = contador.pacientes;
+
+    const dni = `PAC-${anioActual}-${String(numero).padStart(6, '0')}`;
+
+    await contador.save({ transaction: t });
+
+    const paciente = await Paciente.create({
+      ...req.body,
+      dni
+    }, { transaction: t });
+
+    await t.commit();
+
+    res.status(201).json(paciente);
+
+  } catch (error) {
+    await t.rollback();
+    res.status(400).json({ error: error.message });
+  }
+});
 
 function toCSV(headers, rows) {
   const escape = (val) => {
@@ -115,20 +156,44 @@ router.get('/:id', auth, async (req, res) => {
 
 // POST /api/pacientes
 router.post('/', auth, registrarActividad('crear', 'paciente'), async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
-    const ultimo = await Paciente.max('dni') || 0;
+    const contador = await Contador.findByPk(1, {
+      transaction: t,
+      lock: t.LOCK.UPDATE
+    });
+
+    const anioActual = new Date().getFullYear();
+
+    // reset anual
+    if (contador.anio !== anioActual) {
+      contador.anio = anioActual;
+      contador.pacientes = 0;
+    }
+
+    contador.pacientes += 1;
+
+    const numero = contador.pacientes;
+
+    const dni = `PAC-${anioActual}-${String(numero).padStart(6, '0')}`;
+
+    await contador.save({ transaction: t });
 
     const paciente = await Paciente.create({
       ...req.body,
-      dni: ultimo + 1
-    });
+      dni
+    }, { transaction: t });
+
+    await t.commit();
 
     res.status(201).json(paciente);
+
   } catch (error) {
+    await t.rollback();
     res.status(400).json({ error: error.message });
   }
 });
-
 // PUT /api/pacientes/:id
 router.put('/:id', auth, registrarActividad('actualizar', 'paciente'), async (req, res) => {
   try {
@@ -235,14 +300,7 @@ router.get('/:id/recetas', auth, async (req, res) => {
     });
   }
 });
-//obtener el ultino dni
-router.get('/ultimo-dni', async (req, res) => {
-  const ultimo = await Paciente.max('dni') || 0;
 
-  res.json({
-    nextDni: ultimo + 1
-  });
-});
 
 // DELETE /api/pacientes/:id (soft delete)
 router.delete('/:id', auth, registrarActividad('eliminar', 'paciente'), async (req, res) => {
