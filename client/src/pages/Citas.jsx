@@ -24,7 +24,7 @@ const DOCTOR_COLORS = [
   { bg: 'bg-green-600',  light: 'bg-green-50',  text: 'text-green-800',  border: 'border-l-green-600'  },
 ];
 
-const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const HORA_INICIO = 7;
 const HORA_FIN = 20;
@@ -34,26 +34,26 @@ const PIXELS_POR_MINUTO = ALTURA_HORA / 60;
 const TOTAL_MINUTOS =
   (HORA_FIN - HORA_INICIO) * 60;
 
-function getLunesDeSemana(fecha) {
+function getInicioSemana(fecha) {
   const d = new Date(fecha + 'T12:00:00');
-  const dia = d.getDay();
-  const diff = dia === 0 ? -6 : 1 - dia;
-  const lunes = new Date(d);
-  lunes.setDate(d.getDate() + diff);
-  return lunes;
+
+  const dia = d.getDay(); // domingo = 0
+
+  const inicio = new Date(d);
+
+  inicio.setDate(d.getDate() - dia);
+
+  return inicio;
 }
 
-function getDiasSemana(fecha) {
-  const lunes = getLunesDeSemana(fecha);
+function getDiasSemana(fecha) { const inicio = getInicioSemana(fecha);
   return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(lunes);
-    d.setDate(lunes.getDate() + i);
-    return d.getFullYear() + '-' +
-String(d.getMonth() + 1).padStart(2, '0') + '-' +
-String(d.getDate()).padStart(2, '0');
+    const d = new Date(inicio);
+    d.setDate(inicio.getDate() + i);
+     return (
+      d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') );
   });
 }
-
 function getMesGrid(fecha) {
   const d = new Date(fecha + 'T12:00:00');
   const año = d.getFullYear();
@@ -61,7 +61,6 @@ function getMesGrid(fecha) {
   const primerDia = new Date(año, mes, 1);
   const ultimoDia = new Date(año, mes + 1, 0);
   let inicioGrid = primerDia.getDay();
-  inicioGrid = inicioGrid === 0 ? 6 : inicioGrid - 1; // lunes = 0
   const dias = [];
   for (let i = inicioGrid; i > 0; i--) {
     dias.push({fecha: formatLocalDate(new Date(año, mes, 1 - i)),mesActual: false});
