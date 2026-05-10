@@ -890,7 +890,7 @@ export default function Citas() {
       required
     />
 
-    <input name="dni" value={form.dni || ''} className="input-field bg-gray-100"placeholder="Numero de Paciente Automatico" readOnly/>
+    <input name="dni" value={form.dni || ''} className="input-field "placeholder="Numero de Paciente Automatico" readOnly/>
 
     <label>Telefono</label>
     <input
