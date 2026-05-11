@@ -1249,7 +1249,7 @@ const renderVistaSemana = () => {
  {puedeUsarWhatsApp && (
           <button
             onClick={() =>
-             enviarWhatsApprecordatorio(cita)
+             enviarWhatsApprecordatorio(citaSeleccionada)
             }
             className="btn-secondary"
           >
