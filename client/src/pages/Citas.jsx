@@ -82,14 +82,7 @@ function timeToMinutes(t) {
   return h * 60 + m;
 }
 function calcularPosicionCita(cita) {
-  new Date(`1970-01-01T${cita.hora_inicio}`).toLocaleTimeString(
-  'es-MX',
-  {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  }
-)
+  const inicio = timeToMinutes(cita.hora_inicio);
   const fin = timeToMinutes(cita.hora_fin);
 
   return {
