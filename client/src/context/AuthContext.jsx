@@ -8,23 +8,52 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('usuario');
+    // Buscar token en ambos storages
+    const token =
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('token');
+
+    const userData =
+      localStorage.getItem('usuario') ||
+      sessionStorage.getItem('usuario');
+
     if (token && userData) {
       setUsuario(JSON.parse(userData));
     }
+
     setLoading(false);
   }, []);
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('usuario', JSON.stringify(userData));
+  // remember = true -> localStorage
+  // remember = false -> sessionStorage
+  const login = (token, userData, remember = true) => {
+
+    if (remember) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('usuario', JSON.stringify(userData));
+
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('usuario');
+
+    } else {
+      sessionStorage.setItem('token', token);
+      sessionStorage.setItem('usuario', JSON.stringify(userData));
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+    }
+
     setUsuario(userData);
   };
 
   const logout = () => {
+    // Limpiar ambos
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
+
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('usuario');
+
     setUsuario(null);
   };
 
