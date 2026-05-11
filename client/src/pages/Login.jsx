@@ -154,12 +154,13 @@ export default function Login() {
 
       </div>
     </div>
-  </div>
-     {/* Footer */}
+    {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
              Clínica Dental • <FiShield className="text-[#c9a227]" />Sistema seguro de gestión odontológica
           </p>
         </div>
+  </div>
+     
 );
 }
