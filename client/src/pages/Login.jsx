@@ -131,12 +131,6 @@ export default function Login() {
     Recordarme
   </label>
 
-  <button
-    type="button"
-    className="text-[#c9a227] hover:underline"
-  >
-    ¿Olvidaste tu contraseña?
-  </button>
 
 </div>
 
