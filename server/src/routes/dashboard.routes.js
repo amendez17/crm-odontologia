@@ -209,20 +209,6 @@ router.get('/', auth, async (req, res) => {
         };
       })
     );
-console.log('HOY:', hoy);
-
-const citasDebug = await Cita.findAll({
-  attributes: ['id', 'fecha', 'hora_inicio'],
-  order: [['fecha', 'ASC']]
-});
-
-console.log(
-  citasDebug.map(c => ({
-    id: c.id,
-    fecha: c.fecha,
-    hora: c.hora_inicio
-  }))
-);
     res.json({
       estadisticas: {
         totalPacientes,
