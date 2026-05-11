@@ -146,15 +146,20 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Footer */}
-        <div className="mt-6 text-center">
+       <div className="mt-6 text-center">
           <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
-             Clínica Dental • <FiShield className="text-[#c9a227]" />Sistema seguro de gestión odontológica
+             Acceso Seguro <FiShield className="text-[#c9a227]" />
           </p>
         </div>
 
       </div>
     </div>
   </div>
+     {/* Footer */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
+             Clínica Dental • <FiShield className="text-[#c9a227]" />Sistema seguro de gestión odontológica
+          </p>
+        </div>
 );
 }
