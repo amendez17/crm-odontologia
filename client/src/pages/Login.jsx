@@ -9,6 +9,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [remember, setRemember] = useState(true);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export default function Login() {
       });
 
       // guardar sesión
-      login(data.token, data.usuario || null);
+      if (remember) {   localStorage.setItem('token', data.token);   localStorage.setItem('usuario', JSON.stringify(data.usuario)); } else {   sessionStorage.setItem('token', data.token);   sessionStorage.setItem('usuario', JSON.stringify(data.usuario)); }  login(data.token, data.usuario || null);
 
       toast.success('Bienvenido 👋');
       navigate('/');
@@ -118,6 +119,26 @@ export default function Login() {
       placeholder="••••••••"
       required
     />
+    <div className="flex items-center justify-between text-sm">
+  
+  <label className="flex items-center gap-2 cursor-pointer text-slate-600">
+    <input
+      type="checkbox"
+      checked={remember}
+      onChange={(e) => setRemember(e.target.checked)}
+      className="w-4 h-4 accent-[#c9a227]"
+    />
+    Recordarme
+  </label>
+
+  <button
+    type="button"
+    className="text-[#c9a227] hover:underline"
+  >
+    ¿Olvidaste tu contraseña?
+  </button>
+
+</div>
 
     <button
       type="button"
