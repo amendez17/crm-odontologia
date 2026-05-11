@@ -29,7 +29,7 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 const HORA_INICIO = 7;
 const HORA_FIN = 22; // 10 PM
 
-const ALTURA_HORA =   window.innerWidth < 768     ? 55     : 90;
+const ALTURA_HORA = window.innerWidth < 768 ? 42 : 90;
 
 const PIXELS_POR_MINUTO =
   ALTURA_HORA / 60;
@@ -558,7 +558,7 @@ const topLinea =
   border-l-4
   ${color.border}
   ${color.light}
-  p-[2px] md:p-1
+  p-[1px] md:p-1
   overflow-y-auto
   cursor-pointer
   shadow-sm
@@ -576,11 +576,11 @@ const topLinea =
 
         <div className="min-w-0">
 
-          <p className={`font-bold text-[9px] md:text-[9px] md:text-[9px] md:text-xs ${color.text}`}>
+          <p className={`font-bold text-[8px] md:text-[9px] md:text-[9px] md:text-xs ${color.text}`}>
             {formatHora12(cita.hora_inicio)}
           </p>
 
-          <p className="text-[9px] md:text-[9px] md:text-[9px] md:text-xs font-semibold text-gray-800 truncate">
+          <p className="text-[8px] md:text-[8px] md:text-[9px] md:text-xs font-semibold text-gray-800 truncate">
             {cita.paciente?.nombre}
           </p>
 
@@ -656,7 +656,7 @@ const topLinea =
 const renderVistaSemana = () => {
 
   return (
-    <div className=" overflow-x-auto overflow-y-hidden w-full bg-white rounded-2xl border ">
+    <div className="overflow-hidden w-full bg-white rounded-2xl border">
 
       <div
   className="
@@ -665,9 +665,9 @@ const renderVistaSemana = () => {
   "
   style={{
     gridTemplateColumns:
-      window.innerWidth < 768
-        ? '45px repeat(7, minmax(0,1fr))'
-        : '45px repeat(7, minmax(0,1fr))'
+  window.innerWidth < 768
+    ? '32px repeat(7, 1fr)'
+    : '60px repeat(7, 1fr)'
   }}
 >
 
@@ -703,10 +703,9 @@ const renderVistaSemana = () => {
           const hora = HORA_INICIO + i;
 
             return (
-              <div key={hora} className="h-[90px] border-t text-[9px] md:text-[9px] md:text-xs text-gray-400 pr-2 text-right">
-               {formatHora12(`${String(hora).padStart(2,'0')}:00`)}
-              </div>
-            );
+             <div key={hora} className="border-t text-[10px] text-gray-400 pr-1 text-right" style={{height: `${ALTURA_HORA}px`}}>
+  {formatHora12(`${String(hora).padStart(2,'0')}:00`)}
+</div>            );
           })}
         </div>
 
@@ -717,7 +716,7 @@ const renderVistaSemana = () => {
          const citasDia = calcularOverlaps( [...(citasSemana[dia] || [])]);
 
           return (
-            <div key={dia} className="relative border-l" style={{ height:window.innerWidth < 768  ? TOTAL_MINUTOS * 1.2  : TOTAL_MINUTOS * PIXELS_POR_MINUTO }}>
+            <div key={dia} className="relative border-l" style={{height: TOTAL_MINUTOS * PIXELS_POR_MINUTO}}>
 
               {/* LINEAS */}
 
