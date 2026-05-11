@@ -106,10 +106,10 @@ export default function Layout() {
     }
   };
 
-  const sidebarW = collapsed ? 'w-[72px]' : 'w-[230px]';
+  const sidebarW = collapsed   ? 'w-[72px]'   : 'w-[260px] xl:w-[280px]';
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden bg-slate-50">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -221,13 +221,13 @@ export default function Layout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <header className="h-[70px] bg-white/80 backdrop-blur-md border-b border-surface-200/50 flex items-center px-5 lg:px-8 gap-4 z-10">
+        <header className=" h-[65px] sm:h-[70px] bg-white/80 backdrop-blur-md border-b border-surface-200/50 flex items-center px-3 sm:px-5 lg:px-8 gap-2 sm:gap-4 z-10 shrink-0 ">
           <button className="lg:hidden p-2 text-primary-700 hover:bg-primary-50 rounded-xl" onClick={() => setSidebarOpen(true)}>
             <FiMenu size={22} />
           </button>
 
           {/* Welcome & Search */}
-          <div className="hidden sm:block">
+          <div className="hidden md:block">
             <h2 className="text-lg font-bold text-primary-800">
               {usuario?.nombre} {usuario?.apellido}
             </h2>
@@ -237,7 +237,7 @@ export default function Layout() {
           <div className="flex-1" />
 
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
+          <div className=" relative flex-1 max-w-full sm:max-w-sm md:max-w-md ">
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" size={16} />
             <input
               type="text"
@@ -245,7 +245,7 @@ export default function Layout() {
               onChange={e => setBusqueda(e.target.value)}
               onFocus={() => resultados.length > 0 && setShowBusqueda(true)}
               placeholder="Buscar paciente..."
-              className="w-full pl-11 pr-4 py-2.5 bg-surface-50 border border-surface-200 rounded-2xl text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-400 focus:bg-white outline-none transition-all"
+              className=" w-full pl-10 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 text-sm bg-surface-50 border border-surface-200 rounded-2xl text-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-400 focus:bg-white outline-none transition-all"
             />
             {showBusqueda && resultados.length > 0 && (
               <>
@@ -337,13 +337,13 @@ export default function Layout() {
           </div>
 
           {/* User avatar */}
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#d6c08d] to-[#b89a5f] flex items-center justify-center text-white font-bold text-sm shadow-md">
+          <div className=" w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#d6c08d] to-[#b89a5f] flex items-center justify-center text-white font-bold text-sm shadow-md">
             {usuario?.nombre?.[0]}{usuario?.apellido?.[0]}
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-5 lg:p-8">
+        <main className=" flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 ">
           <Outlet />
         </main>
       </div>
