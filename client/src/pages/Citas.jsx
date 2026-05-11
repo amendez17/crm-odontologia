@@ -95,7 +95,21 @@ function calcularPosicionCita(cita) {
       * PIXELS_POR_MINUTO
   };
 }
+function formatHora12(hora) {
+  if (!hora) return '';
 
+  const [h, m] = hora.split(':');
+
+  const date = new Date();
+  date.setHours(parseInt(h));
+  date.setMinutes(parseInt(m));
+
+  return date.toLocaleTimeString('es-MX', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+}
 function calcularOverlaps(citas) {
 
   const sorted = [...citas].sort(
@@ -426,7 +440,7 @@ const topLinea =
   `Hola ${cita.paciente?.nombre || ''} ${cita.paciente?.apellido || ''}\n` +
   `Le recordamos su cita programada para mañana.\n\n` +
   `📅 ${fechaFmt}\n` +
-  `🕐 ${cita.hora_inicio?.slice(0, 5)} hs\n` +
+  `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
   `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
   `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
   `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
@@ -454,7 +468,7 @@ const topLinea =
     `Hola ${cita.paciente?.nombre || ''} ${cita.paciente?.apellido || ''}\n` +
     `Su cita ha quedado confirmada con éxito.\n\n` +
     `📅 ${fechaFmt}\n` +
-    `🕐 ${cita.hora_inicio?.slice(0, 5)} hs\n` +
+    `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
     `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
     `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
     `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
@@ -550,7 +564,7 @@ const topLinea =
         <div className="min-w-0">
 
           <p className={`font-bold text-xs ${color.text}`}>
-            {cita.hora_inicio?.slice(0,5)}
+            {formatHora12(cita.hora_inicio)}
           </p>
 
           <p className="text-xs font-semibold text-gray-800 truncate">
@@ -597,8 +611,8 @@ const topLinea =
       <div key={cita.id} className={`card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 ${color.border}`}>
         <div className="flex items-center gap-4">
           <div className={`text-center min-w-[60px] ${color.light} rounded-xl px-3 py-2`}>
-            <p className={`text-lg font-bold ${color.text}`}>{cita.hora_inicio?.slice(0, 5)}</p>
-            {cita.hora_fin && <p className="text-xs text-surface-400">{cita.hora_fin?.slice(0, 5)}</p>}
+            <p className={`text-lg font-bold ${color.text}`}>{formatHora12(cita.hora_inicio)}</p>
+            {cita.hora_fin && <p className="text-xs text-surface-400">{formatHora12(cita.hora_fin)}</p>}
           </div>
           <div>
             <p className="font-semibold text-primary-900">{cita.paciente?.nombre} {cita.paciente?.apellido}</p>
@@ -677,7 +691,7 @@ const renderVistaSemana = () => {
                 key={hora}
                 className="h-[90px] border-t text-xs text-gray-400 pr-2 text-right"
               >
-                {String(hora).padStart(2,'0')}:00
+               {formatHora12(`${String(hora).padStart(2,'0')}:00`)}
               </div>
             );
           })}
@@ -788,7 +802,7 @@ const renderVistaSemana = () => {
                   onClick={() => !citasHora.length && abrirNuevo(fecha, horaStr)}
                 >
                   <div className="w-16 flex-shrink-0 border-r border-surface-200 flex items-start justify-end pr-2 pt-1.5">
-                    <span className="text-xs text-surface-400">{horaStr}</span>
+                    <span className="text-xs text-surface-400">{formatHora12(horaStr)}</span>
                   </div>
                   <div className="flex-1 p-1 space-y-1">
                     {citasHora.map(cita => renderCitaCard(cita))}
@@ -880,7 +894,7 @@ const renderVistaSemana = () => {
                         onClick={(e) => { e.stopPropagation(); abrirEditar(cita); }}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${color.bg}`} />
-                        <span className="truncate">{cita.hora_inicio?.slice(0, 5)} {cita.paciente?.apellido}</span>
+                        <span className="truncate">{formatHora12(cita.hora_inicio)} {cita.paciente?.apellido}</span>
                       </div>
                     );
                   })}
@@ -1164,9 +1178,9 @@ const renderVistaSemana = () => {
         </p>
 
         <p>
-          {citaSeleccionada.hora_inicio?.slice(0,5)}
+          {formatHora12(citaSeleccionada.hora_inicio)}
           {' - '}
-          {citaSeleccionada.hora_fin?.slice(0,5)}
+          {formatHora12(citaSeleccionada.hora_fin)}
         </p>
       </div>
 
