@@ -90,18 +90,45 @@ Yo, el/la paciente abajo firmante, declaro que he sido informado/a sobre:
 
   'Blanqueamiento dental': `CONSENTIMIENTO INFORMADO PARA BLANQUEAMIENTO DENTAL
 
-Yo, el/la paciente abajo firmante, declaro que he sido informado/a sobre:
+PROCEDIMIENTO: Aplicación de agentes blanqueadores para aclarar el color de los dientes.
 
-1. PROCEDIMIENTO: Aplicación de agentes blanqueadores para aclarar el color de los dientes.
+Yo, el/la paciente abajo firmante, declaro que he leido y comprendidoeste documento y he sido informado/a sobre:
+PROCEDIMIENTO: Aplicación de agentes blanqueadores para aclarar el color de los dientes.
 
-2. RIESGOS Y EFECTOS SECUNDARIOS:
+1. Que he acudido a la Clinica Dental Almar, donde he sido atendido
+
+2. Que se me ha explicado de manera clara en qué consiste el tratamiento de blanqueamiento dental,
+el cual tiene como finalidad mejorar el color de mis dientes, pero no garantiza untono exacto o específico.
+
+3. Que entiendo que el resutado del blanqueamiento puede variar dependiendo de:
+- Color inicial de mis dientes.
+- Tipo de manchas.
+- Habitos (café, vino, tabaco, etc.)
+- Restauraciones Previas.
+
+4. Que pueden requerirse sesiones adicionales.
+
+5. Que se me informo que el agente blanqueador puede entrar en contaco con tejidos blandos
+(encias, labios o mucosa), provocando un aclaraiento temporal de estas zonas, el cual es 
+reversible y no causa daño permanente, desapareciendo en un corto periodo de tiempo.
+
+6. RIESGOS Y EFECTOS SECUNDARIOS:
 - Sensibilidad dental temporal
 - Irritación de encías
 - Resultado puede variar según cada paciente
 - El blanqueamiento no es permanente
 - No afecta restauraciones existentes (empastes, coronas)
 
-3. CONTRAINDICACIONES informadas: embarazo, lactancia, menores de edad, alergia a peróxidos.`,
+7. CONTRAINDICACIONES informadas: embarazo, lactancia, menores de edad, alergia a peróxidos.
+AUTORIZACIÓN PARA FOTOGRAFIAS Y VIDEOS 
+Autorizo la toma de fotografías y/o videos para:
+-Documentación clínica.
+-Seguimiento
+-Uso educativo o en redes sociales
+( ) Rostro completo
+( ) Solo Sonrisa
+( ) No autorizo`,
+
 
   'Procedimiento general': `CONSENTIMIENTO INFORMADO GENERAL
 
