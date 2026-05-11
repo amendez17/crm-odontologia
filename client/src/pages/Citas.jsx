@@ -456,7 +456,6 @@ const topLinea =
   `Le recordamos su cita programada para mañana.\n\n` +
   `📅 ${fechaFmt}\n` +
   `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
-  `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
   `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
   `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
   `Si necesita reprogramar, por favor avísenos con anticipación.\n\n` +
@@ -484,7 +483,6 @@ const topLinea =
     `Su cita ha quedado confirmada con éxito.\n\n` +
     `📅 ${fechaFmt}\n` +
     `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
-    `👨‍⚕️ Dr. ${cita.doctor?.nombre} ${cita.doctor?.apellido}\n` +
     `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
     `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
     `Le recordamos llegar 10 minutos antes.\n`+
@@ -623,7 +621,7 @@ const topLinea =
   const renderCitaCard = (cita) => {
     const color = doctorColorMap[cita.doctor_id] || DOCTOR_COLORS[0];
     return (
-      <div key={cita.id} className={`card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 ${color.border}`}>
+      <div key={cita.id} className={`card flex flex-col lg:flex-row items-start lg:items-center gap-4 items-start sm:items-center justify-between gap-4 border-l-4 ${color.border}`}>
         <div className="flex items-center gap-4">
           <div className={`text-center min-w-[60px] ${color.light} rounded-xl px-3 py-2`}>
             <p className={`text-lg font-bold ${color.text}`}>{formatHora12(cita.hora_inicio)}</p>
@@ -658,10 +656,10 @@ const topLinea =
 const renderVistaSemana = () => {
 
   return (
-    <div className="overflow-auto bg-white rounded-2xl border">
+    <div className=" overflow-x-auto overflow-y-hidden w-full bg-white rounded-2xl border ">
 
       <div
-        className="grid min-w-[900px]"
+        className=" grid min-w-[1100px] md:min-w-[900px] "
         style={{
           gridTemplateColumns: '70px repeat(7, 1fr)'
         }}
@@ -713,15 +711,7 @@ const renderVistaSemana = () => {
          const citasDia = calcularOverlaps( [...(citasSemana[dia] || [])]);
 
           return (
-            <div
-              key={dia}
-              className="relative border-l"
-              style={{
-                height:
-                  TOTAL_MINUTOS
-                  * PIXELS_POR_MINUTO
-              }}
-            >
+            <div key={dia} className="relative border-l" style={{ height:window.innerWidth < 768  ? TOTAL_MINUTOS * 1.2  : TOTAL_MINUTOS * PIXELS_POR_MINUTO }}>
 
               {/* LINEAS */}
 
@@ -851,7 +841,7 @@ const renderVistaSemana = () => {
           ))}
         </div>
         {/* Celdas */}
-        <div className="grid grid-cols-7">
+        <div className=" grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 ">
           {diasMes.map(({ fecha: dia, mesActual }) => {
             const citasDia = citasMes[dia] || [];
             const esHoy = dia === hoy;
@@ -939,9 +929,9 @@ const renderVistaSemana = () => {
   return (
     <div className="space-y-5">
       {/* Encabezado */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className=" flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 ">
         <h1 className="text-2xl font-bold text-primary-800">Agenda de Citas</h1>
-        <div className="flex gap-2 flex-wrap">
+        <div className=" flex flex-col sm:flex-row w-full lg:w-auto gap-2 ">
           <div className="flex bg-surface-100 rounded-2xl p-1">
             <button onClick={() => setVista('dia')} className={`px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${vista === 'dia' ? 'bg-white text-primary-700 shadow-md' : 'text-surface-500 hover:text-primary-600'}`}>
               <FiList size={14} /> Día
@@ -953,19 +943,19 @@ const renderVistaSemana = () => {
               <FiCalendar size={14} /> Mes
             </button>
           </div>
-          <button onClick={() => abrirNuevo()} className="btn-primary flex items-center gap-2">
+          <button onClick={() => abrirNuevo()} className=" btn-primary flex items-center justify-center gap-2 w-full sm:w-auto ">
             <FiPlus size={16} /> Nueva Cita
           </button>
         </div>
       </div>
 
       {/* Navegación */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className=" flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ">
         <button onClick={() => cambiarPeriodo(-1)} className="p-2.5 hover:bg-white/80 rounded-xl border border-surface-200 transition-all hover:shadow-sm">
           <FiChevronLeft size={20} className="text-surface-600" />
         </button>
         <div className="flex items-center gap-3">
-          <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} className="input-field w-auto" />
+          <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} className="input-field w-full sm:w-auto" />
           <span className="text-surface-600 capitalize hidden sm:block font-medium">{getPeriodoLabel()}</span>
         </div>
         <button onClick={() => cambiarPeriodo(1)} className="p-2.5 hover:bg-white/80 rounded-xl border border-surface-200 transition-all hover:shadow-sm">
@@ -982,17 +972,17 @@ const renderVistaSemana = () => {
 
       {/* Filtros */}
       {showFiltros && (
-        <div className="card flex flex-wrap items-end gap-4">
+        <div className=" card grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 ">
           <div>
             <label className="block text-sm font-medium text-surface-600 mb-1">Doctor</label>
-            <select value={filtroDoctor} onChange={e => setFiltroDoctor(e.target.value)} className="input-field w-auto">
+            <select value={filtroDoctor} onChange={e => setFiltroDoctor(e.target.value)} className="input-field w-full sm:w-auto">
               <option value="">Todos</option>
               {doctores.map(d => <option key={d.id} value={d.id}>Dr. {d.nombre} {d.apellido}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-surface-600 mb-1">Estado</label>
-            <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className="input-field w-auto">
+            <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className="input-field w-full sm:w-auto">
               <option value="">Todos</option>
               {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
@@ -1057,7 +1047,7 @@ const renderVistaSemana = () => {
               {doctores.map(d => <option key={d.id} value={d.id}>Dr. {d.nombre} {d.apellido}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className=" grid grid-cols-1 md:grid-cols-3 gap-3 ">
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Fecha *</label>
               <input name="fecha" type="date" value={form.fecha} onChange={handleChange} className="input-field" required />
@@ -1085,9 +1075,9 @@ const renderVistaSemana = () => {
             <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>
             <textarea name="notas" value={form.notas} onChange={handleChange} className="input-field" rows={2} />
           </div>
-          <div className="flex justify-end gap-3 pt-1">
-            <button type="button" onClick={() => setModal(false)} className="btn-secondary">Cancelar</button>
-            <button type="submit" className="btn-primary">{editando ? 'Actualizar' : 'Crear Cita'}</button>
+          <div className=" flex flex-col-reverse sm:flex-row justify-end gap-3 pt-1 ">
+            <button type="button" onClick={() => setModal(false)} className="btn-secondary w-full sm:w-auto">Cancelar</button>
+            <button type="submit" className="btn-primary w-full sm:w-auto">{editando ? 'Actualizar' : 'Crear Cita'}</button>
           </div>
         </form>
       </Modal>
@@ -1131,11 +1121,11 @@ const renderVistaSemana = () => {
       <button
         type="button"
         onClick={() => setModalPaciente(false)}
-        className="btn-secondary"
+        className="btn-secondary w-full sm:w-auto"
       >
         Cancelar
       </button>
-      <button type="submit" className="btn-primary">
+      <button type="submit" className="btn-primary w-full sm:w-auto">
         Crear
       </button>
     </div>
@@ -1263,7 +1253,7 @@ const renderVistaSemana = () => {
             onClick={() =>
               enviarWhatsApp(citaSeleccionada)
             }
-            className="btn-secondary"
+            className="btn-secondary w-full sm:w-auto"
           >
             <FiMessageCircle  />
            Confirmacion cita
@@ -1274,7 +1264,7 @@ const renderVistaSemana = () => {
             onClick={() =>
              enviarWhatsApprecordatorio(citaSeleccionada)
             }
-            className="btn-secondary"
+            className="btn-secondary w-full sm:w-auto"
           >
             <FiMessageCircle className="text-[#f5a60a]" />
             Recordatorio cita
@@ -1286,7 +1276,7 @@ const renderVistaSemana = () => {
               citaSeleccionada
             )
           }
-          className="btn-secondary"
+          className="btn-secondary w-full sm:w-auto"
         >
           <FiFileText className="inline mr-1" />
           Presupuesto
@@ -1297,7 +1287,7 @@ const renderVistaSemana = () => {
             setCitaSeleccionada(null);
             abrirEditar(citaSeleccionada);
           }}
-          className="btn-secondary"
+          className="btn-secondary w-full sm:w-auto"
         >
           <FiEdit2 className="inline mr-1" />
           Editar
@@ -1308,7 +1298,7 @@ const renderVistaSemana = () => {
             eliminar(citaSeleccionada.id);
             setCitaSeleccionada(null);
           }}
-          className="btn-danger"
+          className="btn-danger w-full sm:w-auto"
         >
           <FiTrash2 className="inline mr-1" />
           Eliminar
@@ -1319,7 +1309,7 @@ const renderVistaSemana = () => {
   )}
 </Modal>
 
-      <button onClick={() => abrirNuevo()} className=" fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-xl flex items-center justify-center transition-all hover:scale-105  " title="Nueva cita">
+      <button onClick={() => abrirNuevo()} className=" fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-xl flex items-center justify-center transition-all hover:scale-105  " title="Nueva cita">
   <FiPlus size={26} /></button>
     </div>
   );
