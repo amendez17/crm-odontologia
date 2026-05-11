@@ -45,7 +45,7 @@ export default function Login() {
   };
   const [show, setShow] = useState(false);
   return (
-  <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-slate-50 to-slate-100 relative overflow-hidden">
+  <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-white via-slate-50 to-slate-100 relative overflow-hidden">
 
     {/* Fondo suave tipo Apple */}
     <div className="absolute inset-0 overflow-hidden">
@@ -55,7 +55,7 @@ export default function Login() {
     </div>
 
     {/* Card principal */}
-    <div className="relative w-full max-w-md sm:max-w-lg animate-slide-up px-2">
+    {/* Contenedor */} <div className="relative w-full max-w-md sm:max-w-lg animate-slide-up px-2 flex flex-col items-center">
       <div className="bg-white/70 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-white/40 p-6 sm:p-8">
 
         {/* Logo */}
@@ -155,11 +155,13 @@ export default function Login() {
       </div>
     </div>
     {/* Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
-             Clínica Dental • <FiShield className="text-[#c9a227]" />Sistema seguro de gestión odontológica
-          </p>
-        </div>
+        {/* Footer exterior */}
+<div className="mt-8 text-center">
+  <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
+    <FiShield className="text-[#c9a227]" />
+    Clínica Dental • Sistema seguro de gestión odontológica
+  </p>
+</div>
   </div>
      
 );
