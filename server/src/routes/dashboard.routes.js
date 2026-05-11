@@ -213,7 +213,7 @@ router.get('/', auth, async (req, res) => {
         };
       })
     );
-
+ console.log('HOY:', hoy);
     res.json({
       estadisticas: {
         totalPacientes,
@@ -229,7 +229,7 @@ router.get('/', auth, async (req, res) => {
     });
 
   } catch (error) {
-    console.log('HOY:', hoy);
+   
     res.status(500).json({
       error: error.message
     });
