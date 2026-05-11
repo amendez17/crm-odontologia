@@ -5,11 +5,21 @@ const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const router = express.Router();
 
+
+//obtener fecha Local
+function getFechaLocal(date = new Date()) {
+  return (
+    date.getFullYear() +
+    '-' +
+    String(date.getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(date.getDate()).padStart(2, '0')
+  );
+}
 // GET /api/dashboard
 router.get('/', auth, async (req, res) => {
   try {
-    const hoy = new Date().toISOString().split('T')[0];
-
+    const hoy = getFechaLocal();
     const [
       totalPacientes,
       citasHoy,
@@ -31,7 +41,15 @@ router.get('/', auth, async (req, res) => {
         where: {
           fecha: {
             [Op.gte]: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-              .toISOString().split('T')[0]
+              fecha: {
+  [Op.gte]: getFechaLocal(
+    new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    )
+  )
+}
           }
         }
       }),
@@ -75,11 +93,13 @@ router.get('/', auth, async (req, res) => {
 
 const hoyDate = new Date();
 
-const inicioMes = new Date(
-  hoyDate.getFullYear(),
-  hoyDate.getMonth(),
-  1
-).toISOString().split('T')[0];
+const inicioMes = getFechaLocal(
+  new Date(
+    hoyDate.getFullYear(),
+    hoyDate.getMonth(),
+    1
+  )
+);
 
 const filtroFechas =
   desde && hasta
