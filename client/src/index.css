@@ -1,8 +1,16 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html,
+body,
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -12,6 +20,34 @@ body {
     linear-gradient(135deg, #faf9f7 0%, #f5f3ee 50%, #f8f7f4 100%);
   min-height: 100vh;
   color: #3f3f46;
+}
+
+/* =========================
+   RESPONSIVE GLOBAL
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Scrollbar */
@@ -35,10 +71,12 @@ body {
 
 @layer components {
 
-  /* BUTTONS */
+  /* =========================
+     BUTTONS
+  ========================= */
 
   .btn-primary {
-    @apply text-white px-5 py-2.5 rounded-2xl transition-all font-semibold shadow-md hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply text-white px-5 py-2.5 rounded-2xl transition-all font-semibold shadow-md hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2;
     background: linear-gradient(to right, #e5d3a1, #d6c28a, #cbb47a);
   }
 
@@ -48,7 +86,7 @@ body {
   }
 
   .btn-secondary {
-    @apply bg-white/90 text-zinc-700 px-5 py-2.5 rounded-2xl transition-all font-medium border border-white/60 shadow-sm hover:shadow-md;
+    @apply bg-white/90 text-zinc-700 px-5 py-2.5 rounded-2xl transition-all font-medium border border-white/60 shadow-sm hover:shadow-md inline-flex items-center justify-center gap-2;
   }
 
   .btn-secondary:hover {
@@ -56,16 +94,18 @@ body {
   }
 
   .btn-danger {
-    @apply text-white px-5 py-2.5 rounded-2xl transition-all font-semibold shadow-md;
+    @apply text-white px-5 py-2.5 rounded-2xl transition-all font-semibold shadow-md inline-flex items-center justify-center gap-2;
     background: linear-gradient(to right, #ef4444, #dc2626);
   }
 
   .btn-success {
-    @apply text-white px-5 py-2.5 rounded-2xl transition-all font-semibold shadow-md;
+    @apply text-white px-5 py-2.5 rounded-2xl transition-all font-semibold shadow-md inline-flex items-center justify-center gap-2;
     background: linear-gradient(to right, #d6c28a, #cbb47a);
   }
 
-  /* INPUTS */
+  /* =========================
+     INPUTS
+  ========================= */
 
   .input-field {
     @apply w-full px-4 py-2.5 rounded-2xl outline-none transition-all;
@@ -80,13 +120,16 @@ body {
     background: rgba(255,255,255,0.92);
   }
 
-  /* CARDS */
+  /* =========================
+     CARDS
+  ========================= */
 
   .card {
     @apply rounded-3xl p-6 transition-all animate-fade-in;
     background: rgba(255,255,255,0.72);
     border: 1px solid rgba(255,255,255,0.55);
     backdrop-filter: blur(18px);
+
     box-shadow:
       0 10px 40px rgba(0,0,0,0.04),
       0 2px 10px rgba(0,0,0,0.03);
@@ -94,6 +137,7 @@ body {
 
   .card:hover {
     transform: translateY(-2px);
+
     box-shadow:
       0 20px 50px rgba(0,0,0,0.06),
       0 2px 14px rgba(0,0,0,0.04);
@@ -113,6 +157,7 @@ body {
 
   .stat-card {
     @apply rounded-3xl p-5 flex items-center gap-4 transition-all;
+
     background: rgba(255,255,255,0.78);
     border: 1px solid rgba(255,255,255,0.55);
     backdrop-filter: blur(16px);
@@ -126,16 +171,20 @@ body {
     transform: translateY(-2px);
   }
 
-  /* BADGES */
+  /* =========================
+     BADGES
+  ========================= */
 
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide;
   }
 
-  /* TABLE */
+  /* =========================
+     TABLES
+  ========================= */
 
   .table-modern {
-    @apply w-full text-sm;
+    @apply w-full text-sm min-w-[700px];
   }
 
   .table-modern thead tr {
@@ -143,7 +192,7 @@ body {
   }
 
   .table-modern thead th {
-    @apply px-5 py-3.5 font-semibold text-left text-xs uppercase tracking-wider;
+    @apply px-5 py-3.5 font-semibold text-left text-xs uppercase tracking-wider whitespace-nowrap;
     color: #8b7355;
   }
 
@@ -157,10 +206,12 @@ body {
   }
 
   .table-modern tbody td {
-    @apply px-5 py-3.5;
+    @apply px-5 py-3.5 whitespace-nowrap;
   }
 
-  /* SIDEBAR */
+  /* =========================
+     SIDEBAR
+  ========================= */
 
   .nav-item {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer w-full;
@@ -170,6 +221,7 @@ body {
     background: rgba(255,255,255,0.18);
     color: white;
     backdrop-filter: blur(10px);
+
     box-shadow: 0 4px 18px rgba(0,0,0,0.08);
   }
 
@@ -180,5 +232,80 @@ body {
   .nav-item-inactive:hover {
     background: rgba(255,255,255,0.08);
     color: white;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 640px) {
+
+  body {
+    font-size: 14px;
+  }
+
+  .card,
+  .stat-card,
+  .card-gradient {
+    border-radius: 1.5rem;
+    padding: 1rem;
+  }
+
+  .table-modern {
+    min-width: 650px;
+  }
+
+  .table-modern thead th,
+  .table-modern tbody td {
+    padding: 0.75rem;
+    font-size: 12px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-success {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .input-field {
+    padding: 0.9rem 1rem;
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.2rem !important;
+  }
+
+  h3 {
+    font-size: 1rem !important;
+  }
+
+  .nav-item {
+    padding: 0.85rem;
+    font-size: 13px;
+  }
+}
+
+/* =========================
+   TABLETS
+========================= */
+
+@media (min-width: 641px) and (max-width: 1024px) {
+
+  .card,
+  .stat-card {
+    padding: 1.25rem;
+  }
+
+  .table-modern thead th,
+  .table-modern tbody td {
+    padding: 0.9rem;
   }
 }
