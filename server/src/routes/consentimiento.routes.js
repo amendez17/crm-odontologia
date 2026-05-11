@@ -120,11 +120,14 @@ reversible y no causa daño permanente, desapareciendo en un corto periodo de ti
 - No afecta restauraciones existentes (empastes, coronas)
 
 7. CONTRAINDICACIONES informadas: embarazo, lactancia, menores de edad, alergia a peróxidos.
+
 AUTORIZACIÓN PARA FOTOGRAFIAS Y VIDEOS 
+
 Autorizo la toma de fotografías y/o videos para:
 -Documentación clínica.
 -Seguimiento
 -Uso educativo o en redes sociales
+
 ( ) Rostro completo
 ( ) Solo Sonrisa
 ( ) No autorizo`,
