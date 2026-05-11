@@ -29,7 +29,7 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 const HORA_INICIO = 7;
 const HORA_FIN = 22; // 10 PM
 
-const ALTURA_HORA = 90;
+const ALTURA_HORA =   window.innerWidth < 768     ? 55     : 90;
 
 const PIXELS_POR_MINUTO =
   ALTURA_HORA / 60;
@@ -558,7 +558,7 @@ const topLinea =
   border-l-4
   ${color.border}
   ${color.light}
-  p-1
+  p-[2px] md:p-1
   overflow-y-auto
   cursor-pointer
   shadow-sm
@@ -576,11 +576,11 @@ const topLinea =
 
         <div className="min-w-0">
 
-          <p className={`font-bold text-xs ${color.text}`}>
+          <p className={`font-bold text-[9px] md:text-[9px] md:text-[9px] md:text-xs ${color.text}`}>
             {formatHora12(cita.hora_inicio)}
           </p>
 
-          <p className="text-xs font-semibold text-gray-800 truncate">
+          <p className="text-[9px] md:text-[9px] md:text-[9px] md:text-xs font-semibold text-gray-800 truncate">
             {cita.paciente?.nombre}
           </p>
 
@@ -596,7 +596,7 @@ const topLinea =
           text-[11px]
           text-gray-700
           leading-tight
-          line-clamp-2
+          line-clamp-1 md:line-clamp-2
         ">
           {cita.motivo}
         </div>
@@ -609,7 +609,7 @@ const topLinea =
           text-[10px]
           text-gray-500
           leading-tight
-          line-clamp-2
+          line-clamp-1 md:line-clamp-2
         ">
           {cita.notas}
         </div>
@@ -625,7 +625,7 @@ const topLinea =
         <div className="flex items-center gap-4">
           <div className={`text-center min-w-[60px] ${color.light} rounded-xl px-3 py-2`}>
             <p className={`text-lg font-bold ${color.text}`}>{formatHora12(cita.hora_inicio)}</p>
-            {cita.hora_fin && <p className="text-xs text-surface-400">{formatHora12(cita.hora_fin)}</p>}
+            {cita.hora_fin && <p className="text-[9px] md:text-[9px] md:text-[9px] md:text-xs text-surface-400">{formatHora12(cita.hora_fin)}</p>}
           </div>
           <div>
             <p className="font-semibold text-primary-900">{cita.paciente?.nombre} {cita.paciente?.apellido}</p>
@@ -637,7 +637,7 @@ const topLinea =
           <select
             value={cita.estado}
             onChange={(e) => cambiarEstado(cita.id, e.target.value)}
-            className={`badge ${ESTADOS[cita.estado]?.cls} border-0 cursor-pointer text-xs pr-6`}
+            className={`badge ${ESTADOS[cita.estado]?.cls} border-0 cursor-pointer text-[9px] md:text-[9px] md:text-xs pr-6`}
           >
             {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
@@ -659,11 +659,17 @@ const renderVistaSemana = () => {
     <div className=" overflow-x-auto overflow-y-hidden w-full bg-white rounded-2xl border ">
 
       <div
-        className=" grid min-w-[1100px] md:min-w-[900px] "
-        style={{
-          gridTemplateColumns: '70px repeat(7, 1fr)'
-        }}
-      >
+  className="
+    grid
+    w-full
+  "
+  style={{
+    gridTemplateColumns:
+      window.innerWidth < 768
+        ? '45px repeat(7, minmax(0,1fr))'
+        : '45px repeat(7, minmax(0,1fr))'
+  }}
+>
 
         {/* CABECERA */}
 
@@ -676,13 +682,13 @@ const renderVistaSemana = () => {
           return (
             <div
               key={dia}
-              className="border-l p-2 text-center sticky top-0 bg-white z-20"
+              className=" border-l p-1 md:p-2 text-center sticky top-0 bg-white z-20 "
             >
-              <div className="text-xs text-gray-500">
+              <div className="text-[9px] md:text-[9px] md:text-xs text-gray-500">
                 {DIAS_SEMANA[i]}
               </div>
 
-              <div className="font-bold">
+              <div className="font-bold text-xs md:text-base">
                 {d.getDate()}
               </div>
             </div>
@@ -697,7 +703,7 @@ const renderVistaSemana = () => {
           const hora = HORA_INICIO + i;
 
             return (
-              <div key={hora} className="h-[90px] border-t text-xs text-gray-400 pr-2 text-right">
+              <div key={hora} className="h-[90px] border-t text-[9px] md:text-[9px] md:text-xs text-gray-400 pr-2 text-right">
                {formatHora12(`${String(hora).padStart(2,'0')}:00`)}
               </div>
             );
@@ -801,12 +807,12 @@ const renderVistaSemana = () => {
                   onClick={() => !citasHora.length && abrirNuevo(fecha, horaStr)}
                 >
                   <div className="w-16 flex-shrink-0 border-r border-surface-200 flex items-start justify-end pr-2 pt-1.5">
-                    <span className="text-xs text-surface-400">{formatHora12(horaStr)}</span>
+                    <span className="text-[9px] md:text-[9px] md:text-xs text-surface-400">{formatHora12(horaStr)}</span>
                   </div>
                   <div className="flex-1 p-1 space-y-1">
                     {citasHora.map(cita => renderCitaCard(cita))}
                     {isTarget && !citasHora.length && (
-                      <div className="text-xs text-primary-500 text-center py-2 border-2 border-dashed border-primary-300 rounded-lg">
+                      <div className="text-[9px] md:text-[9px] md:text-xs text-primary-500 text-center py-2 border-2 border-dashed border-primary-300 rounded-lg">
                         Soltar aquí
                       </div>
                     )}
@@ -818,7 +824,7 @@ const renderVistaSemana = () => {
         </div>
         {citasSinHora.length > 0 && (
           <div className="mt-4 space-y-3">
-            <p className="text-xs font-medium text-surface-400 uppercase tracking-wide">Sin hora asignada</p>
+            <p className="text-[9px] md:text-[9px] md:text-xs font-medium text-surface-400 uppercase tracking-wide">Sin hora asignada</p>
             {citasSinHora.map(cita => renderCitaCard(cita))}
           </div>
         )}
@@ -835,7 +841,7 @@ const renderVistaSemana = () => {
         {/* Cabecera días semana */}
         <div className="grid grid-cols-7 border-b border-surface-200 bg-surface-50">
           {DIAS_SEMANA.map(d => (
-            <div key={d} className="py-2 text-center text-xs font-semibold text-surface-500 border-r border-surface-100 last:border-r-0">
+            <div key={d} className="py-2 text-center text-[9px] md:text-[9px] md:text-xs font-semibold text-surface-500 border-r border-surface-100 last:border-r-0">
               {d}
             </div>
           ))}
@@ -990,11 +996,11 @@ const renderVistaSemana = () => {
           <button onClick={() => { setFiltroDoctor(''); setFiltroEstado(''); }} className="btn-secondary text-sm">Limpiar</button>
           {doctores.length > 0 && (
             <div className="flex flex-wrap gap-2 border-l border-surface-200 pl-4 ml-2">
-              <span className="text-xs text-surface-400 self-center">Referencias:</span>
+              <span className="text-[9px] md:text-[9px] md:text-xs text-surface-400 self-center">Referencias:</span>
               {doctores.map((d, i) => {
                 const c = DOCTOR_COLORS[i % DOCTOR_COLORS.length];
                 return (
-                  <span key={d.id} className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${c.light} ${c.text}`}>
+                  <span key={d.id} className={`flex items-center gap-1 text-[9px] md:text-[9px] md:text-xs px-2 py-1 rounded-full ${c.light} ${c.text}`}>
                     <span className={`w-2 h-2 rounded-full ${c.bg}`} />
                     Dr. {d.apellido}
                   </span>
