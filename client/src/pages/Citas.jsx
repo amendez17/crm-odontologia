@@ -98,17 +98,28 @@ function calcularPosicionCita(cita) {
 function formatHora12(hora) {
   if (!hora) return '';
 
-  const [h, m] = hora.split(':');
+  let horas;
+  let minutos;
 
-  const date = new Date();
-  date.setHours(parseInt(h));
-  date.setMinutes(parseInt(m));
+  if (typeof hora === 'string' && hora.includes(':')) {
+    [horas, minutos] = hora.split(':');
+  } else {
+    horas = hora;
+    minutos = '00';
+  }
 
-  return date.toLocaleTimeString('es-MX', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
+  horas = parseInt(horas, 10);
+  minutos = parseInt(minutos, 10);
+
+  const sufijo = horas >= 12 ? 'PM' : 'AM';
+
+  let hora12 = horas % 12;
+
+  if (hora12 === 0) {
+    hora12 = 12;
+  }
+
+  return `${hora12}:${String(minutos).padStart(2, '0')} ${sufijo}`;
 }
 function calcularOverlaps(citas) {
 
