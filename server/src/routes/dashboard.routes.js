@@ -5,14 +5,10 @@ const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 const router = express.Router();
 
-function getFechaLocal(date = new Date()) {
-  return (
-    date.getFullYear() +
-    '-' +
-    String(date.getMonth() + 1).padStart(2, '0') +
-    '-' +
-    String(date.getDate()).padStart(2, '0')
-  );
+function getFechaLocal() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mazatlan'
+  }).format(new Date());
 }
 
 // GET /api/dashboard
