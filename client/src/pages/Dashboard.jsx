@@ -92,22 +92,22 @@ export default function Dashboard() {
   const { estadisticas, proximasCitas, pacientesRecientes, presupuestosPendientes, doctorStats } = data;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in px-1 sm:px-0">
       {/* Welcome bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-primary-900">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-primary-900">Dashboard</h1>
           <p className="text-sm text-surface-400">Resumen general de la clínica</p>
         </div>
         <div className="text-right hidden sm:block">
           <p className="text-sm font-medium text-surface-500">
-            {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           { label: 'Total Pacientes', value: estadisticas.totalPacientes, icon: FiUsers, gradient: 'from-primary-600 to-primary-400', iconBg: 'bg-primary-500' },
           { label: 'Citas Hoy', value: estadisticas.citasHoy, icon: FiCalendar, gradient: 'from-dental-600 to-dental-400', iconBg: 'bg-dental-500' },
@@ -126,7 +126,7 @@ export default function Dashboard() {
       </div>
 
       {/* Gauges Row - like the reference image */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <div className="card flex flex-col items-center">
           <h3 className="font-bold text-gray-800 mb-2 self-start">Citas Hoy</h3>
           <GaugeChart value={estadisticas.citasHoy} max={Math.max(estadisticas.citasHoy, 10)} label="Total del día" unit="citas" color="primary" />
@@ -141,7 +141,7 @@ export default function Dashboard() {
             color="accent"
           />
         </div>
-        <div className="card">
+        <div className="bg-white/80 backdrop-blur-xl border border-white/40 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.06)] p-5">
           <h3 className="font-bold text-gray-800 mb-4">Actividad Mes</h3>
           <div className="flex gap-3 items-end px-2">
             <MiniBar label="Pacientes" value={estadisticas.totalPacientes} max={Math.max(estadisticas.totalPacientes, 20)} color="#2196f3" />
@@ -155,7 +155,7 @@ export default function Dashboard() {
      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Próximas citas */}
-        <div className="card">
+        <div className="bg-white/80 backdrop-blur-xl border border-white/40 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.06)] p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">Próximas Citas</h2>
             <Link to="/citas" className="text-sm text-primary-600 hover:text-primary-700 font-semibold flex items-center gap-1">
@@ -182,7 +182,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-primary-600">{cita.fecha}</p>
+                    <p className="text-sm font-bold text-primary-600">   {new Date(cita.fecha).toLocaleDateString('es-MX')} </p>
                     <p className="text-xs text-surface-400">{cita.hora_inicio?.slice(0,5)}</p>
                   </div>
                 </div>
@@ -192,7 +192,7 @@ export default function Dashboard() {
         </div>
 
         {/* Pacientes recientes */}
-        <div className="card">
+        <div className="bg-white/80 backdrop-blur-xl border border-white/40 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.06)] p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">Pacientes Recientes</h2>
             <Link to="/pacientes" className="text-sm text-primary-600 hover:text-primary-700 font-semibold flex items-center gap-1">
@@ -221,14 +221,14 @@ export default function Dashboard() {
 
       {/* Presupuestos pendientes */}
       {presupuestosPendientes.length > 0 && (
-        <div className="card">
+        <div className="bg-white/80 backdrop-blur-xl border border-white/40 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.06)] p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">Presupuestos Pendientes</h2>
             <Link to="/presupuestos" className="text-sm text-primary-600 hover:text-primary-700 font-semibold flex items-center gap-1">
               Ver todos <FiChevronRight size={14} />
             </Link>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-2xl">
             <table className="table-modern">
               <thead>
                 <tr>
@@ -242,7 +242,7 @@ export default function Dashboard() {
                   <tr key={p.id}>
                     <td className="font-semibold text-gray-900">{p.paciente?.nombre} {p.paciente?.apellido}</td>
                     <td className="font-bold text-dental-600">${Number(p.total).toLocaleString()}</td>
-                    <td className="text-surface-400">{p.createdAt?.split('T')[0]}</td>
+                    <td className="text-surface-400">   {new Date(p.createdAt).toLocaleDateString('es-MX')} </td>
                   </tr>
                 ))}
               </tbody>
