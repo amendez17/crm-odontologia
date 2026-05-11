@@ -27,14 +27,18 @@ const DOCTOR_COLORS = [
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const HORA_INICIO = 7;
-const HORA_FIN = 20;
+const HORA_FIN = 22; // 10 PM
+
 const ALTURA_HORA = 90;
-const PIXELS_POR_MINUTO = ALTURA_HORA / 60;
+
+const PIXELS_POR_MINUTO =
+  ALTURA_HORA / 60;
+
+// IMPORTANTE:
+// +1 para incluir la última hora completa
 
 const TOTAL_MINUTOS =
-  (HORA_FIN - HORA_INICIO) * 60;
-
-function getInicioSemana(fecha) {
+  (HORA_FIN - HORA_INICIO + 1) * 60;function getInicioSemana(fecha) {
   const d = new Date(fecha + 'T12:00:00');
 
   const dia = d.getDay(); // domingo = 0
@@ -691,17 +695,11 @@ const renderVistaSemana = () => {
 
         <div className="relative">
 
-          {Array.from({
-            length: HORA_FIN - HORA_INICIO
-          }).map((_, i) => {
-
-            const hora = HORA_INICIO + i;
+          {Array.from({length: HORA_FIN - HORA_INICIO + 1}).map((_, i) => {
+          const hora = HORA_INICIO + i;
 
             return (
-              <div
-                key={hora}
-                className="h-[90px] border-t text-xs text-gray-400 pr-2 text-right"
-              >
+              <div key={hora} className="h-[90px] border-t text-xs text-gray-400 pr-2 text-right">
                {formatHora12(`${String(hora).padStart(2,'0')}:00`)}
               </div>
             );
