@@ -717,7 +717,7 @@ const renderVistaSemana = () => {
               ))}
               {/* LINEA HORA ACTUAL */}
 
-{dia === getFechaLocal() && (
+{dia === fechaHoy() && (
   <div
     className="
       absolute
