@@ -663,11 +663,11 @@ const exportarCSV = async () => {
                   </td>
                   <td className="text-surface-500">{p.createdAt?.split('T')[0]}</td>
                 <td className="min-w-[180px]">
-                    <div className="flex items-center justify-center gap-2 whitespace-nowrap">
-                      <button onClick={() => editar(p.id)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors" title="Editar"> <FiEdit size={16} /></button>
-                      <button onClick={() => verDetalle(p.id)} className="p-2 text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Ver detalle"><FiEye size={16} /></button>
-                      <button onClick={async () => { const { data } = await api.get(`/presupuestos/${p.id}`); imprimirPresupuesto(data); }} className="p-2 text-surface-500 hover:bg-surface-100 rounded-xl transition-colors" title="Imprimir"><FiPrinter size={16}  /></button>
-                      <button onClick={() => eliminar(p.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Eliminar"><FiTrash2 size={16} /></button>
+                    <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                      <button onClick={() => editar(p.id)} className="p-1 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors" title="Editar"> <FiEdit size={16} /></button>
+                      <button onClick={() => verDetalle(p.id)} className="p-1 text-primary-600 hover:bg-primary-50 rounded-xl transition-colors" title="Ver detalle"><FiEye size={16} /></button>
+                      <button onClick={async () => { const { data } = await api.get(`/presupuestos/${p.id}`); imprimirPresupuesto(data); }} className="p-1 text-surface-500 hover:bg-surface-100 rounded-xl transition-colors" title="Imprimir"><FiPrinter size={16}  /></button>
+                      <button onClick={() => eliminar(p.id)} className="p-1 text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Eliminar"><FiTrash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
