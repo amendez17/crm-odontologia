@@ -423,6 +423,8 @@ const topLinea =
 };
 
   const enviarWhatsApprecordatorio = (cita) => {
+    console.log('CITA COMPLETA:', cita);
+console.log('FECHA CITA:', cita.fecha);
   const tel = cita.paciente?.telefono?.replace(/\D/g, '') || '';
   if (!tel) {
     toast.error('El paciente no tiene teléfono registrado');
