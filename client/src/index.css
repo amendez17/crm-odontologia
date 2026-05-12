@@ -29,13 +29,15 @@ body {
 }
 
 img,
-svg,
 video,
 canvas {
   max-width: 100%;
   height: auto;
 }
 
+svg {
+  flex-shrink: 0;
+}
 input,
 select,
 textarea {
