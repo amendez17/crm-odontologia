@@ -726,7 +726,7 @@ const exportarCSV = async () => {
     );
 
     return mismoPaciente && !citaYaUsada;
-  }))
+  })
   .map(c => (
     <option key={c.id} value={c.id}>
       #{c.id} - {c.paciente?.nombre} {c.paciente?.apellido}
