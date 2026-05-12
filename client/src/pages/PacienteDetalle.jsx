@@ -4,7 +4,6 @@ import api from '../api/axios';
 import Odontograma from '../components/Odontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-
 import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock } from 'react-icons/fi';
 
 export default function PacienteDetalle() {
@@ -35,14 +34,7 @@ export default function PacienteDetalle() {
   
 
   const cargar = async () => {
-    try {
-      const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([
-        api.get(`/pacientes/${id}`),
-        api.get(`/odontograma/${id}`),
-        api.get(`/historia/${id}`),
-        api.get(`/reportes/balance/${id}`),
-        api.get(`/consentimiento/paciente/${id}`)
-      ]);
+    try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([api.get(`/pacientes/${id}`), api.get(`/odontograma/${id}`), api.get(`/historia/${id}`), api.get(`/reportes/balance/${id}`), api.get(`/consentimiento/paciente/${id}`)]);
       setPaciente(pacRes.data);
       setOdontograma(odonRes.data);
       setHistorias(histRes.data);
@@ -52,53 +44,29 @@ export default function PacienteDetalle() {
       toast.error('Error al cargar datos del paciente');
     } finally {
       setLoading(false);
-    }
-  };
-
+    }};
  const cargarRecetas = async () => {
-  try {
-    setLoadingRecetas(true);
-
-    const { data } = await api.get(`/pacientes/${id}/recetas`);
-
+  try {setLoadingRecetas(true);
+  const { data } = await api.get(`/pacientes/${id}/recetas`);
     setRecetas(data || []);
-
   } catch (error) {
     console.error('ERROR RECETAS:', error);
-
     toast.error('Error al cargar recetas');
-
   } finally {
-    setLoadingRecetas(false);
-  }
-};
+    setLoadingRecetas(false);}};
   useEffect(() => {cargar();cargarRecetas();}, [id]);
   useEffect(() => {
     api.get('/usuarios/doctores').then(res => setDoctores(res.data)).catch(() => {});
-    api.get('/consentimiento/plantillas').then(res => setPlantillas(res.data)).catch(() => {});
-  }, []);
-  useEffect(() => {
-  console.log("ODONTOGRAMA BACKEND:", odontograma);
-}, [odontograma]);
-
+    api.get('/consentimiento/plantillas').then(res => setPlantillas(res.data)).catch(() => {});}, []);
+  useEffect(() => {console.log("ODONTOGRAMA BACKEND:", odontograma);}, [odontograma]);
    const handleOdontograma = async (pieza, data) => {
     try {
       // Normaliza: acepta tanto string ('caries') como objeto ({ estado, cara })
-      const payload = typeof data === 'string'
-        ? { estado: data, cara: 'completa' }
-        : { cara: 'completa', ...data };
-
+      const payload = typeof data === 'string'? { estado: data, cara: 'completa' }: { cara: 'completa', ...data };
      // Busca el registro más reciente (mayor id) para esa pieza + cara
-      const registro = odontograma
-        .filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara)
-        .sort((a, b) => b.id - a.id)[0];
-
+      const registro = odontograma.filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara).sort((a, b) => b.id - a.id)[0];
       if (!registro) {
-        await api.post('/odontograma', {
-          paciente_id: parseInt(id),
-          pieza_dental: pieza,
-          ...payload
-        });
+        await api.post('/odontograma', { paciente_id: parseInt(id), pieza_dental: pieza, ...payload});
       } else {
         await api.put(`/odontograma/${registro.id}`, payload);
       }
@@ -109,13 +77,11 @@ export default function PacienteDetalle() {
     } catch (error) {
       console.error('Error guardando odontograma:', error.response?.data || error);
       toast.error('Error al guardar odontograma');
-    }
-  };
+    }};
  
   const guardarHistoria = async (e) => {
     e.preventDefault();
-    try {
-      await api.post('/historia', { ...formHistoria, paciente_id: parseInt(id), fecha: new Date().toISOString().split('T')[0] });
+    try { await api.post('/historia', { ...formHistoria, paciente_id: parseInt(id), fecha: new Date().toISOString().split('T')[0] });
       toast.success('Registro añadido');
       setModalHistoria(false);
       setFormHistoria({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
@@ -123,190 +89,84 @@ export default function PacienteDetalle() {
       setHistorias(data);
     } catch {
       toast.error('Error al guardar');
-    }
-  };
+    }};
 
-  const crearConsentimiento = async (e) => {
-    e.preventDefault();
+  const crearConsentimiento = async (e) => {e.preventDefault();
     try {
       await api.post('/consentimiento', { paciente_id: parseInt(id), tipo: formConsent.tipo, contenido: formConsent.contenido });
       toast.success('Consentimiento creado');
       setModalConsentimiento(false);
       const { data } = await api.get(`/consentimiento/paciente/${id}`);
       setConsentimientos(data);
-    } catch { toast.error('Error al crear consentimiento'); }
-  };
-
-  const firmarConsentimiento = async (consentId) => {
-    if (!confirm('¿Confirmar firma del consentimiento?')) return;
-    try {
-      await api.put(`/consentimiento/${consentId}/firmar`);
+    } catch { toast.error('Error al crear consentimiento'); }};
+  const firmarConsentimiento = async (consentId) => { if (!confirm('¿Confirmar firma del consentimiento?')) return;
+    try { await api.put(`/consentimiento/${consentId}/firmar`);
       toast.success('Consentimiento firmado');
       const { data } = await api.get(`/consentimiento/paciente/${id}`);
       setConsentimientos(data);
-    } catch { toast.error('Error al firmar'); }
-  };
+    } catch { toast.error('Error al firmar'); }};
 
   const imprimirConsentimiento = (c) => {
   const win = window.open('', '_blank', 'width=700,height=900');
-
   const pacienteData = paciente || c.paciente || {};
-
   win.document.write(`<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>Consentimiento - ${c.tipo}</title>
-
 <style>
 
 /* FORMATO CARTA */
-@page {
-  size: Letter;
-  margin: 10mm 12mm 12mm 12mm;
-}
+@page { size: Letter; margin: 10mm 12mm 12mm 12mm;}
 
-body{
-  font-family: 'Segoe UI', Arial, sans-serif;
-  margin:0;
-  padding:5px 10px 10px 10px;
-  max-width:650px;
-  margin:auto;
-  color:#2c2c2c;
-  background:#ffffff;
-}
+body{ font-family: 'Segoe UI', Arial, sans-serif; margin:0; padding:5px 10px 10px 10px; max-width:650px; margin:auto; color:#2c2c2c; background:#ffffff;}
 
 /* CONTENEDOR */
-.container{
-  border:1px solid #f0e6c8;
-  border-radius:12px;
-  padding:20px;
-  position:relative;
-}
+.container{ border:1px solid #f0e6c8; border-radius:12px; padding:20px; position:relative;}
 
 /* MARCA DE AGUA */
-.watermark{
-  position:absolute;
-  top:40%;
-  left:50%;
-  transform:translate(-50%, -50%);
-  font-size:70px;
-  color:rgba(200,162,74,0.08);
-  font-weight:bold;
-  pointer-events:none;
-}
+.watermark{ position:absolute; top:40%; left:50%; transform:translate(-50%, -50%); font-size:70px; color:rgba(200,162,74,0.08); font-weight:bold; pointer-events:none;}
 
 /* HEADER PREMIUM */
-.header{
-  text-align:center;
-  border-bottom:2px solid #c8a24a;
-  padding-bottom:8px;
-  margin-bottom:12px;
-}
+.header{ text-align:center; border-bottom:2px solid #c8a24a; padding-bottom:8px; margin-bottom:12px;}
 
-.logo{
-  width:70px;
-  margin-bottom:5px;
-}
+.logo{ width:70px; margin-bottom:5px;}
 
-.header h1{
-  margin:0;
-  color:#b8962e;
-  font-size:18px;
-  letter-spacing:1px;
-}
+.header h1{ margin:0; color:#b8962e; font-size:18px; letter-spacing:1px;}
 
-.header h2{
-  margin:2px 0;
-  font-size:13px;
-  color:#6b7280;
-}
+.header h2{ margin:2px 0; font-size:13px; color:#6b7280;}
 
-.tipo{
-  font-size:11px;
-  color:#a68b2c;
-  margin-top:3px;
-}
+.tipo{ font-size:11px; color:#a68b2c; margin-top:3px;}
 
 /* INFO CARDS */
-.info{
-  font-size:12px;
-  margin:10px 0;
-  padding:10px;
-  background:#fffaf0;
-  border-left:4px solid #c8a24a;
-  border-radius:6px;
-}
+.info{ font-size:12px; margin:10px 0; padding:10px; background:#fffaf0; border-left:4px solid #c8a24a; border-radius:6px;}
 
 /* CONTENIDO */
-.content{
-  white-space:pre-wrap;
-  font-size:12px;
-  margin:12px 0;
-  line-height:1.6;
-}
+.content{ white-space:pre-wrap; font-size:12px; margin:12px 0; line-height:1.6;}
 
 /* ESTADO */
-.estado{
-  font-size:12px;
-  margin:8px 0;
-  padding:8px;
-  background:#fef9e7;
-  border-left:4px solid #c8a24a;
-  border-radius:5px;
-  color:#7a5c1b;
-  font-weight:bold;
-}
+.estado{ font-size:12px; margin:8px 0; padding:8px; background:#fef9e7; border-left:4px solid #c8a24a; border-radius:5px; color:#7a5c1b; font-weight:bold;}
 
 /* FIRMAS */
-.firma-section{
-  margin-top:35px;
-  display:flex;
-  justify-content:space-between;
-}
+.firma-section{ margin-top:35px; display:flex; justify-content:space-between;}
 
-.linea{
-  border-top:1px solid #c8a24a;
-  margin-top:50px;
-  width:200px;
-  text-align:center;
-  font-size:11px;
-  color:#6b7280;
-}
+.linea{ border-top:1px solid #c8a24a; margin-top:50px; width:200px; text-align:center; font-size:11px; color:#6b7280;}
 
 /* FOOTER */
-.footer{
-  margin-top:20px;
-  text-align:center;
-  font-size:10px;
-  color:#9ca3af;
-}
-
+.footer{ margin-top:20px; text-align:center; font-size:10px; color:#9ca3af;}
 </style>
-
 </head>
-
 <body>
-
 <div class="container">
-
   <div class="watermark">ALMAR</div>
-
   <div class="header">
-
-    <img 
-      src="/logo_clinica-removebg-preview.png"
-      class="logo"
-      alt="Clinica Dental Almar"
-    />
+    <img  src="/logo_clinica-removebg-preview.png" class="logo" alt="Clinica Dental Almar"/>
     <h1>Clínica Dental Almar</h1>
      <h2> 🏢Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
     <h2>📞 669 113 0990</h2>
     <h2>Consentimiento Informado</h2>
-
     <div class="tipo">${c.tipo || ''}</div>
   </div>
-
   <div class="info">
     <strong>Paciente:</strong> ${pacienteData.nombre || '---'} ${pacienteData.apellido || ''}<br>
     <strong>Numero de paciente:</strong> ${pacienteData.dni || '---'}<br>
@@ -314,17 +174,11 @@ body{
     <strong>Fecha:</strong> ${c.createdAt?.split('T')[0] || ''}
   </div>
 
-  <div class="content">
-    ${c.contenido || 'Sin contenido'}
-  </div>
+  <div class="content">${c.contenido || 'Sin contenido'} </div>
 
-  ${
-    c.firmado
-      ? `<div class="estado">
+  ${c.firmado  ? `<div class="estado">
           ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-MX')}
-        </div>`
-      : ''
-  }
+        </div>` : '' }
 
   <div class="firma-section">
     <div>
@@ -339,14 +193,11 @@ body{
   <div class="footer">
     Clínica Dental Almar · Documento confidencial
   </div>
-
 </div>
-
 </body>
 </html>`);
 
   win.document.close();
-
 win.onload = () => {
   win.focus();
   win.print();
@@ -354,7 +205,6 @@ win.onload = () => {
   };
  const imprimirHistoria = () => {
   const win = window.open('', '_blank', 'width=700,height=900');
-
   const registros = historias.map(h => `
     <div class="registro">
       <div class="registro-header">
@@ -368,16 +218,13 @@ win.onload = () => {
       ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
     </div>
   `).join('');
-
   win.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>Historia Clínica - ${paciente.nombre}, ${paciente.apellido}</title>
-
 <style>
-
 /* 📄 FORMATO CARTA */
 @page {size: Letter; margin: 10mm 12mm 12mm 12mm;}
 
@@ -394,7 +241,6 @@ body{font-family: 'Segoe UI', Arial, sans-serif; padding:10px; max-width:700px; 
 
 /* INFO PACIENTE */
 .paciente-info{ display:flex; justify-content:space-between; background:#fffaf0; padding:10px 12px; border-radius:8px; margin-bottom:15px; font-size:12px; border-left:4px solid #c8a24a;}
-
 /* ALERTAS */
 .alerta{ font-size:12px;  margin-bottom:10px;}
 
@@ -412,19 +258,12 @@ body{font-family: 'Segoe UI', Arial, sans-serif; padding:10px; max-width:700px; 
 
 /* FOOTER */
 .footer{ text-align:center; margin-top:20px; font-size:10px; color:#9ca3af; border-top:1px solid #eee; padding-top:8px;}
-
 </style>
-
 </head>
-
 <body>
 
 <div class="header">
- <img 
-      src="/logo_clinica-removebg-preview.png"
-      class="logo"
-      alt="Clinica Dental Almar"
-    />
+ <img  src="/logo_clinica-removebg-preview.png" class="logo" alt="Clinica Dental Almar" />
   <h1>Clínica Dental Almar</h1>
    <h2> 🏢 Av Óscar Pérez Escobosa Local 36, Fraccionamiento Hacienda del Seminario, 82129 Mazatlán, Sin.</h2>
     <h2>📞 669 113 0990</h2>
@@ -440,17 +279,10 @@ body{font-family: 'Segoe UI', Arial, sans-serif; padding:10px; max-width:700px; 
 ${paciente.alergias ? `
   <div class="alerta alergia">
     <strong>⚠️ Alergias:</strong> ${paciente.alergias}
-  </div>
-` : ''}
-
-${paciente.antecedentes_medicos ? `
+  </div>` : ''}${paciente.antecedentes_medicos ? `
   <div class="alerta normal">
     <strong>Antecedentes:</strong> ${paciente.antecedentes_medicos}
-  </div>
-` : ''}
-
-${registros || '<p style="text-align:center;color:#999">Sin registros</p>'}
-
+  </div>` : ''}${registros || '<p style="text-align:center;color:#999">Sin registros</p>'}
 <div class="footer">
   Total: ${historias.length} registros |
   Impreso: ${new Date().toLocaleDateString('es-MX')}
@@ -609,13 +441,9 @@ body{font-family: Arial, sans-serif; margin:0; padding:0; background:#fff;color:
 <script>
 window.onload = () => window.print();
 </script>
-
 </body>
-</html>
-  `);
-
-  recibo.document.close();
-};
+</html>`);
+  recibo.document.close();};
 
   if (loading) return <div className="text-center py-10 text-surface-400">Cargando...</div>;
   if (!paciente) return <div className="text-center py-10 text-surface-400">Paciente no encontrado</div>;
