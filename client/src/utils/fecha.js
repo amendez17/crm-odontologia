@@ -46,7 +46,13 @@ export const formatearFecha = (
 
   if (!fecha) return '';
 
-  return new Date(fecha)
+  const fechaSegura =
+    typeof fecha === 'string' &&
+    fecha.length === 10
+      ? `${fecha}T12:00:00`
+      : fecha;
+
+  return new Date(fechaSegura)
     .toLocaleDateString(
       'es-MX',
       {
@@ -57,7 +63,6 @@ export const formatearFecha = (
       }
     );
 };
-
 /**
  * 11/05/2026 08:30 PM
  */
