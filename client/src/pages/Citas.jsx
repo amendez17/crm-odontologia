@@ -428,7 +428,7 @@ const topLinea =
     toast.error('El paciente no tiene teléfono registrado');
     return;
   }
-const fechaFmt = formatearFecha(cita.fecha);
+const fechaFmt = fechaLarga(cita.fecha);
     
 
   const msg = encodeURIComponent(
@@ -450,7 +450,7 @@ const fechaFmt = formatearFecha(cita.fecha);
     toast.error('El paciente no tiene teléfono registrado');
     return;
   }
-const fechaFmt = formatearFecha(cita.fecha);
+const fechaFmt = fechaLarga(cita.fecha);
       
 
   const msg = encodeURIComponent(
