@@ -265,7 +265,15 @@ const guardar = async (e) => {
   const totalPagado = (p.pagos || []).reduce((s, pa) => s + parseFloat(pa.monto), 0);
   const descuento = parseFloat(p.descuento || 0);
   const totalFinal = parseFloat(p.total) - totalPagado - descuento;
+const nombrePaciente =
+  `${p.paciente?.nombre || ''}_${p.paciente?.apellido || ''}`
+    .replaceAll(' ', '_');
 
+const numeroPaciente =
+  p.paciente?.dni || p.paciente?.id || 'SIN_ID';
+
+const nombreArchivo =
+  `PAC-${numeroPaciente}_${nombrePaciente}_PRESUPUESTO-${p.id}`;
   win.document.write(`
 <!DOCTYPE html>
 <html>
@@ -524,11 +532,10 @@ print-color-adjust: exact;
 </div>
 
 <script>
- window.onload = () => { const nombrePaciente = `${p.paciente?.nombre || ''}_${p.paciente?.apellido || ''}`.replace(/\s+/g, '_');
- const numeroPaciente =  p.paciente?.dni || p.paciente?.id || 'SIN_ID';
-  const nombreArchivo =  `PAC-${numeroPaciente}_${nombrePaciente}_PRESUPUESTO-${p.id}.pdf`; document.title = nombreArchivo;
-  window.print();
-};
+  window.onload = () => {
+    document.title = "${nombreArchivo}";
+    window.print();
+  };
 </script>
 
 </body>
