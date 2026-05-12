@@ -4,6 +4,7 @@ import api from '../api/axios';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiPlus, FiSearch, FiEdit2, FiEye, FiTrash2, FiDownload, FiUsers, FiUserPlus } from 'react-icons/fi';
+import { formatearFecha } from '../utils/fecha';
 
 const formInicial = {
   nombre: '', apellido: '', dni: '', fecha_nacimiento: '', genero: '',
