@@ -3,6 +3,7 @@ import api from '../api/axios';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiPlus, FiTrash2, FiDownload } from 'react-icons/fi';
+import { fechaHoy, formatearFecha } from '../utils/fecha';
 
 export default function Pagos() {
   const [pagos, setPagos] = useState([]);
@@ -10,8 +11,7 @@ export default function Pagos() {
   const [presupuestos, setPresupuestos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ paciente_id: '', presupuesto_id: '', monto: '', metodo_pago: 'efectivo', fecha: new Date().toISOString().split('T')[0], numero_recibo: '', notas: '' });
-  const [filtroDesde, setFiltroDesde] = useState('');
+  const [form, setForm] = useState({ paciente_id: '', presupuesto_id: '', monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), numero_recibo: '', notas: ''});  const [filtroDesde, setFiltroDesde] = useState('');
   const [filtroHasta, setFiltroHasta] = useState('');
 
   const cargar = async () => {
@@ -135,7 +135,7 @@ const exportarPagos = async () => {
 >
   <FiDownload size={16} /> Exportar CSV
 </button>
-          <button onClick={() => { setForm({ paciente_id: '', presupuesto_id: '', monto: '', metodo_pago: 'efectivo', fecha: new Date().toISOString().split('T')[0], numero_recibo: '', notas: '' }); setModal(true); }} className="btn-primary flex items-center gap-2">
+          <button onClick={() => { setForm({ paciente_id: '', presupuesto_id: '', monto: '',  metodo_pago: 'efectivo', fecha: fechaHoy(), numero_recibo: '', notas: ''}); setModal(true); }} className="btn-primary flex items-center gap-2">
             <FiPlus size={16} /> Registrar Pago
           </button>
         </div>
@@ -180,7 +180,7 @@ const exportarPagos = async () => {
                 <tr><td colSpan={6} className="text-center py-8 text-surface-400">No hay pagos registrados</td></tr>
               ) : pagos.map(p => (
                 <tr key={p.id}>
-                  <td className="text-surface-600">{p.fecha}</td>
+                  <td className="text-surface-600">   {formatearFecha(p.fecha)} </td>
                   <td className="font-semibold text-primary-900">{p.paciente?.nombre} {p.paciente?.apellido}</td>
                   <td className="font-semibold text-dental-600">${Number(p.monto).toLocaleString()}</td>
                   <td><span className="badge bg-primary-50 text-primary-700 capitalize">{p.metodo_pago?.replace('_', ' ')}</span></td>
