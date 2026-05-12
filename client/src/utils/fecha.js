@@ -1,72 +1,163 @@
-const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const timezone = 'America/Mazatlan';
 
 /**
- * Fecha actual local
- * Resultado:
- * 2026-05-11
+ * YYYY-MM-DD
+ * Ideal para inputs date y filtros
  */
-export const fechaHoy = () => {
+export const fechaHoy = (
+  fecha = new Date()
+) => {
 
-  const now = new Date();
+  const date = new Date(fecha);
 
-  const year = now.toLocaleString('en-US', {
-    timeZone: timezone,
-    year: 'numeric'
-  });
+  const year = date.toLocaleString(
+    'en-US',
+    {
+      timeZone: timezone,
+      year: 'numeric'
+    }
+  );
 
-  const month = now.toLocaleString('en-US', {
-    timeZone: timezone,
-    month: '2-digit'
-  });
+  const month = date.toLocaleString(
+    'en-US',
+    {
+      timeZone: timezone,
+      month: '2-digit'
+    }
+  );
 
-  const day = now.toLocaleString('en-US', {
-    timeZone: timezone,
-    day: '2-digit'
-  });
+  const day = date.toLocaleString(
+    'en-US',
+    {
+      timeZone: timezone,
+      day: '2-digit'
+    }
+  );
 
   return `${year}-${month}-${day}`;
 };
 
 /**
- * Formato corto:
  * 11/05/2026
  */
-export const formatearFecha = (fecha) => {
+export const formatearFecha = (
+  fecha
+) => {
 
   if (!fecha) return '';
 
-  return new Date(fecha).toLocaleDateString('es-MX', {
-    timeZone: timezone
-  });
+  return new Date(fecha)
+    .toLocaleDateString(
+      'es-MX',
+      {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }
+    );
 };
 
 /**
- * Fecha y hora:
- * 11/05/2026, 8:30 PM
+ * 11/05/2026 08:30 PM
  */
-export const formatearFechaHora = (fecha) => {
+export const formatearFechaHora = (
+  fecha
+) => {
 
   if (!fecha) return '';
 
-  return new Date(fecha).toLocaleString('es-MX', {
-    timeZone: timezone
-  });
+  return new Date(fecha)
+    .toLocaleString(
+      'es-MX',
+      {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }
+    );
 };
 
 /**
- * Hora sola
+ * 08:30 PM
  */
-export const formatearHora = (fecha) => {
+export const formatearHora = (
+  fecha
+) => {
 
   if (!fecha) return '';
 
-  return new Date(fecha).toLocaleTimeString('es-MX', {
-    timeZone: timezone
-  });
+  return new Date(fecha)
+    .toLocaleTimeString(
+      'es-MX',
+      {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit'
+      }
+    );
 };
 
 /**
- * Nombre de zona horaria
+ * lunes, 11 de mayo de 2026
+ */
+export const fechaLarga = (
+  fecha
+) => {
+
+  if (!fecha) return '';
+
+  return new Date(fecha)
+    .toLocaleDateString(
+      'es-MX',
+      {
+        timeZone: timezone,
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }
+    );
+};
+
+/**
+ * Saber si una fecha es hoy
+ */
+export const esHoy = (
+  fecha
+) => {
+
+  return (
+    fechaHoy(fecha) === fechaHoy()
+  );
+};
+
+/**
+ * Diferencia de días
+ */
+export const diasEntre = (
+  fecha1,
+  fecha2
+) => {
+
+  const f1 = new Date(fecha1);
+  const f2 = new Date(fecha2);
+
+  const diferencia =
+    f2.getTime() - f1.getTime();
+
+  return Math.ceil(
+    diferencia / (
+      1000 * 60 * 60 * 24
+    )
+  );
+};
+
+/**
+ * Zona horaria usada
  */
 export const obtenerZonaHoraria = () => {
   return timezone;
