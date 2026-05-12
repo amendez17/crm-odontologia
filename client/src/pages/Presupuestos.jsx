@@ -2,16 +2,8 @@ import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-import {
-  FiPlus,
-  FiEye,
-  FiTrash2,
-  FiPrinter,
-  FiFilter,
-  FiDownload,
-  FiEdit
-} from 'react-icons/fi';
-
+import { FiPlus, FiEye, FiTrash2, FiPrinter, FiFilter, FiDownload, FiEdit} from 'react-icons/fi';
+import { formatearFecha, fechaHoy } from '../utils/fecha';
 const ESTADOS = {
   pendiente: 'bg-yellow-100 text-yellow-700',
   aceptado: 'bg-blue-100 text-blue-700',
@@ -474,7 +466,7 @@ print-color-adjust: exact;
 
     <div class="card">
       <div class="label">Fecha</div>
-      <div class="value">${p.createdAt?.split('T')[0]}</div>
+      <div class="value">${formatearFecha(p.createdAt)}</div>
       <div style="font-size:12px;color:#6b7280">#${p.id}</div>
     </div>
 
@@ -661,7 +653,7 @@ const exportarCSV = async () => {
                       {Object.keys(ESTADOS).map(e => <option key={e} value={e}>{e.replace('_', ' ')}</option>)}
                     </select>
                   </td>
-                  <td className="text-surface-500">{p.createdAt?.split('T')[0]}</td>
+                  <td className="text-surface-500">   {formatearFecha(p.createdAt)} </td>
                 <td className="min-w-[180px]">
                     <div className="flex items-center justify-center gap-0 whitespace-nowrap">
                       <button onClick={() => editar(p.id)} className="p-1 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors" title="Editar"> <FiEdit size={16} /></button>
@@ -837,7 +829,7 @@ const exportarCSV = async () => {
                 <h4 className="font-medium mb-2">Pagos realizados</h4>
                 {modalDetalle.pagos.map(p => (
                   <div key={p.id} className="flex justify-between text-sm p-3 bg-surface-50 rounded-xl mb-1.5 border border-surface-100">
-                    <span>{p.fecha} - {p.metodo_pago?.replace('_', ' ')}</span>
+                    <span>   {formatearFecha(p.fecha)} - {p.metodo_pago?.replace('_', ' ')} </span>
                     <span className="font-medium">${Number(p.monto).toLocaleString()}</span>
                   </div>
                 ))}
