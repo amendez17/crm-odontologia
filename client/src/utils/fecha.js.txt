@@ -1,0 +1,15 @@
+export const fechaHoy = () => {
+  return new Date().toLocaleDateString('sv-SE');
+};
+
+export const formatearFecha = (fecha) => {
+  if (!fecha) return '';
+
+  return new Date(fecha).toLocaleDateString('es-MX');
+};
+
+export const formatearFechaHora = (fecha) => {
+  if (!fecha) return '';
+
+  return new Date(fecha).toLocaleString('es-MX');
+};
