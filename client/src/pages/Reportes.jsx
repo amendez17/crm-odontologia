@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { FiDollarSign, FiCalendar, FiTrendingUp, FiAlertCircle, FiMessageCircle, FiDownload } from 'react-icons/fi';
+import { fechaHoy,formatearFecha,formatearFechaHora, formatearHora} from '../utils/fecha';
 
 const HOY = new Date();
-const INICIO_MES = new Date(HOY.getFullYear(), HOY.getMonth(), 1).toISOString().split('T')[0];
-const FIN_MES = new Date(HOY.getFullYear(), HOY.getMonth() + 1, 0).toISOString().split('T')[0];
+const INICIO_MES = new Date(HOY.getFullYear(), HOY.getMonth(), 1).fechaHoy();
+const FIN_MES = new Date(HOY.getFullYear(), HOY.getMonth() + 1, 0).fechaHoy();
 
 export default function Reportes() {
   const [tab, setTab] = useState('ingresos');
@@ -178,17 +179,17 @@ const exportarPagos = async () => {
             <button onClick={() => {
               const d = new Date(HOY.getFullYear(), HOY.getMonth() - 1, 1);
               const h = new Date(HOY.getFullYear(), HOY.getMonth(), 0);
-              setDesde(d.toISOString().split('T')[0]); setHasta(h.toISOString().split('T')[0]);
+              setDesde(d.fechaHoy()); setHasta(h.fechaHoy());
             }} className="btn-secondary text-sm">Mes anterior</button>
             <button onClick={() => {
               const q = Math.floor(HOY.getMonth() / 3) * 3;
-              const d = new Date(HOY.getFullYear(), q, 1).toISOString().split('T')[0];
-              const h = new Date(HOY.getFullYear(), q + 3, 0).toISOString().split('T')[0];
+              const d = new Date(HOY.getFullYear(), q, 1).fechaHoy();
+              const h = new Date(HOY.getFullYear(), q + 3, 0).fechaHoy();
               setDesde(d); setHasta(h);
             }} className="btn-secondary text-sm">Trimestre</button>
             <button onClick={() => {
-              const d = new Date(HOY.getFullYear(), 0, 1).toISOString().split('T')[0];
-              const h = new Date(HOY.getFullYear(), 11, 31).toISOString().split('T')[0];
+              const d = new Date(HOY.getFullYear(), 0, 1).fechaHoy();
+              const h = new Date(HOY.getFullYear(), 11, 31).fechaHoy();
               setDesde(d); setHasta(h);
             }} className="btn-secondary text-sm">Este año</button>
           </div>
