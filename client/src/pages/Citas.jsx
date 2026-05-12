@@ -428,7 +428,7 @@ const topLinea =
     toast.error('El paciente no tiene teléfono registrado');
     return;
   }
-const fechaFmt = fechaLarga(cita.fecha);, {
+const fechaFmt = fechaLarga(cita.fecha);
       weekday: 'long',
       day: 'numeric',
       month: 'long'
@@ -453,7 +453,7 @@ const fechaFmt = fechaLarga(cita.fecha);, {
     toast.error('El paciente no tiene teléfono registrado');
     return;
   }
-const fechaFmt = fechaLarga(cita.fecha);, {
+const fechaFmt = fechaLarga(cita.fecha);
       weekday: 'long',
       day: 'numeric',
       month: 'long'
