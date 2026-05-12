@@ -95,20 +95,28 @@ const guardar = async (e) => {
   try {
 
     const payload = {
-      ...form,
-      descuento: parseFloat(form.descuento) || 0,
+  ...form,
 
-      detalles: detalles.map(d => ({
-        tratamiento_id: parseInt(d.tratamiento_id),
+  cita_id: form.cita_id
+    ? parseInt(form.cita_id)
+    : null,
 
-        pieza_dental: d.pieza_dental
-          ? parseInt(d.pieza_dental)
-          : null,
+  paciente_id: parseInt(form.paciente_id),
 
-        precio: parseFloat(d.precio)
-      }))
-    };
+  doctor_id: parseInt(form.doctor_id),
 
+  descuento: parseFloat(form.descuento) || 0,
+
+  detalles: detalles.map(d => ({
+    tratamiento_id: parseInt(d.tratamiento_id),
+
+    pieza_dental: d.pieza_dental
+      ? parseInt(d.pieza_dental)
+      : null,
+
+    precio: parseFloat(d.precio)
+  }))
+};
     // EDITAR
     if (editandoId) {
 
