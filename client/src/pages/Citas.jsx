@@ -4,7 +4,7 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiFileText } from 'react-icons/fi';
 import {FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar} from 'react-icons/fi';
-
+import {fechaHoy, formatearFecha, formatearFechaHora, formatearHora, fechaLarga} from '../utils/fecha';
 
 const ESTADOS = {
   programada:  { cls: 'bg-blue-100 text-blue-700',   label: 'Programada' },
@@ -67,13 +67,13 @@ function getMesGrid(fecha) {
   let inicioGrid = primerDia.getDay();
   const dias = [];
   for (let i = inicioGrid; i > 0; i--) {
-    dias.push({fecha: formatLocalDate(new Date(año, mes, 1 - i)),mesActual: false});
+    dias.push({fecha: fechaHoy(new Date(año, mes, 1 - i)),mesActual: false});
   }
-  for (let i = 1; i <= ultimoDia.getDate(); i++) {dias.push({fecha: formatLocalDate(new Date(año, mes, i)),mesActual: true});
+  for (let i = 1; i <= ultimoDia.getDate(); i++) {dias.push({fecha: fechaHoy(new Date(año, mes, i)),mesActual: true});
 }  let ext = 1;
   while (dias.length % 7 !== 0) {
   dias.push({
-    fecha: formatLocalDate(new Date(año, mes + 1, ext++)),
+    fecha: fechaHoy(new Date(año, mes + 1, ext++)),
     mesActual: false
   });
 }
@@ -177,26 +177,15 @@ function calcularOverlaps(citas) {
 
   return sorted;
 }
-function getFechaLocal() {
-  const hoy = new Date();
-  const year = hoy.getFullYear();
-  const month = String(hoy.getMonth() + 1).padStart(2, '0');
-  const day = String(hoy.getDate()).padStart(2, '0');
 
-  return `${year}-${month}-${day}`;
-}
-const formatLocalDate = (date) => {
-  return new Date(
-    date.getTime() - date.getTimezoneOffset() * 60000
-  ).toISOString().split('T')[0];
-};
+
 export default function Citas() {
   const [citas, setCitas]           = useState([]);
   const [citasSemana, setCitasSemana] = useState({});
   const [citasMes, setCitasMes]     = useState({});
   const [doctores, setDoctores]     = useState([]);
   const [pacientes, setPacientes]   = useState([]);
-  const [fecha, setFecha] = useState(getFechaLocal());
+  const [fecha, setFecha] = useState(fechaHoy());
   const [vista, setVista]           = useState('semana');
   const [loading, setLoading]       = useState(true);
   const [modal, setModal]           = useState(false);
@@ -307,8 +296,8 @@ const topLinea =
     setLoading(true);
     try {
       const d = new Date(fecha + 'T12:00:00');
-      const desde = formatLocalDate(new Date(d.getFullYear(), d.getMonth(), 1));
-      const hasta = formatLocalDate(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+      const desde = fechaHoy(new Date(d.getFullYear(), d.getMonth(), 1));
+      const hasta = fechaHoy(new Date(d.getFullYear(), d.getMonth() + 1, 0));
       const params = { desde, hasta };
       if (filtroDoctor) params.doctor_id = filtroDoctor;
       if (filtroEstado) params.estado = filtroEstado;
@@ -362,15 +351,11 @@ const topLinea =
     d.setMonth(d.getMonth() + dir);
   }
 
-  setFecha(
-    new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-      .toISOString()
-      .split('T')[0]
-  );
+  setFecha(fechaHoy(d));
 };
 
-  const formatFecha      = (f) => new Date(f + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const formatFechaCorta = (f) => new Date(f + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+  const formatFecha = (f) => { return fechaLarga(f);};
+  const formatFechaCorta = (f) => { return new Date(f).toLocaleDateString('es-MX', { timeZone: 'America/Mazatlan', day: 'numeric', month: 'short'});};
   const getNombreMes     = ()  => { const d = new Date(fecha + 'T12:00:00'); return `${MESES[d.getMonth()]} ${d.getFullYear()}`; };
 
   const getPeriodoLabel = () => {
@@ -443,9 +428,7 @@ const topLinea =
     toast.error('El paciente no tiene teléfono registrado');
     return;
   }
-
-  const fechaFmt = new Date(cita.fecha + 'T12:00:00')
-    .toLocaleDateString('es-MX', {
+const fechaFmt = fechaLarga(cita.fecha);, {
       weekday: 'long',
       day: 'numeric',
       month: 'long'
@@ -470,9 +453,7 @@ const topLinea =
     toast.error('El paciente no tiene teléfono registrado');
     return;
   }
-
-  const fechaFmt = new Date(cita.fecha + 'T12:00:00')
-    .toLocaleDateString('es-MX', {
+const fechaFmt = fechaLarga(cita.fecha);, {
       weekday: 'long',
       day: 'numeric',
       month: 'long'
@@ -537,7 +518,7 @@ const topLinea =
       cargar();
     } catch { toast.error('Error al reprogramar la cita'); }
   };
- const hoy = getFechaLocal();
+ const hoy = fechaHoy();
   // ── Render helpers ──────────────────────────────────────────────────────────
 
   const renderCitaChip = (cita, style = {}) => {
