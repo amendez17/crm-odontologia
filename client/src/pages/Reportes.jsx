@@ -5,8 +5,8 @@ import { FiDollarSign, FiCalendar, FiTrendingUp, FiAlertCircle, FiMessageCircle,
 import { fechaHoy,formatearFecha,formatearFechaHora, formatearHora} from '../utils/fecha';
 
 const HOY = new Date();
-const INICIO_MES = new Date(HOY.getFullYear(), HOY.getMonth(), 1).fechaHoy();
-const FIN_MES = new Date(HOY.getFullYear(), HOY.getMonth() + 1, 0).fechaHoy();
+const INICIO_MES = fechaHoy(new Date(HOY.getFullYear(), HOY.getMonth(), 1));
+const FIN_MES = fechaHoy(new Date(HOY.getFullYear(), HOY.getMonth() + 1, 0));
 
 export default function Reportes() {
   const [tab, setTab] = useState('ingresos');
@@ -179,18 +179,18 @@ const exportarPagos = async () => {
             <button onClick={() => {
               const d = new Date(HOY.getFullYear(), HOY.getMonth() - 1, 1);
               const h = new Date(HOY.getFullYear(), HOY.getMonth(), 0);
-              setDesde(d.fechaHoy()); setHasta(h.fechaHoy());
+             setDesde(fechaHoy(d)); setHasta(fechaHoy(h));
             }} className="btn-secondary text-sm">Mes anterior</button>
             <button onClick={() => {
               const q = Math.floor(HOY.getMonth() / 3) * 3;
-              const d = new Date(HOY.getFullYear(), q, 1).fechaHoy();
-              const h = new Date(HOY.getFullYear(), q + 3, 0).fechaHoy();
+              const d = fechaHoy(new Date(HOY.getFullYear(), q, 1));
+              const h = fechaHoy(new Date(HOY.getFullYear(), q + 3, 0));
               setDesde(d); setHasta(h);
             }} className="btn-secondary text-sm">Trimestre</button>
             <button onClick={() => {
-              const d = new Date(HOY.getFullYear(), 0, 1).fechaHoy();
-              const h = new Date(HOY.getFullYear(), 11, 31).fechaHoy();
-              setDesde(d); setHasta(h);
+             const d = fechaHoy(new Date(HOY.getFullYear(), 0, 1));
+              const h = fechaHoy(new Date(HOY.getFullYear(), 11, 31));
+          setDesde(d); setHasta(h);
             }} className="btn-secondary text-sm">Este año</button>
           </div>
         </div>
