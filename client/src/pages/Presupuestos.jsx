@@ -273,7 +273,7 @@ const numeroPaciente =
   p.paciente?.dni || p.paciente?.id || 'SIN_ID';
 
 const nombreArchivo =
-  `PAC-${numeroPaciente}_${nombrePaciente}_PRESUPUESTO_${p.id}`;
+  `CA-${numeroPaciente}_${nombrePaciente}_PRESUPUESTO_${p.id}`;
   win.document.write(`
 <!DOCTYPE html>
 <html>
