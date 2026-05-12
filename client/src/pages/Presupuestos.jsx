@@ -645,7 +645,7 @@ const exportarCSV = async () => {
             </thead>
             <tbody>
               {presupuestos.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-8 text-surface-400">No hay presupuestos</td></tr>
+                <tr><td colSpan={7} className="text-center py-6 text-surface-400">No hay presupuestos</td></tr>
               ) : presupuestos.map(p => (
                 <tr key={p.id}>
                   <td className="text-surface-400 font-medium">#{p.id}</td>
