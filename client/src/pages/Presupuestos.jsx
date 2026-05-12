@@ -524,7 +524,11 @@ print-color-adjust: exact;
 </div>
 
 <script>
-  window.onload = () => window.print();
+ window.onload = () => { const nombrePaciente = `${p.paciente?.nombre || ''}_${p.paciente?.apellido || ''}`.replace(/\s+/g, '_');
+ const numeroPaciente =  p.paciente?.dni || p.paciente?.id || 'SIN_ID';
+  const nombreArchivo =  `PAC-${numeroPaciente}_${nombrePaciente}_PRESUPUESTO-${p.id}.pdf`; document.title = nombreArchivo;
+  window.print();
+};
 </script>
 
 </body>
