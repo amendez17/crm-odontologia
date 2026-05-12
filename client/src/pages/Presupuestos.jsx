@@ -680,37 +680,53 @@ const exportarCSV = async () => {
 
   <select
     value={form.cita_id}
-    onChange={(e) => {
-      const cita = citas.find(
-        c => c.id === parseInt(e.target.value)
-      );
+   onChange={(e) => {
 
-      setForm({
-        ...form,
-        cita_id: e.target.value,
-        paciente_id: cita?.paciente_id || '',
-        doctor_id: cita?.doctor_id || ''
-      });
-    }}
+  const value = e.target.value;
+
+  // SIN CITA
+  if (!value) {
+
+    setForm({
+      ...form,
+      cita_id: ''
+    });
+
+    return;
+  }
+
+  const cita = citas.find(
+    c => c.id === parseInt(value)
+  );
+
+  setForm({
+    ...form,
+    cita_id: value,
+    paciente_id: cita?.paciente_id || '',
+    doctor_id: cita?.doctor_id || ''
+  });
+}}
     className="input-field"
   >
     <option value="">Sin cita</option>
 
-    {citas
+   {citas
   .filter(c => {
 
-    // SOLO citas del paciente seleccionado
+    // Si NO hay paciente seleccionado
+    // mostrar todas las citas disponibles
     const mismoPaciente =
+      !form.paciente_id ||
       Number(c.paciente_id) === Number(form.paciente_id);
 
-    // citas ya usadas en otros presupuestos
+    // citas ya usadas
     const citaYaUsada = presupuestos.some(p =>
       Number(p.cita_id) === Number(c.id) &&
       Number(p.id) !== Number(editandoId)
     );
 
     return mismoPaciente && !citaYaUsada;
-  })
+  }))
   .map(c => (
     <option key={c.id} value={c.id}>
       #{c.id} - {c.paciente?.nombre} {c.paciente?.apellido}
