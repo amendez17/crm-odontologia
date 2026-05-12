@@ -429,10 +429,7 @@ const topLinea =
     return;
   }
 const fechaFmt = fechaLarga(cita.fecha);
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    });
+    
 
   const msg = encodeURIComponent(
   `Hola ${cita.paciente?.nombre || ''} ${cita.paciente?.apellido || ''}\n` +
@@ -454,10 +451,7 @@ const fechaFmt = fechaLarga(cita.fecha);
     return;
   }
 const fechaFmt = fechaLarga(cita.fecha);
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    });
+      
 
   const msg = encodeURIComponent(
     `Hola ${cita.paciente?.nombre || ''} ${cita.paciente?.apellido || ''}\n` +
