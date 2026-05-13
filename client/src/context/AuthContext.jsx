@@ -6,6 +6,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
+  const authenticated = !!usuario;
 
   useEffect(() => {
     // Buscar token en ambos storages
@@ -58,7 +59,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout, loading }}>
+   <AuthContext.Provider value={{usuario, login, logout, loading, authenticated}}>
       {children}
     </AuthContext.Provider>
   );
