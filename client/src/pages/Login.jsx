@@ -26,7 +26,7 @@ export default function Login() {
       });
 
       // guardar sesión
-      if (remember) {   localStorage.setItem('token', data.token);   localStorage.setItem('usuario', JSON.stringify(data.usuario)); } else {   sessionStorage.setItem('token', data.token);   sessionStorage.setItem('usuario', JSON.stringify(data.usuario)); }  login(data.token, data.usuario || null);
+     login(data.token, data.usuario || null, remember);
 
       toast.success('Bienvenido 👋');
       navigate('/');
