@@ -5,6 +5,7 @@ import Odontograma from '../components/Odontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock } from 'react-icons/fi';
+import { fechaHoy } from '../utils/fecha';
 
 export default function PacienteDetalle() {
   const { id } = useParams();
@@ -18,7 +19,7 @@ export default function PacienteDetalle() {
   const [modalCita, setModalCita] = useState(false);
   const [doctores, setDoctores] = useState([]);
   const [formHistoria, setFormHistoria] = useState({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
-  const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo', fecha: new Date().toISOString().split('T')[0], presupuesto_id: '', numero_recibo: '', notas: '' });
+  const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '',  notas: ''});
   const [formCita, setFormCita] = useState({ doctor_id: '', fecha: new Date().toISOString().split('T')[0], hora_inicio: '', hora_fin: '', motivo: '' });
   const [consentimientos, setConsentimientos] = useState([]);
   const [plantillas, setPlantillas] = useState([]);
@@ -326,7 +327,7 @@ ${paciente.alergias ? `
       });
       toast.success('Pago registrado');
       setModalPago(false);
-      setFormPago({ monto: '', metodo_pago: 'efectivo', fecha: new Date().toISOString().split('T')[0], presupuesto_id: '', numero_recibo: '', notas: '' });
+      setFormPago({ monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: ''});
       cargar();
     } catch {
       toast.error('Error al registrar pago');
