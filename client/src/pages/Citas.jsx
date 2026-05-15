@@ -1024,11 +1024,28 @@ const renderVistaSemana = () => {
       <Modal isOpen={modal} onClose={() => setModal(false)} title={editando ? 'Editar Cita' : 'Nueva Cita'}>
         <form onSubmit={guardar} className="space-y-4">
          <div>
-  <label className="block text-sm font-medium text-surface-600 mb-1"> Paciente * </label>
+  <label className="block text-sm font-medium text-surface-600 mb-1">
+    Paciente *
+  </label>
+
   <div className="flex gap-2 items-start">
     <div className="flex-1 relative">
-      <input type="text" placeholder="Buscar paciente..." value={busquedaPaciente} onChange={(e) => setBusquedaPaciente(e.target.value)} className="input-field mb-2"/>
-        <select   name="paciente_id"   value={form.paciente_id}   onChange={handleChange}   className="input-field w-full"   required >   <option value="">Seleccionar paciente</option>    {pacientesFiltrados.map((p) => (     <option key={p.id} value={p.id}>       {p.nombre} {p.apellido} — {p.dni}     </option>   ))} </select>
+
+      <input
+        type="text"
+        placeholder="Buscar paciente..."
+        value={busquedaPaciente}
+        onChange={(e) => setBusquedaPaciente(e.target.value)}
+        className="input-field mb-2"
+      />
+
+      <select
+        name="paciente_id"
+        value={form.paciente_id}
+        onChange={handleChange}
+        className="input-field w-full"
+        required
+      >
         <option value="">Seleccionar paciente</option>
 
         {pacientesFiltrados.map((p) => (
