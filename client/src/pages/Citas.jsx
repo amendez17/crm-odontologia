@@ -202,6 +202,7 @@ export default function Citas() {
   const abrirNuevoPaciente = () => { setFormPaciente({ nombre: '', apellido: '', dni: '', telefono: ''});setModalPaciente(true);};
   const [horaActual, setHoraActual] = useState(new Date());
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
+  const [busquedaPaciente, setBusquedaPaciente] = useState('');
   const minutosActuales =
   horaActual.getHours() * 60
   + horaActual.getMinutes();
@@ -251,7 +252,17 @@ const topLinea =
 
   cargarUsuario();
 }, []);
+const pacientesFiltrados = useMemo(() => {
+  if (!busquedaPaciente.trim()) return pacientes;
 
+  const texto = busquedaPaciente.toLowerCase();
+
+  return pacientes.filter((p) =>
+    `${p.nombre} ${p.apellido} ${p.dni || ''}`
+      .toLowerCase()
+      .includes(texto)
+  );
+}, [pacientes, busquedaPaciente]);
   // Mapa doctor_id → color
   const doctorColorMap = useMemo(() => {
   const map = {};
@@ -1012,15 +1023,33 @@ const renderVistaSemana = () => {
       {/* Modal */}
       <Modal isOpen={modal} onClose={() => setModal(false)} title={editando ? 'Editar Cita' : 'Nueva Cita'}>
         <form onSubmit={guardar} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-surface-600 mb-1">Paciente *</label>
-             <div className="flex gap-2 items-center">
-              <select name="paciente_id" value={form.paciente_id} onChange={handleChange} className="input-field flex-1"  required>
-              <option value="">Seleccionar paciente</option> {pacientes.map(p => ( <option key={p.id} value={p.id}> {p.nombre}, {p.apellido} — {p.dni} </option> ))}
-              </select> <button type="button" onClick={abrirNuevoPaciente} className="btn-secondary px-3" title="Nuevo paciente">  <FiPlus /> </button>
-              </div>
-          </div>
-          <div>
+         <div>
+  <label className="block text-sm font-medium text-surface-600 mb-1"> Paciente * </label>
+  <div className="flex gap-2 items-start">
+    <div className="flex-1 relative">
+      <input type="text" placeholder="Buscar paciente..." value={busquedaPaciente} onChange={(e) => setBusquedaPaciente(e.target.value)} className="input-field mb-2"/>
+        <select   name="paciente_id"   value={form.paciente_id}   onChange={handleChange}   className="input-field w-full"   required >   <option value="">Seleccionar paciente</option>    {pacientesFiltrados.map((p) => (     <option key={p.id} value={p.id}>       {p.nombre} {p.apellido} — {p.dni}     </option>   ))} </select>
+        <option value="">Seleccionar paciente</option>
+
+        {pacientesFiltrados.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.nombre} {p.apellido} — {p.dni}
+          </option>
+        ))}
+      </select>
+
+    </div>
+
+    <button
+      type="button"
+      onClick={abrirNuevoPaciente}
+      className="btn-secondary px-3"
+      title="Nuevo paciente"
+    >
+      <FiPlus />
+    </button>
+  </div>
+</div> <div>
             <label className="block text-sm font-medium text-surface-600 mb-1">Doctor *</label>
             <select name="doctor_id" value={form.doctor_id} onChange={handleChange} className="input-field" required>
               <option value="">Seleccionar doctor</option>
