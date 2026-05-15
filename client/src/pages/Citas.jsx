@@ -1080,7 +1080,7 @@ const renderVistaSemana = () => {
   >
     <FiPlus />
   </button>
-
+       </div>
 </div>
            <div>
             <label className="block text-sm font-medium text-surface-600 mb-1">Doctor *</label>
