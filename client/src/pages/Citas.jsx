@@ -1026,7 +1026,7 @@ const renderVistaSemana = () => {
          <div>
             <label className="block text-sm font-medium text-surface-600 mb-1"> Paciente *</label>
 
-       <div className="flex gap-2 items-start">
+       <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-start">
         <div className="flex-1 relative">
           <input type="text" placeholder="Buscar paciente..." value={ form.paciente_id ? pacientes.find(p => p.id == form.paciente_id) ? `${pacientes.find(p => p.id == form.paciente_id).nombre} ${pacientes.find(p => p.id == form.paciente_id).apellido}` : busquedaPaciente : busquedaPaciente }
           onChange={(e) => {
@@ -1072,14 +1072,10 @@ const renderVistaSemana = () => {
   </div>
 
   {/* BOTÓN NUEVO PACIENTE */}
-  <button
-    type="button"
-    onClick={abrirNuevoPaciente}
-    className="btn-secondary px-3 h-[42px]"
-    title="Nuevo paciente"
-  >
-    <FiPlus />
-  </button>
+  <button type="button" onClick={abrirNuevoPaciente} className=" btn-secondary h-[42px] w-full sm:w-auto sm:px-3 flex items-center justify-center gap-2 shrink-0 " title="Nuevo paciente">
+  <FiPlus />
+  <span className="sm:hidden">Nuevo paciente</span>
+</button>
        </div>
 </div>
            <div>
