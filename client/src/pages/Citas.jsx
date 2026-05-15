@@ -1030,57 +1030,58 @@ const renderVistaSemana = () => {
 
   <div className="flex gap-2 items-start">
 
-    <div className="flex-1">
+    <div className="flex-1 relative">
+  <input
+    type="text"
+    placeholder="Buscar paciente..."
+    value={
+      form.paciente_id
+        ? pacientes.find(p => p.id == form.paciente_id)
+            ? `${pacientes.find(p => p.id == form.paciente_id).nombre} ${pacientes.find(p => p.id == form.paciente_id).apellido}`
+            : busquedaPaciente
+        : busquedaPaciente
+    }
+    onChange={(e) => {
+      setBusquedaPaciente(e.target.value);
+      setForm({ ...form, paciente_id: '' });
+    }}
+    className="input-field w-full"
+    autoComplete="off"
+    required
+  />
 
-      {/* CONTENEDOR UNIFICADO */}
-      <div className="border border-surface-300 rounded-xl overflow-hidden bg-white focus-within:ring-2 focus-within:ring-primary-300">
+  {busquedaPaciente && (
+    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+      {pacientesFiltrados.length > 0 ? (
+        pacientesFiltrados.map((p) => (
+          <button
+            type="button"
+            key={p.id}
+            onClick={() => {
+              setForm({ ...form, paciente_id: p.id });
+              setBusquedaPaciente(
+                `${p.nombre} ${p.apellido}`
+              );
+            }}
+            className="w-full text-left px-4 py-3 hover:bg-primary-50 border-b last:border-b-0"
+          >
+            <p className="font-medium">
+              {p.nombre} {p.apellido}
+            </p>
 
-        {/* BUSCADOR */}
-        <input
-          type="text"
-          placeholder="Buscar paciente..."
-          value={busquedaPaciente}
-          onChange={(e) => setBusquedaPaciente(e.target.value)}
-          className="
-            w-full
-            px-3
-            py-2
-            border-0
-            border-b
-            border-surface-200
-            focus:outline-none
-            text-sm
-          "
-        />
-
-        {/* SELECT */}
-        <select
-          name="paciente_id"
-          value={form.paciente_id}
-          onChange={handleChange}
-          className="
-            w-full
-            px-3
-            py-2
-            border-0
-            focus:outline-none
-            bg-white
-          "
-          required
-        >
-          <option value="">
-            Seleccionar paciente
-          </option>
-
-          {pacientesFiltrados.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nombre} {p.apellido} — {p.dni}
-            </option>
-          ))}
-        </select>
-
-      </div>
+            <p className="text-sm text-gray-500">
+              {p.dni}
+            </p>
+          </button>
+        ))
+      ) : (
+        <div className="px-4 py-3 text-sm text-gray-500">
+          No se encontraron pacientes
+        </div>
+      )}
     </div>
+  )}
+</div>    </div>
 
     {/* BOTÓN NUEVO PACIENTE */}
     <button
