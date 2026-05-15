@@ -1028,18 +1028,27 @@ const renderVistaSemana = () => {
 
        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-start">
         <div className="flex-1 relative">
-          <input type="text" placeholder="Buscar paciente..." value={ form.paciente_id ? pacientes.find(p => p.id == form.paciente_id) ? `${pacientes.find(p => p.id == form.paciente_id).nombre} ${pacientes.find(p => p.id == form.paciente_id).apellido}` : busquedaPaciente : busquedaPaciente }
-          onChange={(e) => {
-        setBusquedaPaciente(e.target.value);
-        setForm({ ...form, paciente_id: '' });
-      }}
-      className="input-field w-full"
-      autoComplete="off"
-      required
-    />
+         <input
+  type="text"
+  placeholder="Buscar paciente..."
+  value={
+    form.paciente_id
+      ? pacientes.find(p => p.id == form.paciente_id)
+        ? `${pacientes.find(p => p.id == form.paciente_id).nombre} ${pacientes.find(p => p.id == form.paciente_id).apellido}`
+        : busquedaPaciente
+      : busquedaPaciente
+  }
+  onChange={(e) => {
+    setBusquedaPaciente(e.target.value);
+    setForm({ ...form, paciente_id: '' });
+  }}
+  className="input-field w-full text-base sm:text-sm"
+  autoComplete="off"
+  required
+/>
 
     {busquedaPaciente && (
-      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
         {pacientesFiltrados.length > 0 ? (
           pacientesFiltrados.map((p) => (
             <button
@@ -1051,7 +1060,7 @@ const renderVistaSemana = () => {
                   `${p.nombre} ${p.apellido}`
                 );
               }}
-              className="w-full text-left px-4 py-3 hover:bg-primary-50 border-b last:border-b-0"
+              className="w-full text-left px-4 py-4 hover:bg-primary-50 border-b last:border-b-0"
             >
               <p className="font-medium">
                 {p.nombre} {p.apellido}
