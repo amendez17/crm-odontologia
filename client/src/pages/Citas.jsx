@@ -1148,8 +1148,7 @@ const renderVistaSemana = () => {
       required
     />
     <label>Número de paciente</label>
-    <input name="dni" value={form.dni || ''} className="input-field "placeholder="Número de Paciente Automático" readOnly/>
-
+    <input  name="dni" value={formPaciente.dni || ''} className="input-field" placeholder="Número de Paciente Automático" readOnly/>
     <label>Telefono</label>
     <input
       name="Teléfono"
