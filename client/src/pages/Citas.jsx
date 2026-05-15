@@ -1024,78 +1024,65 @@ const renderVistaSemana = () => {
       <Modal isOpen={modal} onClose={() => setModal(false)} title={editando ? 'Editar Cita' : 'Nueva Cita'}>
         <form onSubmit={guardar} className="space-y-4">
          <div>
-  <label className="block text-sm font-medium text-surface-600 mb-1">
-    Paciente *
-  </label>
+            <label className="block text-sm font-medium text-surface-600 mb-1"> Paciente *</label>
 
-  <div className="flex gap-2 items-start">
+       <div className="flex gap-2 items-start">
+        <div className="flex-1 relative">
+          <input type="text" placeholder="Buscar paciente..." value={ form.paciente_id ? pacientes.find(p => p.id == form.paciente_id) ? `${pacientes.find(p => p.id == form.paciente_id).nombre} ${pacientes.find(p => p.id == form.paciente_id).apellido}` : busquedaPaciente : busquedaPaciente }
+          onChange={(e) => {
+        setBusquedaPaciente(e.target.value);
+        setForm({ ...form, paciente_id: '' });
+      }}
+      className="input-field w-full"
+      autoComplete="off"
+      required
+    />
 
-    <div className="flex-1 relative">
-  <input
-    type="text"
-    placeholder="Buscar paciente..."
-    value={
-      form.paciente_id
-        ? pacientes.find(p => p.id == form.paciente_id)
-            ? `${pacientes.find(p => p.id == form.paciente_id).nombre} ${pacientes.find(p => p.id == form.paciente_id).apellido}`
-            : busquedaPaciente
-        : busquedaPaciente
-    }
-    onChange={(e) => {
-      setBusquedaPaciente(e.target.value);
-      setForm({ ...form, paciente_id: '' });
-    }}
-    className="input-field w-full"
-    autoComplete="off"
-    required
-  />
+    {busquedaPaciente && (
+      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+        {pacientesFiltrados.length > 0 ? (
+          pacientesFiltrados.map((p) => (
+            <button
+              type="button"
+              key={p.id}
+              onClick={() => {
+                setForm({ ...form, paciente_id: p.id });
+                setBusquedaPaciente(
+                  `${p.nombre} ${p.apellido}`
+                );
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-primary-50 border-b last:border-b-0"
+            >
+              <p className="font-medium">
+                {p.nombre} {p.apellido}
+              </p>
 
-  {busquedaPaciente && (
-    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-      {pacientesFiltrados.length > 0 ? (
-        pacientesFiltrados.map((p) => (
-          <button
-            type="button"
-            key={p.id}
-            onClick={() => {
-              setForm({ ...form, paciente_id: p.id });
-              setBusquedaPaciente(
-                `${p.nombre} ${p.apellido}`
-              );
-            }}
-            className="w-full text-left px-4 py-3 hover:bg-primary-50 border-b last:border-b-0"
-          >
-            <p className="font-medium">
-              {p.nombre} {p.apellido}
-            </p>
-
-            <p className="text-sm text-gray-500">
-              {p.dni}
-            </p>
-          </button>
-        ))
-      ) : (
-        <div className="px-4 py-3 text-sm text-gray-500">
-          No se encontraron pacientes
-        </div>
-      )}
-    </div>
-  )}
-</div>    </div>
-
-    {/* BOTÓN NUEVO PACIENTE */}
-    <button
-      type="button"
-      onClick={abrirNuevoPaciente}
-      className="btn-secondary px-3 h-[92px]"
-      title="Nuevo paciente"
-    >
-      <FiPlus />
-    </button>
-
+              <p className="text-sm text-gray-500">
+                {p.dni}
+              </p>
+            </button>
+          ))
+        ) : (
+          <div className="px-4 py-3 text-sm text-gray-500">
+            No se encontraron pacientes
+          </div>
+        )}
+      </div>
+    )}
   </div>
+
+  {/* BOTÓN NUEVO PACIENTE */}
+  <button
+    type="button"
+    onClick={abrirNuevoPaciente}
+    className="btn-secondary px-3 h-[42px]"
+    title="Nuevo paciente"
+  >
+    <FiPlus />
+  </button>
+
 </div>
-          <div>
+           <div>
             <label className="block text-sm font-medium text-surface-600 mb-1">Doctor *</label>
             <select name="doctor_id" value={form.doctor_id} onChange={handleChange} className="input-field" required>
               <option value="">Seleccionar doctor</option>
