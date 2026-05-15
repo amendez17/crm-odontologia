@@ -52,7 +52,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><Layout /></PrivateRoute>}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<Citas />} />
         
           <Route path="pacientes" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <Pacientes /> </PrivateRoute> }/>
           <Route path="pacientes/:id" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <PacienteDetalle /> </PrivateRoute>}/>
