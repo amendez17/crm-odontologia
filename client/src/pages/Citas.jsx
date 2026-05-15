@@ -1029,44 +1029,72 @@ const renderVistaSemana = () => {
   </label>
 
   <div className="flex gap-2 items-start">
-    <div className="flex-1 relative">
 
-      <input
-        type="text"
-        placeholder="Buscar paciente..."
-        value={busquedaPaciente}
-        onChange={(e) => setBusquedaPaciente(e.target.value)}
-        className="input-field mb-2"
-      />
+    <div className="flex-1">
 
-      <select
-        name="paciente_id"
-        value={form.paciente_id}
-        onChange={handleChange}
-        className="input-field w-full"
-        required
-      >
-        <option value="">Seleccionar paciente</option>
+      {/* CONTENEDOR UNIFICADO */}
+      <div className="border border-surface-300 rounded-xl overflow-hidden bg-white focus-within:ring-2 focus-within:ring-primary-300">
 
-        {pacientesFiltrados.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.nombre} {p.apellido} — {p.dni}
+        {/* BUSCADOR */}
+        <input
+          type="text"
+          placeholder="Buscar paciente..."
+          value={busquedaPaciente}
+          onChange={(e) => setBusquedaPaciente(e.target.value)}
+          className="
+            w-full
+            px-3
+            py-2
+            border-0
+            border-b
+            border-surface-200
+            focus:outline-none
+            text-sm
+          "
+        />
+
+        {/* SELECT */}
+        <select
+          name="paciente_id"
+          value={form.paciente_id}
+          onChange={handleChange}
+          className="
+            w-full
+            px-3
+            py-2
+            border-0
+            focus:outline-none
+            bg-white
+          "
+          required
+        >
+          <option value="">
+            Seleccionar paciente
           </option>
-        ))}
-      </select>
 
+          {pacientesFiltrados.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.nombre} {p.apellido} — {p.dni}
+            </option>
+          ))}
+        </select>
+
+      </div>
     </div>
 
+    {/* BOTÓN NUEVO PACIENTE */}
     <button
       type="button"
       onClick={abrirNuevoPaciente}
-      className="btn-secondary px-3"
+      className="btn-secondary px-3 h-[92px]"
       title="Nuevo paciente"
     >
       <FiPlus />
     </button>
+
   </div>
-</div> <div>
+</div>
+          <div>
             <label className="block text-sm font-medium text-surface-600 mb-1">Doctor *</label>
             <select name="doctor_id" value={form.doctor_id} onChange={handleChange} className="input-field" required>
               <option value="">Seleccionar doctor</option>
