@@ -642,7 +642,7 @@ const fechaFmt = fechaLarga(cita.fecha);
 const renderVistaSemana = () => {
 
   return (
-    <div className="overflow-hidden w-full bg-white rounded-2xl border">
+    <div className="overflow-visible w-full bg-white rounded-2xl border relative">
 
       <div
   className="
@@ -668,7 +668,7 @@ const renderVistaSemana = () => {
           return (
             <div
               key={dia}
-              className=" border-l p-1 md:p-2 text-center sticky top-0 bg-white z-20 "
+              className="border-l p-1 md:p-2 text-center sticky top-0 bg-white z-30"
             >
               <div className="text-[9px] md:text-[9px] md:text-xs text-gray-500">
                 {DIAS_SEMANA[i]}
@@ -736,7 +736,7 @@ const renderVistaSemana = () => {
       right-0
       h-[2px]
       bg-red-500
-      z-30
+      z-10
     "
     style={{
       top: topLinea
@@ -1027,7 +1027,7 @@ const renderVistaSemana = () => {
             <label className="block text-sm font-medium text-surface-600 mb-1"> Paciente *</label>
 
        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-start">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative overflow-visible">
          <input
   type="text"
   placeholder="Buscar paciente..."
