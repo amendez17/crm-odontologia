@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { FiUsers, FiCalendar, FiClock, FiDollarSign, FiTrendingUp, FiChevronRight } from 'react-icons/fi';
+import { formatearFecha, fechaLarga} from '../utils/fecha';
 
 function GaugeChart({ value, max, label, unit, color = 'primary', size = 140 }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
@@ -100,8 +101,8 @@ export default function Dashboard() {
           <p className="text-sm text-surface-400">Resumen general de la clínica</p>
         </div>
         <div className="text-right hidden sm:block">
-          <p className="text-sm font-medium text-surface-500">
-            {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+         <p className="text-sm font-medium text-surface-500">
+          {fechaLarga(new Date())}
           </p>
         </div>
       </div>
@@ -182,7 +183,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-primary-600">   {new Date(cita.fecha).toLocaleDateString('es-MX')} </p>
+                    <p className="text-sm font-bold text-primary-600">{formatearFecha(cita.fecha)}</p>
                     <p className="text-xs text-surface-400">{cita.hora_inicio?.slice(0,5)}</p>
                   </div>
                 </div>
@@ -242,7 +243,7 @@ export default function Dashboard() {
                   <tr key={p.id}>
                     <td className="font-semibold text-gray-900">{p.paciente?.nombre} {p.paciente?.apellido}</td>
                     <td className="font-bold text-dental-600">${Number(p.total).toLocaleString()}</td>
-                    <td className="text-surface-400">   {new Date(p.createdAt).toLocaleDateString('es-MX')} </td>
+                    <td className="text-surface-400"> {formatearFecha(p.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
