@@ -219,7 +219,7 @@ export default function Layout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className=" h-[65px] sm:h-[70px] bg-white/80 backdrop-blur-md border-b border-surface-200/50 flex items-center px-3 sm:px-5 lg:px-8 gap-2 sm:gap-4 z-10 shrink-0 ">
           <button className="lg:hidden p-2 text-primary-700 hover:bg-primary-50 rounded-xl" onClick={() => setSidebarOpen(true)}>
@@ -290,7 +290,7 @@ export default function Layout() {
             {showNotif && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />
-                <div className="absolute right-0 top-14 z-50 w-80 bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-slide-up">
+                <div className="absolute right-0 top-14 z-[9999] w-80 bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-slide-up">
                   <div className="px-4 py-3 bg-gradient-to-r from-[#cbb27c] to-[#b89a5f] text-white">
                     <h3 className="font-semibold text-sm">Citas pendientes</h3>
                     <p className="text-xs text-white/80">Hoy y mañana</p>
@@ -343,7 +343,7 @@ export default function Layout() {
         </header>
 
         {/* Page content */}
-        <main className=" flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 ">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-5 lg:p-8">
           <Outlet />
         </main>
       </div>
