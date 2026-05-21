@@ -642,7 +642,7 @@ const fechaFmt = fechaLarga(cita.fecha);
 const renderVistaSemana = () => {
 
   return (
-    <div className="overflow-visible w-full bg-white rounded-2xl border relative">
+    <div className="overflow-x-auto overflow-y-visible w-full bg-white rounded-2xl border relative">
 
       <div
   className="
@@ -736,7 +736,7 @@ const renderVistaSemana = () => {
       right-0
       h-[2px]
       bg-red-500
-      z-10
+      z-[2]
     "
     style={{
       top: topLinea
@@ -1047,21 +1047,19 @@ const renderVistaSemana = () => {
   required
 />
 
-    {busquedaPaciente && (
+    {busquedaPaciente && !form.paciente_id && (
       <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
         {pacientesFiltrados.length > 0 ? (
           pacientesFiltrados.map((p) => (
-            <button
-              type="button"
-              key={p.id}
-              onClick={() => {
-                setForm({ ...form, paciente_id: p.id });
-                setBusquedaPaciente(
-                  `${p.nombre} ${p.apellido}`
-                );
-              }}
-              className="w-full text-left px-4 py-4 hover:bg-primary-50 border-b last:border-b-0"
-            >
+            <button type="button" key={p.id}
+             onClick={() => { setForm({ ...form, paciente_id: p.id });
+             setBusquedaPaciente( `${p.nombre} ${p.apellido}`);
+
+          // cerrar autocomplete
+              setTimeout(() => { setBusquedaPaciente( `${p.nombre} ${p.apellido}` ); }, 0); }}
+
+              
+              className="w-full text-left px-4 py-4 hover:bg-primary-50 border-b last:border-b-0">
               <p className="font-medium">
                 {p.nombre} {p.apellido}
               </p>
