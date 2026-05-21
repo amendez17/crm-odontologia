@@ -668,7 +668,7 @@ const renderVistaSemana = () => {
           return (
             <div
               key={dia}
-              className="border-l p-1 md:p-2 text-center sticky top-0 bg-white z-10"
+              className="border-l p-1 md:p-2 text-center bg-white z-[1]"
             >
               <div className="text-[9px] md:text-[9px] md:text-xs text-gray-500">
                 {DIAS_SEMANA[i]}
