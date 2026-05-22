@@ -4,6 +4,7 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiPlus, FiTrash2, FiDownload } from 'react-icons/fi';
 import { fechaHoy, formatearFecha } from '../utils/fecha';
+import socket from '../socket';
 
 export default function Pagos() {
   const [pagos, setPagos] = useState([]);
@@ -41,7 +42,23 @@ export default function Pagos() {
       setPresupuestos(presRes.data);
     } catch {}
   };
-
+useEffect(() => { socket.on('pago-creado', (nuevoPago) => {
+    setPagos(prev => {
+      const existe = prev.some(p => p.id === nuevoPago.id);
+      if (existe) return prev;
+      return [nuevoPago, ...prev];
+    });
+  });
+  socket.on('pago-eliminado', (id) => {
+    setPagos(prev =>
+      prev.filter(p => p.id !== id)
+    );
+  });
+  return () => {
+    socket.off('pago-creado');
+    socket.off('pago-eliminado');
+  };
+}, []);
   useEffect(() => { cargar(); cargarDatos(); }, []);
   useEffect(() => { if (filtroDesde && filtroHasta) cargar(); }, [filtroDesde, filtroHasta]);
 
