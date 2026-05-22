@@ -653,6 +653,8 @@ const exportarCSV = async () => {
   setDetalles([]);
   setModalDetalle(null);
   setEditandoId(null);
+  setBusquedaPaciente('');
+  setMostrarPacientes(false);
   setModal(true);
 }} className="btn-primary flex items-center gap-2"> <FiPlus size={16} /> Nuevo Presupuesto </button>
         </div>
@@ -755,8 +757,8 @@ const exportarCSV = async () => {
   }
 
   const cita = citas.find(
-    c => c.id === parseInt(value)
-  );
+    c => c.id === parseInt(value)  );
+     setBusquedaPaciente( cita?.paciente ? `${cita.paciente.nombre} ${cita.paciente.apellido}` : '');
 
   setForm({
     ...form,
@@ -804,18 +806,21 @@ const exportarCSV = async () => {
     value={busquedaPaciente}
     onChange={(e) => {
 
-      const value = e.target.value;
+  const value = e.target.value;
 
-      setBusquedaPaciente(value);
+  setBusquedaPaciente(value);
 
-      setMostrarPacientes(true);
+  setMostrarPacientes(true);
 
-      setForm(prev => ({
-        ...prev,
-        paciente_id: '',
-        cita_id: ''
-      }));
-    }}
+  // SOLO limpiar paciente si el usuario modifica el texto
+  if (form.paciente_id) {
+    setForm(prev => ({
+      ...prev,
+      paciente_id: '',
+      cita_id: ''
+    }));
+  }
+}}
     onFocus={() => setMostrarPacientes(true)}
     onBlur={() => {
       setTimeout(() => {
