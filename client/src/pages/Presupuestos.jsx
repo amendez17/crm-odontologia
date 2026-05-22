@@ -822,11 +822,7 @@ const exportarCSV = async () => {
   }
 }}
     onFocus={() => setMostrarPacientes(true)}
-    onBlur={() => {
-      setTimeout(() => {
-        setMostrarPacientes(false);
-      }, 150);
-    }}
+   
     placeholder="Buscar paciente..."
     className="input-field"
     required={!form.paciente_id}
@@ -848,22 +844,22 @@ const exportarCSV = async () => {
     .map(p => (
 
       <button
-        key={p.id}
-        type="button"
-        onClick={() => {
+  key={p.id}
+  type="button"
+  onMouseDown={() => {
 
-          setForm(prev => ({
-            ...prev,
-            paciente_id: p.id,
-            cita_id: ''
-          }));
+    setForm(prev => ({
+      ...prev,
+      paciente_id: p.id,
+      cita_id: ''
+    }));
 
-          setBusquedaPaciente(
-            `${p.nombre} ${p.apellido}`
-          );
+    setBusquedaPaciente(
+      `${p.nombre} ${p.apellido}`
+    );
 
-          setMostrarPacientes(false);
-        }}
+    setMostrarPacientes(false);
+  }}
         className="w-full text-left px-4 py-3 hover:bg-primary-50 border-b border-surface-100 last:border-b-0"
       >
         <div className="font-medium text-sm">
