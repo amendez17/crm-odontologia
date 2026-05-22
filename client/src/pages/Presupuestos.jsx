@@ -800,7 +800,7 @@ const exportarCSV = async () => {
     Paciente *
   </label>
 
-  <input
+  <input className="input-field text-sm md:text-base"
     type="text"
     autoComplete="off"
     value={busquedaPaciente}
@@ -829,7 +829,7 @@ const exportarCSV = async () => {
   />
 
   {mostrarPacientes && busquedaPaciente.length >= 2 && (
-    <div className="absolute left-0 right-0 top-full z-30 mt-1 bg-white border border-surface-200 rounded-xl shadow-xl max-h-64 overflow-y-auto">
+    <div className=" absolute left-0 right-0 top-full z-30 mt-1 bg-white border border-surface-200 rounded-xl shadow-xl max-h-60 sm:max-h-64 md:max-h-72 overflow-y-auto touch-pan-y">
 
      {pacientesFiltrados.length === 0 ? (
 
@@ -860,16 +860,24 @@ const exportarCSV = async () => {
 
     setMostrarPacientes(false);
   }}
-        className="w-full text-left px-4 py-3 hover:bg-primary-50 border-b border-surface-100 last:border-b-0"
+         className="
+    w-full text-left
+    px-3 py-3
+    sm:px-4 sm:py-3
+    md:px-4 md:py-4
+    hover:bg-primary-50
+    active:bg-primary-100
+    border-b border-surface-100 last:border-b-0
+  "
       >
-        <div className="font-medium text-sm">
-          {p.nombre} {p.apellido}
-        </div>
+        <div className="font-medium text-sm md:text-base">
+  {p.nombre} {p.apellido}
+</div>
 
-        <div className="text-xs text-surface-500">
-          {p.dni || 'Sin DNI'}
-          {p.telefono ? ` • ${p.telefono}` : ''}
-        </div>
+<div className="text-xs md:text-sm text-surface-500">
+  {p.dni || 'Sin DNI'}
+  {p.telefono ? ` • ${p.telefono}` : ''}
+</div>
       </button>
 
     ))
