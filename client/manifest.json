@@ -9,7 +9,8 @@
     {
       "src": "/android-icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "image\/png",
+   "density": "4.0"
     },
     {
       "src": "/logo_clinica-removebg-preview.png",
