@@ -75,7 +75,7 @@ router.delete('/:id', auth, registrarActividad('eliminar', 'pago'), async (req, 
     await pago.destroy();
 
     // SOCKET
-    req.io.emit('pago-eliminado', req.params.id);
+    req.io.emit('pago-eliminado', pago.id);
 
     res.json({ message: 'Pago eliminado.' });
 
