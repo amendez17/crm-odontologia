@@ -374,9 +374,13 @@ ${paciente.alergias ? `
       toast.success('Pago registrado');
       setModalPago(false);
       setFormPago({ monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: ''});
-    } catch {
-      toast.error('Error al registrar pago');
-    }
+    } catch (err) {
+     toast.error(
+    err.response?.data?.error ||
+    'Error al registrar pago'
+  );
+
+}
   };
 
  const imprimirRecibo = (pago) => {
@@ -1614,9 +1618,13 @@ window.onload = () => window.print();
                     <div className="w-full bg-surface-200 rounded-full h-2 mb-3">
                       <div className="bg-gradient-to-r from-dental-500 to-dental-400 h-full rounded-full" style={{ width: `${Math.min(100, pctPagado)}%` }} />
                     </div>
-                    {pendiente > 0 && (
-                      <p className="text-sm text-red-600">Pendiente: ${Number(pendiente).toLocaleString()}</p>
-                    )}
+                    {pendiente > 0 ? ( <p className="text-sm text-red-600 font-medium">
+                      Pendiente: ${Number(pendiente).toLocaleString()}
+                      </p> ) : ( <p className="text-sm text-green-600 font-semibold">
+                              ✔ Presupuesto liquidado
+                        </p>
+
+                        )}
                     {p.detalles?.length > 0 && (
                       <div className="mt-3 space-y-1">
                         {p.detalles.map(d => (
@@ -1666,9 +1674,16 @@ window.onload = () => window.print();
                   <label className="block text-sm font-medium text-surface-600 mb-1">Asociar a presupuesto</label>
                   <select value={formPago.presupuesto_id} onChange={e => setFormPago({ ...formPago, presupuesto_id: e.target.value })} className="input-field">
                     <option value="">Sin asociar</option>
-                    {balance.presupuestos.map(p => (
-                      <option key={p.id} value={p.id}>#{p.id} - ${Number(p.total).toLocaleString()} ({p.estado})</option>
-                    ))}
+                   {balance.presupuestos.map(p => { const descuento = parseFloat(p.descuento || 0); const totalPagado = parseFloat(p.pagado || 0);
+                    const restante = parseFloat(p.total || 0) - descuento - totalPagado; const liquidado = restante <= 0;
+                    return ( <option key={p.id} value={p.id} disabled={liquidado}>
+                      #{p.id}
+                      {' — '}
+                      Restante: ${Number(Math.max(0, restante)).toLocaleString()}
+                      {liquidado ? ' • LIQUIDADO' : ''}
+                      </option>
+                              );
+                                })}
                   </select>
                 </div>
               )}
