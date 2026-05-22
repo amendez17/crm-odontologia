@@ -9,7 +9,8 @@
     {
       "src": "/android-icon-192x192.png",
       "sizes": "192x192",
-      "image/png"
+       "type": "image\/png",
+       "density": "4.0"
   
     },
     {
