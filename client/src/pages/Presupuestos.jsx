@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { FiPlus, FiEye, FiTrash2, FiPrinter, FiFilter, FiDownload, FiEdit} from 'react-icons/fi';
 import { formatearFecha, fechaHoy } from '../utils/fecha';
 import socket from '../socket';
+import { useMemo } from 'react';
 
 const ESTADOS = {
   pendiente: 'bg-yellow-100 text-yellow-700',
@@ -561,7 +562,8 @@ print-color-adjust: exact;
   `);
 
   win.document.close();
-};  const total = detalles.reduce((s, d) => s + (parseFloat(d.precio) || 0), 0);
+};  
+const total = useMemo(() => {return detalles.reduce((s, d) => s + (parseFloat(d.precio) || 0),  0 );}, [detalles]);
 const exportarCSV = async () => {
   try {
     const params = new URLSearchParams();
