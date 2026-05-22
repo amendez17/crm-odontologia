@@ -1590,10 +1590,10 @@ window.onload = () => window.print();
           </button>
 
           {/* Detalle por presupuesto */}
-          {balance.presupuestos?.length > 0 && (
+          {balance.presupuestos   ?.filter(p =>     ['aceptado', 'en_curso', 'finalizado'].includes(p.estado)   ).length > 0 && (
             <div className="space-y-4">
               <h3 className="font-semibold text-primary-900">Detalle por Presupuesto</h3>
-              {balance.presupuestos.map(p => {
+              {balance.presupuestos   .filter(p =>     ['aceptado', 'en_curso', 'finalizado'].includes(p.estado)   )   .map(p => {
                 const pendiente = parseFloat(p.total) - p.pagado;
                 const pctPagado = parseFloat(p.total) > 0 ? (p.pagado / parseFloat(p.total)) * 100 : 0;
                 return (
