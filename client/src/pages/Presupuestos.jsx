@@ -830,13 +830,7 @@ const exportarCSV = async () => {
   {mostrarPacientes && busquedaPaciente.length >= 2 && (
     <div className="absolute left-0 right-0 top-full z-30 mt-1 bg-white border border-surface-200 rounded-xl shadow-xl max-h-64 overflow-y-auto">
 
-      {pacientesFiltrados.length === 0 ? (
-
-        <div className="p-3 text-sm text-surface-400">
-          Sin resultados
-        </div>
-
-      ) :{pacientesFiltrados.length === 0 ? (
+     {pacientesFiltrados.length === 0 ? (
 
   <div className="p-3 text-sm text-surface-400">
     Sin resultados
