@@ -68,12 +68,18 @@ const presupuesto = await Presupuesto.create({
     await t.commit();
 
     const resultado = await Presupuesto.findByPk(presupuesto.id, {
+      
       include: [
         { model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido'] },
         { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] },
         { model: DetallePresupuesto, as: 'detalles', include: [{ model: Tratamiento, as: 'tratamiento' }] }
       ]
     });
+    // SOCKET.IO
+req.app.get('io').emit(
+  'presupuesto_creado',
+  resultado
+);
 
     res.status(201).json(resultado);
   } catch (error) {
@@ -213,7 +219,11 @@ router.put(
           ]
         }
       );
-
+// SOCKET.IO
+req.app.get('io').emit(
+  'presupuesto_actualizado',
+  actualizado
+);
       res.json(actualizado);
 
     } catch (error) {
@@ -234,6 +244,46 @@ router.delete('/:id', auth, registrarActividad('eliminar', 'presupuesto'), async
     if (!presupuesto) return res.status(404).json({ error: 'Presupuesto no encontrado.' });
     await DetallePresupuesto.destroy({ where: { presupuesto_id: presupuesto.id } });
     await presupuesto.destroy();
+    router.delete('/:id', auth, registrarActividad('eliminar', 'presupuesto'), async (req, res) => {
+  try {
+
+    const presupuesto = await Presupuesto.findByPk(req.params.id);
+
+    if (!presupuesto) {
+      return res.status(404).json({
+        error: 'Presupuesto no encontrado.'
+      });
+    }
+
+    const presupuestoId = presupuesto.id;
+
+    await DetallePresupuesto.destroy({
+      where: {
+        presupuesto_id: presupuesto.id
+      }
+    });
+
+    await presupuesto.destroy();
+
+    // SOCKET.IO
+    req.app.get('io').emit(
+      'presupuesto_eliminado',
+      {
+        id: presupuestoId
+      }
+    );
+
+    res.json({
+      message: 'Presupuesto eliminado.'
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
     res.json({ message: 'Presupuesto eliminado.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
