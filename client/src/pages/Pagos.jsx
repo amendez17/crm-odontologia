@@ -31,7 +31,7 @@ export default function Pagos() {
       setLoading(false);
     }
   };
-
+const getId = (p) => p.id;
   const cargarDatos = async () => {
     try {
       const [pacRes, presRes] = await Promise.all([
@@ -42,18 +42,21 @@ export default function Pagos() {
       setPresupuestos(presRes.data);
     } catch {}
   };
-useEffect(() => { socket.on('pago-creado', (nuevoPago) => {
+useEffect(() => {
+  socket.on('pago-creado', (nuevoPago) => {
     setPagos(prev => {
       const existe = prev.some(p => p.id === nuevoPago.id);
       if (existe) return prev;
       return [nuevoPago, ...prev];
     });
   });
+
   socket.on('pago-eliminado', (id) => {
     setPagos(prev =>
       prev.filter(p => p.id !== id)
     );
   });
+
   return () => {
     socket.off('pago-creado');
     socket.off('pago-eliminado');
@@ -82,8 +85,12 @@ useEffect(() => { socket.on('pago-creado', (nuevoPago) => {
     if (!confirm('¿Eliminar este pago?')) return;
     try {
       await api.delete(`/pagos/${id}`);
+setPagos(prev => prev.filter(p => p.id !== id));
       toast.success('Pago eliminado');
-      cargar();
+     socket.on('pago-eliminado', (id) => {
+  console.log('ELIMINADO SOCKET ID:', id);
+});
+      console.log('PAGOS:', pagos);
     } catch {
       toast.error('Error al eliminar');
     }
