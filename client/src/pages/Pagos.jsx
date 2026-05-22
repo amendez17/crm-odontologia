@@ -72,7 +72,7 @@ useEffect(() => { socket.on('pago-creado', (nuevoPago) => {
       });
       toast.success('Pago registrado');
       setModal(false);
-      cargar();
+      
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al registrar pago');
     }
