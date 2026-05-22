@@ -35,16 +35,20 @@ export default function PacienteDetalle() {
   const [modalEditarReceta, setModalEditarReceta] = useState(false);
 
 useEffect(() => {
-  socket.on('pago_creado', () => {
+
+  const actualizar = () => {
     cargar();
-  });
-  socket.on('pago_eliminado', () => {
-    cargar();
-  });
+  };
+
+  socket.on('pago-creado', actualizar);
+  socket.on('pago-eliminado', actualizar);
+
   return () => {
-    socket.off('pago_creado');
-    socket.off('pago_eliminado');
-  };}, []);
+    socket.off('pago-creado', actualizar);
+    socket.off('pago-eliminado', actualizar);
+  };
+
+}, []);
   const cargar = async () => {
     try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([api.get(`/pacientes/${id}`), api.get(`/odontograma/${id}`), api.get(`/historia/${id}`), api.get(`/reportes/balance/${id}`), api.get(`/consentimiento/paciente/${id}`)]);
       setPaciente(pacRes.data);
