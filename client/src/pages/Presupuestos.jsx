@@ -4,6 +4,8 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiPlus, FiEye, FiTrash2, FiPrinter, FiFilter, FiDownload, FiEdit} from 'react-icons/fi';
 import { formatearFecha, fechaHoy } from '../utils/fecha';
+import socket from '../socket';
+
 const ESTADOS = {
   pendiente: 'bg-yellow-100 text-yellow-700',
   aceptado: 'bg-blue-100 text-blue-700',
@@ -64,7 +66,23 @@ export default function Presupuestos() {
 };
   useEffect(() => { cargar(); }, [filtroEstado, filtroPaciente]);
   useEffect(() => { cargarDatos(); }, []);
+useEffect(() => {
 
+  const handleActualizar = () => {
+    cargar();
+  };
+
+  socket.on('presupuesto_creado', handleActualizar);
+  socket.on('presupuesto_actualizado', handleActualizar);
+  socket.on('presupuesto_eliminado', handleActualizar);
+
+  return () => {
+    socket.off('presupuesto_creado', handleActualizar);
+    socket.off('presupuesto_actualizado', handleActualizar);
+    socket.off('presupuesto_eliminado', handleActualizar);
+  };
+
+}, []);
   const agregarDetalle = () => {
     setDetalles([...detalles, { tratamiento_id: '', pieza_dental: '', precio: '' }]);
   };
@@ -689,7 +707,7 @@ const exportarCSV = async () => {
       )}
 
       {/* Modal Nuevo Presupuesto */}
-      <Modal isOpen={modal} onClose={() => setModal(false)} title={ editandoId ? `Editar Presupuesto #${editandoId}` : 'Nuevo Presupuesto'} size="xl">
+     <Modal isOpen={modal} onClose={() => { setModal(false); setEditandoId(null); }} title={ editandoId ? `Editar Presupuesto #${editandoId}` : 'Nuevo Presupuesto' } size="xl">
         <form onSubmit={guardar} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> 
             <div>
