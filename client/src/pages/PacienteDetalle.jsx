@@ -36,19 +36,50 @@ export default function PacienteDetalle() {
 
 useEffect(() => {
 
-  const actualizar = () => {
-    cargar();
-  };
+  socket.on('pago-creado', (nuevoPago) => {
+    setPaciente(prev => {
+      if (!prev) return prev;
 
-  socket.on('pago-creado', actualizar);
-  socket.on('pago-eliminado', actualizar);
+      return {
+        ...prev,
+        pagos: [nuevoPago, ...(prev.pagos || [])]
+      };
+    });
+
+    cargarBalance();
+  });
+
+  socket.on('pago-eliminado', (id) => {
+    setPaciente(prev => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        pagos: (prev.pagos || []).filter(p => p.id !== id)
+      };
+    });
+
+    cargarBalance();
+  });
 
   return () => {
-    socket.off('pago-creado', actualizar);
-    socket.off('pago-eliminado', actualizar);
+    socket.off('pago-creado');
+    socket.off('pago-eliminado');
   };
 
 }, []);
+
+  const cargarBalance = async () => {
+  try {
+    const { data } = await api.get(`/reportes/balance/${id}`);
+    setBalance(data);
+  } catch {}
+};
+  useEffect(() => {
+  cargar();
+  cargarRecetas();
+  cargarBalance();
+}, [id]);
   const cargar = async () => {
     try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([api.get(`/pacientes/${id}`), api.get(`/odontograma/${id}`), api.get(`/historia/${id}`), api.get(`/reportes/balance/${id}`), api.get(`/consentimiento/paciente/${id}`)]);
       setPaciente(pacRes.data);
