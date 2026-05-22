@@ -83,6 +83,7 @@ router.put('/:id', auth, registrarActividad('actualizar', 'cita'), async (req, r
     const io = req.app.get('io');
 
 io.emit('cita-editada', citaActualizada);
+    console.log('EMIT cita-editada', citaActualizada.id);
     res.json(citaActualizada);
   } catch (error) {
     res.status(400).json({ error: error.message });
