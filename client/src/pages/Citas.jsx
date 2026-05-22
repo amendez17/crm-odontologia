@@ -545,7 +545,6 @@ const pacientesFiltrados = useMemo(() => {
       if (editando) { await api.put(`/citas/${editando}`, form); toast.success('Cita actualizada'); }
       else          { await api.post('/citas', form);            toast.success('Cita creada'); }
       setModal(false);
-      cargar();
     } catch (err) { toast.error(err.response?.data?.error || 'Error al guardar'); }
   };
 
@@ -665,7 +664,7 @@ const fechaFmt = fechaLarga(cita.fecha);
       }
       await api.put(`/citas/${cita.id}`, updates);
       toast.success('Cita reprogramada');
-      cargar();
+   
     } catch { toast.error('Error al reprogramar la cita'); }
   };
  const hoy = fechaHoy();
@@ -1193,7 +1192,7 @@ const renderVistaSemana = () => {
 />
 
     {busquedaPaciente && !form.paciente_id && (
-      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
+      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 sm:max-h-72 overflow-y-auto text-sm">
         {pacientesFiltrados.length > 0 ? (
           pacientesFiltrados.map((p) => (
             <button type="button" key={p.id}
