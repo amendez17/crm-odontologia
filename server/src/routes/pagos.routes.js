@@ -31,34 +31,153 @@ router.get('/', auth, async (req, res) => {
 });
 
 // POST /api/pagos
-router.post('/', auth, registrarActividad('crear', 'pago'), async (req, res) => {
-  try {
+router.post(
+  '/',
+  auth,
+  registrarActividad('crear', 'pago'),
+  async (req, res) => {
 
-    const pago = await Pago.create(req.body);
+    try {
 
-    const pagoCompleto = await Pago.findByPk(pago.id, {
-      include: [
+      const {
+        presupuesto_id,
+        monto
+      } = req.body;
+
+      // BUSCAR PRESUPUESTO
+      const presupuesto = await Presupuesto.findByPk(
+        presupuesto_id,
         {
-          model: Paciente,
-          as: 'paciente',
-          attributes: ['id', 'nombre', 'apellido']
-        },
-        {
-          model: Presupuesto,
-          as: 'presupuesto'
+          include: [
+            {
+              model: Pago,
+              as: 'pagos'
+            }
+          ]
         }
-      ]
-    });
+      );
 
-    // SOCKET
-    req.io.emit('pago-creado', pagoCompleto);
+      if (!presupuesto) {
 
-    res.status(201).json(pagoCompleto);
+        return res.status(404).json({
+          error: 'Presupuesto no encontrado.'
+        });
 
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+      }
+
+      // TOTAL PAGADO
+      const totalPagado = presupuesto.pagos.reduce(
+        (sum, p) =>
+          sum + parseFloat(p.monto),
+        0
+      );
+
+      // SALDO RESTANTE
+      const saldoRestante =
+        parseFloat(presupuesto.total) -
+        totalPagado;
+
+      // YA LIQUIDADO
+      if (saldoRestante <= 0) {
+
+        return res.status(400).json({
+          error: 'El presupuesto ya está liquidado.'
+        });
+
+      }
+
+      // SOBREPAGO
+      if (parseFloat(monto) > saldoRestante) {
+
+        return res.status(400).json({
+          error: `El pago excede el saldo restante de $${saldoRestante.toLocaleString()}`
+        });
+
+      }
+
+      // CREAR PAGO
+      const pago = await Pago.create(req.body);
+
+      // NUEVO TOTAL PAGADO
+      const nuevoTotalPagado =
+        totalPagado + parseFloat(monto);
+
+      // ACTUALIZAR ESTADO
+      if (
+        nuevoTotalPagado >=
+        parseFloat(presupuesto.total)
+      ) {
+
+        await presupuesto.update({
+          estado: 'finalizado'
+        });
+
+      }
+
+      // PAGO COMPLETO
+      const pagoCompleto = await Pago.findByPk(
+        pago.id,
+        {
+          include: [
+            {
+              model: Paciente,
+              as: 'paciente',
+              attributes: [
+                'id',
+                'nombre',
+                'apellido'
+              ]
+            },
+            {
+              model: Presupuesto,
+              as: 'presupuesto'
+            }
+          ]
+        }
+      );
+
+      // SOCKET
+      req.io.emit(
+        'pago-creado',
+        pagoCompleto
+      );
+
+      // SOCKET PRESUPUESTO ACTUALIZADO
+      const presupuestoActualizado =
+        await Presupuesto.findByPk(
+          presupuesto.id,
+          {
+            include: [
+              {
+                model: Paciente,
+                as: 'paciente'
+              },
+              {
+                model: Pago,
+                as: 'pagos'
+              }
+            ]
+          }
+        );
+
+      req.app.get('io').emit(
+        'presupuesto_actualizado',
+        presupuestoActualizado
+      );
+
+      res.status(201).json(
+        pagoCompleto
+      );
+
+    } catch (error) {
+
+      res.status(400).json({
+        error: error.message
+      });
+
+    }
   }
-});
+);
 
 // DELETE /api/pagos/:id
 router.delete('/:id', auth, registrarActividad('eliminar', 'pago'), async (req, res) => {
