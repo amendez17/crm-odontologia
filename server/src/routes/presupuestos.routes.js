@@ -238,56 +238,58 @@ req.app.get('io').emit(
 );
 
 // DELETE /api/presupuestos/:id
-router.delete('/:id', auth, registrarActividad('eliminar', 'presupuesto'), async (req, res) => {
-  try {
-    const presupuesto = await Presupuesto.findByPk(req.params.id);
-    if (!presupuesto) return res.status(404).json({ error: 'Presupuesto no encontrado.' });
-    await DetallePresupuesto.destroy({ where: { presupuesto_id: presupuesto.id } });
-    await presupuesto.destroy();
-    router.delete('/:id', auth, registrarActividad('eliminar', 'presupuesto'), async (req, res) => {
-  try {
+router.delete(
+  '/:id',
+  auth,
+  registrarActividad('eliminar', 'presupuesto'),
+  async (req, res) => {
 
-    const presupuesto = await Presupuesto.findByPk(req.params.id);
+    try {
 
-    if (!presupuesto) {
-      return res.status(404).json({
-        error: 'Presupuesto no encontrado.'
+      const presupuesto = await Presupuesto.findByPk(
+        req.params.id
+      );
+
+      if (!presupuesto) {
+
+        return res.status(404).json({
+          error: 'Presupuesto no encontrado.'
+        });
+
+      }
+
+      const presupuestoId = presupuesto.id;
+
+      // ELIMINAR DETALLES
+      await DetallePresupuesto.destroy({
+        where: {
+          presupuesto_id: presupuesto.id
+        }
       });
+
+      // ELIMINAR PRESUPUESTO
+      await presupuesto.destroy();
+
+      // SOCKET.IO
+      req.app.get('io').emit(
+        'presupuesto_eliminado',
+        {
+          id: presupuestoId
+        }
+      );
+
+      res.json({
+        message: 'Presupuesto eliminado.'
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        error: error.message
+      });
+
     }
-
-    const presupuestoId = presupuesto.id;
-
-    await DetallePresupuesto.destroy({
-      where: {
-        presupuesto_id: presupuesto.id
-      }
-    });
-
-    await presupuesto.destroy();
-
-    // SOCKET.IO
-    req.app.get('io').emit(
-      'presupuesto_eliminado',
-      {
-        id: presupuestoId
-      }
-    );
-
-    res.json({
-      message: 'Presupuesto eliminado.'
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      error: error.message
-    });
   }
-});
-    res.json({ message: 'Presupuesto eliminado.' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+);
 
 module.exports = router;
