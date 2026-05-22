@@ -30,7 +30,25 @@ export default function Presupuestos() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [filtroPaciente, setFiltroPaciente] = useState('');
   const [showFiltros, setShowFiltros] = useState(false);
+const [busquedaPaciente, setBusquedaPaciente] = useState('');
+const [mostrarPacientes, setMostrarPacientes] = useState(false);
 
+const pacientesFiltrados = useMemo(() => {
+
+  const textoBusqueda = busquedaPaciente.toLowerCase();
+
+  return pacientes.filter(p => {
+
+    const texto =
+      `${p.nombre} ${p.apellido} ${p.dni || ''} ${p.telefono || ''}`
+        .toLowerCase();
+
+    return texto.includes(textoBusqueda);
+
+  });
+
+}, [pacientes, busquedaPaciente]);
+  
   const cargar = async () => {
     setLoading(true);
     try {
@@ -259,7 +277,9 @@ const guardar = async (e) => {
         precio: d.precio
       }))
     );
-
+setBusquedaPaciente(
+  `${data.paciente?.nombre || ''} ${data.paciente?.apellido || ''}`
+);
     setModal(true);
 
   } catch (err) {
@@ -709,7 +729,7 @@ const exportarCSV = async () => {
       )}
 
       {/* Modal Nuevo Presupuesto */}
-     <Modal isOpen={modal} onClose={() => { setModal(false); setEditandoId(null); }} title={ editandoId ? `Editar Presupuesto #${editandoId}` : 'Nuevo Presupuesto' } size="xl">
+     <Modal isOpen={modal} onClose={() => { setModal(false); setEditandoId(null); setBusquedaPaciente(''); setMostrarPacientes(false); }} title={ editandoId ? `Editar Presupuesto #${editandoId}` : 'Nuevo Presupuesto' } size="xl">
         <form onSubmit={guardar} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> 
             <div>
@@ -773,14 +793,97 @@ const exportarCSV = async () => {
 ))}
   </select>
 </div>
-            <div>
-              <label className="block text-sm font-medium text-surface-600 mb-1">Paciente *</label>
-              <select value={form.paciente_id} onChange={e => setForm({ ...form, paciente_id: e.target.value, cita_id: '' })} className="input-field" required>
-                <option value="">Seleccionar</option>
-                {pacientes.map(p => <option key={p.id} value={p.id}> {p.nombre} {p.apellido}</option>)}
-              </select>
-            </div>
-            <div>
+            <div className="relative">
+  <label className="block text-sm font-medium text-surface-600 mb-1">
+    Paciente *
+  </label>
+
+  <input
+    type="text"
+    autoComplete="off"
+    value={busquedaPaciente}
+    onChange={(e) => {
+
+      const value = e.target.value;
+
+      setBusquedaPaciente(value);
+
+      setMostrarPacientes(true);
+
+      setForm(prev => ({
+        ...prev,
+        paciente_id: '',
+        cita_id: ''
+      }));
+    }}
+    onFocus={() => setMostrarPacientes(true)}
+    onBlur={() => {
+      setTimeout(() => {
+        setMostrarPacientes(false);
+      }, 150);
+    }}
+    placeholder="Buscar paciente..."
+    className="input-field"
+    required={!form.paciente_id}
+  />
+
+  {mostrarPacientes && busquedaPaciente.length >= 2 && (
+    <div className="absolute left-0 right-0 top-full z-30 mt-1 bg-white border border-surface-200 rounded-xl shadow-xl max-h-64 overflow-y-auto">
+
+      {pacientesFiltrados.length === 0 ? (
+
+        <div className="p-3 text-sm text-surface-400">
+          Sin resultados
+        </div>
+
+      ) :{pacientesFiltrados.length === 0 ? (
+
+  <div className="p-3 text-sm text-surface-400">
+    Sin resultados
+  </div>
+
+) : (
+
+  pacientesFiltrados
+    .slice(0, 20)
+    .map(p => (
+
+      <button
+        key={p.id}
+        type="button"
+        onClick={() => {
+
+          setForm(prev => ({
+            ...prev,
+            paciente_id: p.id,
+            cita_id: ''
+          }));
+
+          setBusquedaPaciente(
+            `${p.nombre} ${p.apellido}`
+          );
+
+          setMostrarPacientes(false);
+        }}
+        className="w-full text-left px-4 py-3 hover:bg-primary-50 border-b border-surface-100 last:border-b-0"
+      >
+        <div className="font-medium text-sm">
+          {p.nombre} {p.apellido}
+        </div>
+
+        <div className="text-xs text-surface-500">
+          {p.dni || 'Sin DNI'}
+          {p.telefono ? ` • ${p.telefono}` : ''}
+        </div>
+      </button>
+
+    ))
+
+)}
+    </div>
+  )}
+</div>
+          <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Doctor *</label>
               <select value={form.doctor_id} onChange={e => setForm({ ...form, doctor_id: e.target.value })} className="input-field" required>
                 <option value="">Seleccionar</option>
