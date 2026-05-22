@@ -241,7 +241,10 @@ const topLinea =
   return ['administrador', 'recepcionista'].includes(usuario?.rol);
 }, [usuario]);
 useEffect(() => {
+
   socket.on('cita-creada', (nuevaCita) => {
+
+    // Vista día
     setCitas(prev => {
       const existe = prev.some(c => c.id === nuevaCita.id);
 
@@ -249,9 +252,56 @@ useEffect(() => {
 
       return [...prev, nuevaCita];
     });
+
+    // Vista semana
+    setCitasSemana(prev => {
+
+      const copia = { ...prev };
+
+      if (!copia[nuevaCita.fecha]) {
+        copia[nuevaCita.fecha] = [];
+      }
+
+      const existe = copia[nuevaCita.fecha]
+        .some(c => c.id === nuevaCita.id);
+
+      if (!existe) {
+        copia[nuevaCita.fecha] = [
+          ...copia[nuevaCita.fecha],
+          nuevaCita
+        ];
+      }
+
+      return copia;
+    });
+
+    // Vista mes
+    setCitasMes(prev => {
+
+      const copia = { ...prev };
+
+      if (!copia[nuevaCita.fecha]) {
+        copia[nuevaCita.fecha] = [];
+      }
+
+      const existe = copia[nuevaCita.fecha]
+        .some(c => c.id === nuevaCita.id);
+
+      if (!existe) {
+        copia[nuevaCita.fecha] = [
+          ...copia[nuevaCita.fecha],
+          nuevaCita
+        ];
+      }
+
+      return copia;
+    });
+
   });
 
   socket.on('cita-editada', (citaActualizada) => {
+
+    // Día
     setCitas(prev =>
       prev.map(c =>
         c.id === citaActualizada.id
@@ -259,12 +309,71 @@ useEffect(() => {
           : c
       )
     );
+
+    // Semana
+    setCitasSemana(prev => {
+
+      const copia = { ...prev };
+
+      Object.keys(copia).forEach(fecha => {
+        copia[fecha] = copia[fecha].map(c =>
+          c.id === citaActualizada.id
+            ? citaActualizada
+            : c
+        );
+      });
+
+      return copia;
+    });
+
+    // Mes
+    setCitasMes(prev => {
+
+      const copia = { ...prev };
+
+      Object.keys(copia).forEach(fecha => {
+        copia[fecha] = copia[fecha].map(c =>
+          c.id === citaActualizada.id
+            ? citaActualizada
+            : c
+        );
+      });
+
+      return copia;
+    });
+
   });
 
   socket.on('cita-eliminada', (id) => {
+
     setCitas(prev =>
       prev.filter(c => c.id !== id)
     );
+
+    setCitasSemana(prev => {
+
+      const copia = { ...prev };
+
+      Object.keys(copia).forEach(fecha => {
+        copia[fecha] =
+          copia[fecha].filter(c => c.id !== id);
+      });
+
+      return copia;
+    });
+
+    setCitasMes(prev => {
+
+      const copia = { ...prev };
+
+      Object.keys(copia).forEach(fecha => {
+        copia[fecha] =
+          copia[fecha].filter(c => c.id !== id);
+      });
+
+      return copia;
+    });
+
   });
 
   return () => {
@@ -272,7 +381,9 @@ useEffect(() => {
     socket.off('cita-editada');
     socket.off('cita-eliminada');
   };
+
 }, []);
+  
   useEffect(() => {
   const cargarUsuario = async () => {
     try {
