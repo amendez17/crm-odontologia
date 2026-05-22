@@ -29,7 +29,6 @@ router.get('/', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // POST /api/pagos
 router.post(
   '/',
@@ -44,74 +43,78 @@ router.post(
         monto
       } = req.body;
 
-      // BUSCAR PRESUPUESTO
-      const presupuesto = await Presupuesto.findByPk(
-        presupuesto_id,
-        {
-          include: [
-            {
-              model: Pago,
-              as: 'pagos'
-            }
-          ]
+      let presupuesto = null;
+
+      // SOLO SI EL PAGO TIENE PRESUPUESTO
+      if (presupuesto_id) {
+
+        // BUSCAR PRESUPUESTO
+        presupuesto = await Presupuesto.findByPk(
+          presupuesto_id,
+          {
+            include: [
+              {
+                model: Pago,
+                as: 'pagos'
+              }
+            ]
+          }
+        );
+
+        if (!presupuesto) {
+          return res.status(404).json({
+            error: 'Presupuesto no encontrado.'
+          });
         }
-      );
 
-      if (!presupuesto) {
+        // TOTAL PAGADO
+        const totalPagado = presupuesto.pagos.reduce(
+          (sum, p) => sum + parseFloat(p.monto),
+          0
+        );
 
-        return res.status(404).json({
-          error: 'Presupuesto no encontrado.'
-        });
+        // SALDO RESTANTE
+        const saldoRestante =
+          parseFloat(presupuesto.total) -
+          totalPagado;
 
-      }
+        // YA LIQUIDADO
+        if (saldoRestante <= 0) {
+          return res.status(400).json({
+            error: 'El presupuesto ya está liquidado.'
+          });
+        }
 
-      // TOTAL PAGADO
-      const totalPagado = presupuesto.pagos.reduce(
-        (sum, p) =>
-          sum + parseFloat(p.monto),
-        0
-      );
-
-      // SALDO RESTANTE
-      const saldoRestante =
-        parseFloat(presupuesto.total) -
-        totalPagado;
-
-      // YA LIQUIDADO
-      if (saldoRestante <= 0) {
-
-        return res.status(400).json({
-          error: 'El presupuesto ya está liquidado.'
-        });
-
-      }
-
-      // SOBREPAGO
-      if (parseFloat(monto) > saldoRestante) {
-
-        return res.status(400).json({
-          error: `El pago excede el saldo restante de $${saldoRestante.toLocaleString()}`
-        });
-
+        // SOBREPAGO
+        if (parseFloat(monto) > saldoRestante) {
+          return res.status(400).json({
+            error: `El pago excede el saldo restante de $${saldoRestante.toLocaleString()}`
+          });
+        }
       }
 
       // CREAR PAGO
       const pago = await Pago.create(req.body);
 
-      // NUEVO TOTAL PAGADO
-      const nuevoTotalPagado =
-        totalPagado + parseFloat(monto);
+      // SI HAY PRESUPUESTO → VALIDAR SI SE LIQUIDÓ
+      if (presupuesto) {
 
-      // ACTUALIZAR ESTADO
-      if (
-        nuevoTotalPagado >=
-        parseFloat(presupuesto.total)
-      ) {
+        const totalPagadoActualizado =
+          presupuesto.pagos.reduce(
+            (sum, p) => sum + parseFloat(p.monto),
+            0
+          ) + parseFloat(monto);
 
-        await presupuesto.update({
-          estado: 'finalizado'
-        });
+        if (
+          totalPagadoActualizado >=
+          parseFloat(presupuesto.total)
+        ) {
 
+          await presupuesto.update({
+            estado: 'finalizado'
+          });
+
+        }
       }
 
       // PAGO COMPLETO
@@ -142,28 +145,31 @@ router.post(
         pagoCompleto
       );
 
-      // SOCKET PRESUPUESTO ACTUALIZADO
-      const presupuestoActualizado =
-        await Presupuesto.findByPk(
-          presupuesto.id,
-          {
-            include: [
-              {
-                model: Paciente,
-                as: 'paciente'
-              },
-              {
-                model: Pago,
-                as: 'pagos'
-              }
-            ]
-          }
-        );
+      // ACTUALIZAR PRESUPUESTO EN TIEMPO REAL
+      if (presupuesto) {
 
-      req.app.get('io').emit(
-        'presupuesto_actualizado',
-        presupuestoActualizado
-      );
+        const presupuestoActualizado =
+          await Presupuesto.findByPk(
+            presupuesto.id,
+            {
+              include: [
+                {
+                  model: Paciente,
+                  as: 'paciente'
+                },
+                {
+                  model: Pago,
+                  as: 'pagos'
+                }
+              ]
+            }
+          );
+
+        req.app.get('io').emit(
+          'presupuesto_actualizado',
+          presupuestoActualizado
+        );
+      }
 
       res.status(201).json(
         pagoCompleto
@@ -178,7 +184,6 @@ router.post(
     }
   }
 );
-
 // DELETE /api/pagos/:id
 router.delete('/:id', auth, registrarActividad('eliminar', 'pago'), async (req, res) => {
   try {
