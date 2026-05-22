@@ -87,10 +87,7 @@ useEffect(() => {
       await api.delete(`/pagos/${id}`);
 setPagos(prev => prev.filter(p => p.id !== id));
       toast.success('Pago eliminado');
-     socket.on('pago-eliminado', (id) => {
-  console.log('ELIMINADO SOCKET ID:', id);
-});
-      console.log('PAGOS:', pagos);
+     
     } catch {
       toast.error('Error al eliminar');
     }
