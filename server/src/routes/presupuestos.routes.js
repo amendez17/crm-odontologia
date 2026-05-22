@@ -18,8 +18,8 @@ router.get('/', auth, async (req, res) => {
       include: [
         { model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido', 'dni'] },
         { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] },
-        { model: DetallePresupuesto, as: 'detalles', include: [{ model: Tratamiento, as: 'tratamiento' }] }
-      ],
+        { model: DetallePresupuesto, as: 'detalles', include: [{ model: Tratamiento, as: 'tratamiento' }]},
+        { model: Pago, as: 'pagos'} ],
       order: [['createdAt', 'DESC']]
     });
     res.json(presupuestos);
