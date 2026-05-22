@@ -58,6 +58,9 @@ router.post('/', auth, registrarActividad('crear', 'cita'), async (req, res) => 
         { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido', 'especialidad'] }
       ]
     });
+    const io = req.app.get('io');
+
+io.emit('cita-creada', citaCompleta);
     res.status(201).json(citaCompleta);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -76,6 +79,9 @@ router.put('/:id', auth, registrarActividad('actualizar', 'cita'), async (req, r
         { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido', 'especialidad'] }
       ]
     });
+    const io = req.app.get('io');
+
+io.emit('cita-editada', citaActualizada);
     res.json(citaActualizada);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -122,8 +128,16 @@ router.delete('/:id', auth, registrarActividad('eliminar', 'cita'), async (req, 
   try {
     const cita = await Cita.findByPk(req.params.id);
     if (!cita) return res.status(404).json({ error: 'Cita no encontrada.' });
-    await cita.destroy();
-    res.json({ message: 'Cita eliminada.' });
+    
+    const citaId = cita.id;
+
+await cita.destroy();
+
+const io = req.app.get('io');
+
+io.emit('cita-eliminada', citaId);
+
+res.json({ message: 'Cita eliminada.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

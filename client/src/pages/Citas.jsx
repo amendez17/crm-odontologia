@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { FiFileText } from 'react-icons/fi';
 import {FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar} from 'react-icons/fi';
 import {fechaHoy, formatearFecha, formatearFechaHora, formatearHora, fechaLarga} from '../utils/fecha';
+import socket from '../socket';
 
 const ESTADOS = {
   programada:  { cls: 'bg-blue-100 text-blue-700',   label: 'Programada' },
@@ -239,6 +240,39 @@ const topLinea =
  const puedeUsarWhatsApp = useMemo(() => {
   return ['administrador', 'recepcionista'].includes(usuario?.rol);
 }, [usuario]);
+useEffect(() => {
+  socket.on('cita-creada', (nuevaCita) => {
+    setCitas(prev => {
+      const existe = prev.some(c => c.id === nuevaCita.id);
+
+      if (existe) return prev;
+
+      return [...prev, nuevaCita];
+    });
+  });
+
+  socket.on('cita-editada', (citaActualizada) => {
+    setCitas(prev =>
+      prev.map(c =>
+        c.id === citaActualizada.id
+          ? citaActualizada
+          : c
+      )
+    );
+  });
+
+  socket.on('cita-eliminada', (id) => {
+    setCitas(prev =>
+      prev.filter(c => c.id !== id)
+    );
+  });
+
+  return () => {
+    socket.off('cita-creada');
+    socket.off('cita-editada');
+    socket.off('cita-eliminada');
+  };
+}, []);
   useEffect(() => {
   const cargarUsuario = async () => {
     try {

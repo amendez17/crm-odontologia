@@ -1,12 +1,31 @@
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+
 require('dotenv').config();
 
 
 const { sequelize, Usuario } = require('./models');
 
 const app = express();
+const server = http.createServer(app);
 
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log('Usuario conectado:', socket.id);
+
+  socket.on('disconnect', () => {
+    console.log('Usuario desconectado:', socket.id);
+  });
+});
+app.set('io', io);
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -55,9 +74,9 @@ async function iniciar() {
       console.log('Usuario admin creado: admin@clinica.com / admin123');
     }
 
-    app.listen(PORT, () => {
-      console.log(`Servidor corriendo en http://localhost:${PORT}`);
-    });
+    server.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
   } catch (error) {
     console.error('Error al iniciar:', error);
   }
