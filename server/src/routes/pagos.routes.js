@@ -33,14 +33,28 @@ router.get('/', auth, async (req, res) => {
 // POST /api/pagos
 router.post('/', auth, registrarActividad('crear', 'pago'), async (req, res) => {
   try {
+
     const pago = await Pago.create(req.body);
+
     const pagoCompleto = await Pago.findByPk(pago.id, {
       include: [
-        { model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido'] },
-        { model: Presupuesto, as: 'presupuesto' }
+        {
+          model: Paciente,
+          as: 'paciente',
+          attributes: ['id', 'nombre', 'apellido']
+        },
+        {
+          model: Presupuesto,
+          as: 'presupuesto'
+        }
       ]
     });
+
+    // SOCKET
+    req.io.emit('pago-creado', pagoCompleto);
+
     res.status(201).json(pagoCompleto);
+
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -49,13 +63,24 @@ router.post('/', auth, registrarActividad('crear', 'pago'), async (req, res) => 
 // DELETE /api/pagos/:id
 router.delete('/:id', auth, registrarActividad('eliminar', 'pago'), async (req, res) => {
   try {
+
     const pago = await Pago.findByPk(req.params.id);
-    if (!pago) return res.status(404).json({ error: 'Pago no encontrado.' });
+
+    if (!pago) {
+      return res.status(404).json({
+        error: 'Pago no encontrado.'
+      });
+    }
+
     await pago.destroy();
+
+    // SOCKET
+    req.io.emit('pago-eliminado', req.params.id);
+
     res.json({ message: 'Pago eliminado.' });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
 module.exports = router;
