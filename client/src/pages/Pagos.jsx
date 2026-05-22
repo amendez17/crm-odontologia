@@ -74,6 +74,15 @@ useEffect(() => {
         presupuesto_id: form.presupuesto_id || null
       });
       toast.success('Pago registrado');
+      setForm({
+  paciente_id: '',
+  presupuesto_id: '',
+  monto: '',
+  metodo_pago: 'efectivo',
+  fecha: fechaHoy(),
+  numero_recibo: '',
+  notas: ''
+});
       setModal(false);
       
     } catch (err) {
@@ -97,7 +106,7 @@ setPagos(prev => prev.filter(p => p.id !== id));
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const presupuestosPaciente = presupuestos.filter(p => p.paciente_id === parseInt(form.paciente_id));
+  const presupuestosPaciente = presupuestos   .filter(p => p.paciente_id === parseInt(form.paciente_id))   .filter(p => {     const total = parseFloat(p.total || 0);      const pagado = (p.pagos || []).reduce(       (sum, pago) => sum + parseFloat(pago.monto || 0),       0     );      return pagado < total;   });
 const exportarPagos = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -231,7 +240,14 @@ const exportarPagos = async () => {
               <label className="block text-sm font-medium text-surface-600 mb-1">Presupuesto (opcional)</label>
               <select name="presupuesto_id" value={form.presupuesto_id} onChange={handleChange} className="input-field">
                 <option value="">Sin asociar</option>
-                {presupuestosPaciente.map(p => <option key={p.id} value={p.id}>#{p.id} - ${Number(p.total).toLocaleString()} ({p.estado})</option>)}
+                {presupuestosPaciente.map(p => { const total = parseFloat(p.total || 0); const pagado = (p.pagos || []).reduce( (sum, pago) => sum + parseFloat(pago.monto || 0),  0 );
+                  const restante = total - pagado;
+                  return (
+                    <option key={p.id} value={p.id}>
+                      #{p.id} - Debe: ${Number(restante).toLocaleString()}
+                    </option>
+                      );
+                      })}
               </select>
             </div>
           )}
