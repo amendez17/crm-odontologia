@@ -6,6 +6,7 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock } from 'react-icons/fi';
 import { fechaHoy } from '../utils/fecha';
+import socket from '../socket';
 
 export default function PacienteDetalle() {
   const { id } = useParams();
@@ -32,8 +33,18 @@ export default function PacienteDetalle() {
   const [loadingRecetas, setLoadingRecetas] = useState(true);
   const [editandoReceta, setEditandoReceta] = useState(null);
   const [modalEditarReceta, setModalEditarReceta] = useState(false);
-  
 
+useEffect(() => {
+  socket.on('pago_creado', () => {
+    cargar();
+  });
+  socket.on('pago_eliminado', () => {
+    cargar();
+  });
+  return () => {
+    socket.off('pago_creado');
+    socket.off('pago_eliminado');
+  };}, []);
   const cargar = async () => {
     try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([api.get(`/pacientes/${id}`), api.get(`/odontograma/${id}`), api.get(`/historia/${id}`), api.get(`/reportes/balance/${id}`), api.get(`/consentimiento/paciente/${id}`)]);
       setPaciente(pacRes.data);
@@ -328,7 +339,6 @@ ${paciente.alergias ? `
       toast.success('Pago registrado');
       setModalPago(false);
       setFormPago({ monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: ''});
-      cargar();
     } catch {
       toast.error('Error al registrar pago');
     }
