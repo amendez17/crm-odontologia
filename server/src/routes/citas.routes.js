@@ -138,7 +138,7 @@ await cita.destroy();
 const io = req.app.get('io');
 
 io.emit('cita-eliminada', citaId);
-
+console.log('EMIT cita-eliminada', citaId);
 res.json({ message: 'Cita eliminada.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
