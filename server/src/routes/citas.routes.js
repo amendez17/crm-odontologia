@@ -61,7 +61,7 @@ router.post('/', auth, registrarActividad('crear', 'cita'), async (req, res) => 
     const io = req.app.get('io');
 
 io.emit('cita-creada', citaCompleta);
-    console.log('EMIT cita-creada', citaCompleta.id);
+  
     res.status(201).json(citaCompleta);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -83,7 +83,7 @@ router.put('/:id', auth, registrarActividad('actualizar', 'cita'), async (req, r
     const io = req.app.get('io');
 
 io.emit('cita-editada', citaActualizada);
-    console.log('EMIT cita-editada', citaActualizada.id);
+    
     res.json(citaActualizada);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -138,7 +138,7 @@ await cita.destroy();
 const io = req.app.get('io');
 
 io.emit('cita-eliminada', citaId);
-console.log('EMIT cita-eliminada', citaId);
+
 res.json({ message: 'Cita eliminada.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
