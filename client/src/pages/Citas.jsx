@@ -6,7 +6,13 @@ import { FiFileText } from 'react-icons/fi';
 import {FiPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight,FiList, FiGrid, FiFilter, FiMessageCircle, FiCalendar} from 'react-icons/fi';
 import {fechaHoy, formatearFecha, formatearFechaHora, formatearHora, fechaLarga} from '../utils/fecha';
 import socket from '../socket';
+socket.on('connect', () => {
+  console.log('SOCKET CONECTADO', socket.id);
+});
 
+socket.on('connect_error', (err) => {
+  console.log('ERROR SOCKET:', err.message);
+});
 const ESTADOS = {
   programada:  { cls: 'bg-blue-100 text-blue-700',   label: 'Programada' },
   confirmada:  { cls: 'bg-indigo-100 text-indigo-700', label: 'Confirmada' },
