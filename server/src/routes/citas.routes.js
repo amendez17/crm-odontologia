@@ -61,6 +61,7 @@ router.post('/', auth, registrarActividad('crear', 'cita'), async (req, res) => 
     const io = req.app.get('io');
 
 io.emit('cita-creada', citaCompleta);
+    console.log('EMIT cita-creada', citaCompleta.id);
     res.status(201).json(citaCompleta);
   } catch (error) {
     res.status(400).json({ error: error.message });
