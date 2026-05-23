@@ -30,7 +30,19 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 const HORA_INICIO = 7;
 const HORA_FIN = 22; // 10 PM
 
-const ALTURA_HORA = window.innerWidth < 768 ? 42 : 90;
+const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+useEffect(() => {
+  const onResize = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+
+  window.addEventListener('resize', onResize);
+
+  return () => window.removeEventListener('resize', onResize);
+}, []);
+
+const ALTURA_HORA = isMobile ? 42 : 90;
 
 const PIXELS_POR_MINUTO =
   ALTURA_HORA / 60;
