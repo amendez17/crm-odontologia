@@ -79,20 +79,7 @@ function timeToMinutes(t) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
 }
-function calcularPosicionCita(cita) {
-  const inicio = timeToMinutes(cita.hora_inicio);
-  const fin = timeToMinutes(cita.hora_fin);
 
-  return {
-    top:
-      (inicio - HORA_INICIO * 60)
-      * PIXELS_POR_MINUTO,
-
-    height:
-      (fin - inicio)
-      * PIXELS_POR_MINUTO
-  };
-}
 function formatHora12(hora) {
   if (!hora) return '';
 
@@ -222,7 +209,20 @@ const PIXELS_POR_MINUTO = ALTURA_HORA / 60;
 
 const TOTAL_MINUTOS =
   (HORA_FIN - HORA_INICIO + 1) * 60;
+const calcularPosicionCita = (cita) => {
+  const inicio = timeToMinutes(cita.hora_inicio);
+  const fin = timeToMinutes(cita.hora_fin);
 
+  return {
+    top:
+      (inicio - HORA_INICIO * 60) *
+      PIXELS_POR_MINUTO,
+
+    height:
+      (fin - inicio) *
+      PIXELS_POR_MINUTO
+  };
+};
   const topLinea =
   (minutosActuales - HORA_INICIO * 60) *
   PIXELS_POR_MINUTO;
