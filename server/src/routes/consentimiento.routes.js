@@ -29,9 +29,9 @@ He podido formular todas las preguntas que he considerado oportunas y todas ella
 
   'Carillas Dentales': `CONSENTIMIENTO INFORMADO PARA CARILLAS DENTALES
 
-Yo, el/la paciente abajo firmante, declaro que he sido informado/a de manera clara y comprensible sobre el procedimiento
-de colocación de carillas dentales, el cual consiste en mejorar la apariencia estética de los dientes mediante la colocación
-de láminas delgadas de resina o porcelana adheridas a la superficie dental.
+Yo, el/la paciente abajo firmante, declaro que he sido informado/a de manera clara y comprensible sobre el 
+procedimiento de colocación de carillas dentales, el cual consiste en mejorar la apariencia estética 
+de los dientes mediante la colocaciónde láminas delgadas de resina o porcelana adheridas a la superficie dental.
 
 Objetivos del Tratamiento
 
