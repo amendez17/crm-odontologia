@@ -2,6 +2,7 @@ const express = require('express');
 const { Tratamiento, CategoriaTratamiento } = require('../models');
 const { auth, esAdmin } = require('../middleware/auth');
 const router = express.Router();
+const { getIO } = require('../socket');
 
 // GET /api/tratamientos
 router.get('/', auth, async (req, res) => {
@@ -34,7 +35,10 @@ router.get('/categorias', auth, async (req, res) => {
 router.post('/categorias', auth, esAdmin, async (req, res) => {
   try {
     const categoria = await CategoriaTratamiento.create(req.body);
-    res.status(201).json(categoria);
+
+getIO().emit('categoria:creada', categoria);
+
+res.status(201).json(categoria);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -44,7 +48,14 @@ router.post('/categorias', auth, esAdmin, async (req, res) => {
 router.post('/', auth, esAdmin, async (req, res) => {
   try {
     const tratamiento = await Tratamiento.create(req.body);
-    res.status(201).json(tratamiento);
+
+const tratamientoCompleto = await Tratamiento.findByPk(tratamiento.id, {
+  include: [{ model: CategoriaTratamiento, as: 'categoria' }]
+});
+
+getIO().emit('tratamiento:creado', tratamientoCompleto);
+
+res.status(201).json(tratamientoCompleto);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -56,7 +67,14 @@ router.put('/:id', auth, esAdmin, async (req, res) => {
     const tratamiento = await Tratamiento.findByPk(req.params.id);
     if (!tratamiento) return res.status(404).json({ error: 'Tratamiento no encontrado.' });
     await tratamiento.update(req.body);
-    res.json(tratamiento);
+
+const actualizado = await Tratamiento.findByPk(tratamiento.id, {
+  include: [{ model: CategoriaTratamiento, as: 'categoria' }]
+});
+
+getIO().emit('tratamiento:actualizado', actualizado);
+
+res.json(actualizado);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -68,7 +86,10 @@ router.delete('/:id', auth, esAdmin, async (req, res) => {
     const tratamiento = await Tratamiento.findByPk(req.params.id);
     if (!tratamiento) return res.status(404).json({ error: 'Tratamiento no encontrado.' });
     await tratamiento.update({ activo: false });
-    res.json({ message: 'Tratamiento desactivado.' });
+
+getIO().emit('tratamiento:eliminado', tratamiento.id);
+
+res.json({ message: 'Tratamiento desactivado.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
