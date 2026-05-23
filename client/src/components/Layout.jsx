@@ -221,7 +221,7 @@ export default function Layout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className=" h-[65px] sm:h-[70px] bg-white/80 backdrop-blur-md border-b border-surface-200/50 flex items-center px-3 sm:px-5 lg:px-8 gap-2 sm:gap-4 z-10 shrink-0 ">
+        <header className=" h-[65px] sm:h-[70px] bg-white/80 backdrop-blur-md border-b border-surface-200/50 flex items-center px-3 sm:px-5 lg:px-8 gap-2 sm:gap-4 relative z-50 shrink-0 ">
           <button className="lg:hidden p-2 text-primary-700 hover:bg-primary-50 rounded-xl" onClick={() => setSidebarOpen(true)}>
             <FiMenu size={22} />
           </button>
