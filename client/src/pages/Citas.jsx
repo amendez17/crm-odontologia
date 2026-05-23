@@ -803,7 +803,7 @@ const renderVistaSemana = () => {
 
         {/* CABECERA */}
 
-        <div className="sticky top-0 bg-white z-40" />
+        <div className="sticky top-0 bg-white z-10 border-b" />
 
         {diasSemana.map((dia, i) => {
 
@@ -812,7 +812,7 @@ const renderVistaSemana = () => {
           return (
             <div
               key={dia}
-              className=" border-l p-1  md:p-2  text-center bg-white sticky top-0 z-30 shadow-sm"
+              className="   border-l   p-1   md:p-2   text-center   bg-white/95   backdrop-blur   sticky   top-0   z-10   border-b "
             >
               <div className="text-[9px] md:text-[9px] md:text-xs text-gray-500">
                 {DIAS_SEMANA[i]}
