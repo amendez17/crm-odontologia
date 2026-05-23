@@ -26,6 +26,77 @@ Yo, el/la paciente abajo firmante, declaro que he sido informado/a por mi odont�
 5. POST-OPERATORIO: Me comprometo a seguir las indicaciones post-operatorias proporcionadas.
 
 He podido formular todas las preguntas que he considerado oportunas y todas ellas han sido respondidas satisfactoriamente.`,
+'Carillas': `CONSENTIMIENTO INFORMADO PARA CARILLAS DENTALES
+
+Yo, el/la paciente abajo firmante, declaro que he sido informado/a de manera clara y comprensible sobre el procedimiento
+de colocación de carillas dentales, el cual consiste en mejorar la apariencia estética de los dientes mediante la colocación
+de láminas delgadas de resina o porcelana adheridas a la superficie dental.
+
+Objetivos del Tratamiento
+
+El tratamiento tiene como finalidad:
+
+* Mejorar color, forma y tamaño de los dientes.
+* Corregir pequeñas fracturas o desgastes.
+* Mejorar la estética de la sonrisa.
+
+Información Importante
+
+Entiendo y acepto que:
+
+* Las carillas pueden requerir desgaste parcial del esmalte dental.
+* La duración de las carillas depende de los cuidados, hábitos y revisiones periódicas.
+* Los resultados estéticos pueden variar según las características naturales de mis dientes.
+* Las carillas pueden fracturarse, despegarse o pigmentarse con el tiempo.
+* En algunos casos puede presentarse sensibilidad dental temporal.
+* Hábitos como morder objetos, bruxismo o abrir cosas con los dientes pueden afectar el tratamiento.
+* El tratamiento puede requerir ajustes, mantenimiento o reemplazo futuro.
+
+Riesgos y Complicaciones
+
+He sido informado(a) de posibles riesgos y complicaciones, entre ellos:
+
+* Sensibilidad dental.
+* Molestia gingival temporal.
+* Fractura o desprendimiento de la carilla.
+* Cambios en la mordida o necesidad de ajustes.
+* Diferencias leves de color o forma respecto a expectativas personales.
+
+Cuidados Posteriores
+
+Me comprometo a:
+
+* Mantener adecuada higiene oral.
+* Asistir a revisiones periódicas.
+* Evitar hábitos que puedan dañar las carillas.
+* Seguir las indicaciones del odontólogo tratante.
+
+Alternativas de Tratamiento
+
+Se me explicaron otras alternativas de tratamiento, incluyendo:
+
+* Blanqueamiento dental.
+* Resinas estéticas.
+* Ortodoncia.
+* No realizar tratamiento.
+
+Consentimiento
+
+Declaro que:
+
+* He tenido oportunidad de realizar preguntas y todas fueron respondidas satisfactoriamente.
+* Comprendo la información proporcionada sobre beneficios, riesgos y limitaciones del tratamiento.
+* Autorizo de manera voluntaria la realización del procedimiento de colocación de carillas dentales.
+AUTORIZACIÓN PARA FOTOGRAFIAS Y VIDEOS 
+
+Autorizo la toma de fotografías y/o videos para:
+-Documentación clínica.
+-Seguimiento
+-Uso educativo o en redes sociales
+
+( ) Rostro completo
+( ) Solo Sonrisa
+( ) No autorizo`,
 
   'Endodoncia': `CONSENTIMIENTO INFORMADO PARA TRATAMIENTO ENDODÓNTICO
 
