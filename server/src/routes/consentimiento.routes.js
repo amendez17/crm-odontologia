@@ -115,7 +115,15 @@ Yo, el/la paciente abajo firmante, declaro que he sido informado/a sobre:
 - Posible fractura de la pieza tratada
 - Necesidad de cirugía apical complementaria
 
-4. Se me ha informado que la pieza endodonciada requerirá una restauración definitiva (corona) para protegerla.`,
+4. Se me ha informado que la pieza endodonciada requerirá una restauración definitiva (corona) para protegerla. 
+Autorizo la toma de fotografías y/o videos para:
+-Documentación clínica.
+-Seguimiento
+-Uso educativo o en redes sociales
+
+( ) Rostro completo
+( ) Solo Sonrisa
+( ) No autorizo`,
 
   'Ortodoncia': `CONSENTIMIENTO INFORMADO PARA TRATAMIENTO ORTODÓNTICO
 
