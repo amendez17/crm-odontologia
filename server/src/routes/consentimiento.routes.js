@@ -26,7 +26,8 @@ Yo, el/la paciente abajo firmante, declaro que he sido informado/a por mi odont�
 5. POST-OPERATORIO: Me comprometo a seguir las indicaciones post-operatorias proporcionadas.
 
 He podido formular todas las preguntas que he considerado oportunas y todas ellas han sido respondidas satisfactoriamente.`,
-'Carillas': `CONSENTIMIENTO INFORMADO PARA CARILLAS DENTALES
+
+  'Carillas Dentales': `CONSENTIMIENTO INFORMADO PARA CARILLAS DENTALES
 
 Yo, el/la paciente abajo firmante, declaro que he sido informado/a de manera clara y comprensible sobre el procedimiento
 de colocación de carillas dentales, el cual consiste en mejorar la apariencia estética de los dientes mediante la colocación
