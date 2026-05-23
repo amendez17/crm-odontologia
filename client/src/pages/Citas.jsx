@@ -222,6 +222,10 @@ const PIXELS_POR_MINUTO = ALTURA_HORA / 60;
 
 const TOTAL_MINUTOS =
   (HORA_FIN - HORA_INICIO + 1) * 60;
+
+  const topLinea =
+  (minutosActuales - HORA_INICIO * 60) *
+  PIXELS_POR_MINUTO;
  
 //Guardar paciente
  const guardarPaciente = async (e) => {
