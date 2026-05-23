@@ -2,7 +2,7 @@ const express = require('express');
 const { Tratamiento, CategoriaTratamiento } = require('../models');
 const { auth, esAdmin } = require('../middleware/auth');
 const router = express.Router();
-const { getIO } = require('../socket');
+
 
 // GET /api/tratamientos
 router.get('/', auth, async (req, res) => {
@@ -36,8 +36,10 @@ router.post('/categorias', auth, esAdmin, async (req, res) => {
   try {
     const categoria = await CategoriaTratamiento.create(req.body);
 
-getIO().emit('categoria:creada', categoria);
-
+req.app.get('io').emit(
+  'categoria:creada',
+  categoria
+);
 res.status(201).json(categoria);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -53,7 +55,10 @@ const tratamientoCompleto = await Tratamiento.findByPk(tratamiento.id, {
   include: [{ model: CategoriaTratamiento, as: 'categoria' }]
 });
 
-getIO().emit('tratamiento:creado', tratamientoCompleto);
+req.app.get('io').emit(
+  'tratamiento:creado',
+  tratamientoCompleto
+);
 
 res.status(201).json(tratamientoCompleto);
   } catch (error) {
@@ -72,7 +77,10 @@ const actualizado = await Tratamiento.findByPk(tratamiento.id, {
   include: [{ model: CategoriaTratamiento, as: 'categoria' }]
 });
 
-getIO().emit('tratamiento:actualizado', actualizado);
+req.app.get('io').emit(
+  'tratamiento:actualizado',
+  actualizado
+);
 
 res.json(actualizado);
   } catch (error) {
@@ -87,7 +95,10 @@ router.delete('/:id', auth, esAdmin, async (req, res) => {
     if (!tratamiento) return res.status(404).json({ error: 'Tratamiento no encontrado.' });
     await tratamiento.update({ activo: false });
 
-getIO().emit('tratamiento:eliminado', tratamiento.id);
+req.app.get('io').emit(
+  'tratamiento:eliminado',
+  tratamiento.id
+);
 
 res.json({ message: 'Tratamiento desactivado.' });
   } catch (error) {
