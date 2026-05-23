@@ -786,7 +786,7 @@ const fechaFmt = fechaLarga(cita.fecha);
 const renderVistaSemana = () => {
 
   return (
-    <div className="overflow-x-auto overflow-y-visible w-full bg-white rounded-2xl border relative">
+    <div   className="     overflow-x-auto     overflow-y-auto     w-full     bg-white     rounded-2xl     border     relative   "   style={{     maxHeight: '80vh'   }} >
 
       <div
   className="
@@ -803,7 +803,7 @@ const renderVistaSemana = () => {
 
         {/* CABECERA */}
 
-        <div />
+        <div className="sticky top-0 bg-white z-40" />
 
         {diasSemana.map((dia, i) => {
 
@@ -812,7 +812,7 @@ const renderVistaSemana = () => {
           return (
             <div
               key={dia}
-              className="border-l p-1 md:p-2 text-center bg-white z-[1]"
+              className=" border-l p-1  md:p-2  text-center bg-white sticky top-0 z-30 shadow-sm"
             >
               <div className="text-[9px] md:text-[9px] md:text-xs text-gray-500">
                 {DIAS_SEMANA[i]}
