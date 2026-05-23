@@ -96,27 +96,47 @@ router.post(
       // CREAR PAGO
       const pago = await Pago.create(req.body);
 
-      // SI HAY PRESUPUESTO → VALIDAR SI SE LIQUIDÓ
-      if (presupuesto) {
+     // SI HAY PRESUPUESTO → ACTUALIZAR ESTADO
+if (presupuesto) {
 
-        const totalPagadoActualizado =
-          presupuesto.pagos.reduce(
-            (sum, p) => sum + parseFloat(p.monto),
-            0
-          ) + parseFloat(monto);
+  const totalPagadoActualizado =
+    presupuesto.pagos.reduce(
+      (sum, p) => sum + parseFloat(p.monto),
+      0
+    ) + parseFloat(monto);
 
-        if (
-          totalPagadoActualizado >=
-          parseFloat(presupuesto.total)
-        ) {
+  const totalPresupuesto =
+    parseFloat(presupuesto.total);
 
-          await presupuesto.update({
-            estado: 'finalizado'
-          });
+  let nuevoEstado = 'pendiente';
 
-        }
-      }
+  // SIN PAGOS
+  if (totalPagadoActualizado <= 0) {
 
+    nuevoEstado = 'pendiente';
+
+  }
+
+  // PAGO PARCIAL
+  else if (
+    totalPagadoActualizado < totalPresupuesto
+  ) {
+
+    nuevoEstado = 'en_curso';
+
+  }
+
+  // LIQUIDADO
+  else {
+
+    nuevoEstado = 'finalizado';
+
+  }
+
+  await presupuesto.update({
+    estado: nuevoEstado
+  });
+}
       // PAGO COMPLETO
       const pagoCompleto = await Pago.findByPk(
         pago.id,
@@ -185,26 +205,127 @@ router.post(
   }
 );
 // DELETE /api/pagos/:id
-router.delete('/:id', auth, registrarActividad('eliminar', 'pago'), async (req, res) => {
-  try {
+router.delete(
+  '/:id',
+  auth,
+  registrarActividad('eliminar', 'pago'),
+  async (req, res) => {
 
-    const pago = await Pago.findByPk(req.params.id);
+    try {
 
-    if (!pago) {
-      return res.status(404).json({
-        error: 'Pago no encontrado.'
+      const pago = await Pago.findByPk(req.params.id);
+
+      if (!pago) {
+        return res.status(404).json({
+          error: 'Pago no encontrado.'
+        });
+      }
+
+      const presupuestoId = pago.presupuesto_id;
+
+      await pago.destroy();
+
+      // SOCKET PAGO ELIMINADO
+      req.app.get('io').emit(
+        'pago-eliminado',
+        pago.id
+      );
+
+      // RECALCULAR PRESUPUESTO
+      if (presupuestoId) {
+
+        const presupuesto =
+          await Presupuesto.findByPk(
+            presupuestoId,
+            {
+              include: [
+                {
+                  model: Pago,
+                  as: 'pagos'
+                }
+              ]
+            }
+          );
+
+        if (presupuesto) {
+
+          const totalPagado =
+            presupuesto.pagos.reduce(
+              (sum, p) =>
+                sum + parseFloat(p.monto),
+              0
+            );
+
+          const totalPresupuesto =
+            parseFloat(presupuesto.total);
+
+          let nuevoEstado = 'pendiente';
+
+          // SIN PAGOS
+          if (totalPagado <= 0) {
+
+            nuevoEstado = 'pendiente';
+
+          }
+
+          // PAGO PARCIAL
+          else if (
+            totalPagado < totalPresupuesto
+          ) {
+
+            nuevoEstado = 'en_curso';
+
+          }
+
+          // LIQUIDADO
+          else {
+
+            nuevoEstado = 'finalizado';
+
+          }
+
+          await presupuesto.update({
+            estado: nuevoEstado
+          });
+
+          // SOCKET PRESUPUESTO ACTUALIZADO
+          const presupuestoActualizado =
+            await Presupuesto.findByPk(
+              presupuesto.id,
+              {
+                include: [
+                  {
+                    model: Paciente,
+                    as: 'paciente'
+                  },
+                  {
+                    model: Pago,
+                    as: 'pagos'
+                  }
+                ]
+              }
+            );
+
+          req.app.get('io').emit(
+            'presupuesto_actualizado',
+            presupuestoActualizado
+          );
+        }
+      }
+
+      res.json({
+        message: 'Pago eliminado.'
       });
+
+    } catch (error) {
+
+      res.status(500).json({
+        error: error.message
+      });
+
     }
-
-    await pago.destroy();
-
-    // SOCKET
-    req.io.emit('pago-eliminado', pago.id);
-
-    res.json({ message: 'Pago eliminado.' });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-});
+);
+
+
 module.exports = router;
