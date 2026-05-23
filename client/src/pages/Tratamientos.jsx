@@ -3,6 +3,7 @@ import api from '../api/axios';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiPlus, FiEdit2, FiTrash2, FiTag } from 'react-icons/fi';
+import socket from '../socket';
 
 export default function Tratamientos() {
   const [tratamientos, setTratamientos] = useState([]);
@@ -31,6 +32,38 @@ export default function Tratamientos() {
   };
 
   useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+  socket.on('tratamiento:creado', (nuevoTratamiento) => {
+    setTratamientos(prev => [nuevoTratamiento, ...prev]);
+  });
+
+  socket.on('tratamiento:actualizado', (tratamientoActualizado) => {
+    setTratamientos(prev =>
+      prev.map(t =>
+        t.id === tratamientoActualizado.id
+          ? tratamientoActualizado
+          : t
+      )
+    );
+  });
+
+  socket.on('tratamiento:eliminado', (id) => {
+    setTratamientos(prev =>
+      prev.filter(t => t.id !== id)
+    );
+  });
+
+  socket.on('categoria:creada', (nuevaCategoria) => {
+    setCategorias(prev => [...prev, nuevaCategoria]);
+  });
+
+  return () => {
+    socket.off('tratamiento:creado');
+    socket.off('tratamiento:actualizado');
+    socket.off('tratamiento:eliminado');
+    socket.off('categoria:creada');
+  };
+}, []);
 
   const abrirNuevo = () => {
     setForm({ nombre: '', descripcion: '', precio: '', duracion_minutos: '30', categoria_id: '' });
@@ -56,7 +89,7 @@ export default function Tratamientos() {
         toast.success('Tratamiento creado');
       }
       setModal(false);
-      cargar();
+     
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al guardar');
     }
@@ -69,7 +102,7 @@ export default function Tratamientos() {
       toast.success('Categoría creada');
       setModalCat(false);
       setFormCat({ nombre: '', descripcion: '' });
-      cargar();
+     
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al crear categoría');
     }
@@ -80,7 +113,7 @@ export default function Tratamientos() {
     try {
       await api.delete(`/tratamientos/${id}`);
       toast.success('Tratamiento desactivado');
-      cargar();
+      
     } catch {
       toast.error('Error al eliminar');
     }
