@@ -30,28 +30,9 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 const HORA_INICIO = 7;
 const HORA_FIN = 22; // 10 PM
 
-const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-useEffect(() => {
-  const onResize = () => {
-    setIsMobile(window.innerWidth < 768);
-  };
 
-  window.addEventListener('resize', onResize);
-
-  return () => window.removeEventListener('resize', onResize);
-}, []);
-
-const ALTURA_HORA = isMobile ? 42 : 90;
-
-const PIXELS_POR_MINUTO =
-  ALTURA_HORA / 60;
-
-// IMPORTANTE:
-// +1 para incluir la última hora completa
-
-const TOTAL_MINUTOS =
-  (HORA_FIN - HORA_INICIO + 1) * 60;function getInicioSemana(fecha) {
+function getInicioSemana(fecha) {
   const d = new Date(fecha + 'T12:00:00');
 
   const dia = d.getDay(); // domingo = 0
@@ -223,9 +204,24 @@ export default function Citas() {
   { length: HORA_FIN - HORA_INICIO + 1 },
   (_, i) => HORA_INICIO + i
 );
-const topLinea =
-  (minutosActuales - HORA_INICIO * 60)
-  * PIXELS_POR_MINUTO;
+ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+useEffect(() => {
+  const onResize = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+
+  window.addEventListener('resize', onResize);
+
+  return () => window.removeEventListener('resize', onResize);
+}, []);
+
+const ALTURA_HORA = isMobile ? 42 : 90;
+
+const PIXELS_POR_MINUTO = ALTURA_HORA / 60;
+
+const TOTAL_MINUTOS =
+  (HORA_FIN - HORA_INICIO + 1) * 60;
  
 //Guardar paciente
  const guardarPaciente = async (e) => {
@@ -807,7 +803,7 @@ const renderVistaSemana = () => {
   "
   style={{
     gridTemplateColumns:
-  window.innerWidth < 768
+  isMobile
     ? '32px repeat(7, 1fr)'
     : '60px repeat(7, 1fr)'
   }}
