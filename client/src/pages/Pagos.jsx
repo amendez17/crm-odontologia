@@ -49,6 +49,9 @@ useEffect(() => {
       if (existe) return prev;
       return [nuevoPago, ...prev];
     });
+    socket.on('reconnect', () => {
+  cargar();
+});
   });
 
   socket.on('pago-eliminado', (id) => {
