@@ -47,6 +47,9 @@ useEffect(() => {
     });
 
     cargarBalance();
+    socket.on('reconnect', () => {
+  cargar();
+});
   });
 
   socket.on('pago-eliminado', (id) => {
