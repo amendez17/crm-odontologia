@@ -90,7 +90,9 @@ useEffect(() => {
   const handleActualizar = () => {
     cargar();
   };
-
+socket.on('reconnect', () => {
+  cargar();
+});
   socket.on('presupuesto_creado', handleActualizar);
   socket.on('presupuesto_actualizado', handleActualizar);
   socket.on('presupuesto_eliminado', handleActualizar);
