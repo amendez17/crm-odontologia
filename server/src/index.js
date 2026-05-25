@@ -13,9 +13,18 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: [
+      'http://localhost:5173',
+      'https://clinicadental-almar.vercel.app/',
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
   },
+
+  transports: ['websocket', 'polling'],
+
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 io.on('connection', (socket) => {
