@@ -56,7 +56,9 @@ useEffect(() => {
       prev.filter(p => p.id !== id)
     );
   });
-
+socket.on('reconnect', () => {
+  cargar();
+});
   return () => {
     socket.off('pago-creado');
     socket.off('pago-eliminado');
