@@ -253,7 +253,9 @@ const calcularPosicionCita = (cita) => {
   return ['administrador', 'recepcionista'].includes(usuario?.rol);
 }, [usuario]);
 useEffect(() => {
-
+socket.on('reconnect', () => {
+  cargar();
+});
   socket.on('cita-creada', (nuevaCita) => {
 
     // Vista día
