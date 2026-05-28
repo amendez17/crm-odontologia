@@ -391,10 +391,11 @@ socket.on('reconnect', () => {
   });
 
   return () => {
-    socket.off('cita-creada');
-    socket.off('cita-editada');
-    socket.off('cita-eliminada');
-  };
+  socket.off('reconnect');
+  socket.off('cita-creada');
+  socket.off('cita-editada');
+  socket.off('cita-eliminada');
+};
 
 }, []);
   
@@ -556,15 +557,140 @@ const pacientesFiltrados = useMemo(() => {
   const guardar = async (e) => {
     e.preventDefault();
     try {
-      if (editando) { await api.put(`/citas/${editando}`, form); toast.success('Cita actualizada'); }
-      else          { await api.post('/citas', form);            toast.success('Cita creada'); }
+     if (editando) {
+
+  const res = await api.put(`/citas/${editando}`, form);
+
+  const citaActualizada = res.data;
+
+  // Vista día
+  setCitas(prev =>
+    prev.map(c =>
+      c.id === citaActualizada.id
+        ? citaActualizada
+        : c
+    )
+  );
+
+  // Vista semana
+  setCitasSemana(prev => {
+
+    const copia = { ...prev };
+
+    Object.keys(copia).forEach(fecha => {
+      copia[fecha] = copia[fecha].map(c =>
+        c.id === citaActualizada.id
+          ? citaActualizada
+          : c
+      );
+    });
+
+    return copia;
+  });
+
+  // Vista mes
+  setCitasMes(prev => {
+
+    const copia = { ...prev };
+
+    Object.keys(copia).forEach(fecha => {
+      copia[fecha] = copia[fecha].map(c =>
+        c.id === citaActualizada.id
+          ? citaActualizada
+          : c
+      );
+    });
+
+    return copia;
+  });
+
+  toast.success('Cita actualizada');
+}
+     else {
+
+  const res = await api.post('/citas', form);
+
+  const nuevaCita = res.data;
+
+  // Vista día
+  setCitas(prev => [...prev, nuevaCita]);
+
+  // Vista semana
+  setCitasSemana(prev => {
+
+    const copia = { ...prev };
+
+    if (!copia[nuevaCita.fecha]) {
+      copia[nuevaCita.fecha] = [];
+    }
+
+    copia[nuevaCita.fecha] = [
+      ...copia[nuevaCita.fecha],
+      nuevaCita
+    ];
+
+    return copia;
+  });
+
+  // Vista mes
+  setCitasMes(prev => {
+
+    const copia = { ...prev };
+
+    if (!copia[nuevaCita.fecha]) {
+      copia[nuevaCita.fecha] = [];
+    }
+
+    copia[nuevaCita.fecha] = [
+      ...copia[nuevaCita.fecha],
+      nuevaCita
+    ];
+
+    return copia;
+  });
+
+  toast.success('Cita creada');
+}
       setModal(false);
     } catch (err) { toast.error(err.response?.data?.error || 'Error al guardar'); }
   };
 
   const eliminar = async (id) => {
     if (!window.confirm('¿Eliminar esta cita?')) return;
-    try { await api.delete(`/citas/${id}`); toast.success('Cita eliminada'); cargar(); }
+    try { await api.delete(`/citas/${id}`);
+
+// Vista día
+setCitas(prev =>
+  prev.filter(c => c.id !== id)
+);
+
+// Vista semana
+setCitasSemana(prev => {
+
+  const copia = { ...prev };
+
+  Object.keys(copia).forEach(fecha => {
+    copia[fecha] =
+      copia[fecha].filter(c => c.id !== id);
+  });
+
+  return copia;
+});
+
+// Vista mes
+setCitasMes(prev => {
+
+  const copia = { ...prev };
+
+  Object.keys(copia).forEach(fecha => {
+    copia[fecha] =
+      copia[fecha].filter(c => c.id !== id);
+  });
+
+  return copia;
+});
+
+toast.success('Cita eliminada'); }
     catch { toast.error('Error al eliminar'); }
   };
 
