@@ -313,50 +313,69 @@ socket.on('reconnect', () => {
 
   });
 
-  socket.on('cita-editada', (citaActualizada) => {
+ socket.on('cita-editada', (citaActualizada) => {
 
-    // Día
-    setCitas(prev =>
-      prev.map(c =>
-        c.id === citaActualizada.id
-          ? citaActualizada
-          : c
-      )
+  // Día
+  setCitas(prev => {
+
+    const sinVieja = prev.filter(
+      c => c.id !== citaActualizada.id
     );
 
-    // Semana
-    setCitasSemana(prev => {
-
-      const copia = { ...prev };
-
-      Object.keys(copia).forEach(fecha => {
-        copia[fecha] = copia[fecha].map(c =>
-          c.id === citaActualizada.id
-            ? citaActualizada
-            : c
-        );
-      });
-
-      return copia;
-    });
-
-    // Mes
-    setCitasMes(prev => {
-
-      const copia = { ...prev };
-
-      Object.keys(copia).forEach(fecha => {
-        copia[fecha] = copia[fecha].map(c =>
-          c.id === citaActualizada.id
-            ? citaActualizada
-            : c
-        );
-      });
-
-      return copia;
-    });
-
+    return [...sinVieja, citaActualizada];
   });
+
+  // Semana
+  setCitasSemana(prev => {
+
+    const copia = { ...prev };
+
+    // eliminar de todos los días
+    Object.keys(copia).forEach(fecha => {
+      copia[fecha] = copia[fecha].filter(
+        c => c.id !== citaActualizada.id
+      );
+    });
+
+    // agregar al nuevo día
+    if (!copia[citaActualizada.fecha]) {
+      copia[citaActualizada.fecha] = [];
+    }
+
+    copia[citaActualizada.fecha] = [
+      ...copia[citaActualizada.fecha],
+      citaActualizada
+    ];
+
+    return copia;
+  });
+
+  // Mes
+  setCitasMes(prev => {
+
+    const copia = { ...prev };
+
+    // eliminar de todos los días
+    Object.keys(copia).forEach(fecha => {
+      copia[fecha] = copia[fecha].filter(
+        c => c.id !== citaActualizada.id
+      );
+    });
+
+    // agregar al nuevo día
+    if (!copia[citaActualizada.fecha]) {
+      copia[citaActualizada.fecha] = [];
+    }
+
+    copia[citaActualizada.fecha] = [
+      ...copia[citaActualizada.fecha],
+      citaActualizada
+    ];
+
+    return copia;
+  });
+
+});
 
   socket.on('cita-eliminada', (id) => {
 
