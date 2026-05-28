@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
 const socket = io(import.meta.env.VITE_API_URL, {
-  transports: ['websocket', 'polling'],
+  transports: ['websocket'],
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
@@ -23,6 +23,21 @@ socket.on('reconnect', (attempt) => {
 
 socket.on('connect_error', (err) => {
   console.log('⚠️ Error socket:', err.message);
+});
+
+document.addEventListener('visibilitychange', () => {
+
+  if (document.visibilityState === 'visible') {
+
+    if (!socket.connected) {
+
+      console.log('🔄 Reconectando socket...');
+      socket.connect();
+
+    }
+
+  }
+
 });
 
 export default socket;
