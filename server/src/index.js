@@ -21,7 +21,7 @@ const io = new Server(server, {
     credentials: true,
   },
 
-  transports: ['websocket', 'polling'],
+  transports: ['websocket'],
 
   pingTimeout: 60000,
   pingInterval: 25000,
@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
 });
 app.set('io', io);
 // Middleware
-app.use(cors());
+app.use(cors({   origin: [     'http://localhost:5173',     'https://clinicadental-almar.vercel.app'   ],   credentials: true }));
 app.use(express.json());
 
 app.use((req, res, next) => {
