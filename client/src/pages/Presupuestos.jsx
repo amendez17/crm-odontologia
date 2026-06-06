@@ -706,7 +706,7 @@ const exportarCSV = async () => {
                   <td className="text-surface-400 font-medium">#{p.id}</td>
                   <td className="font-semibold text-primary-900">{p.paciente?.nombre} {p.paciente?.apellido}</td>
                   <td className="text-surface-600">Dr. {p.doctor?.nombre} {p.doctor?.apellido}</td>
-                  <td className="font-semibold text-dental-600">${Number(p.total).toLocaleString()}</td>
+                  <td className="font-semibold text-dental-600"> ${(Number(p.total) - Number(p.descuento || 0) ).toLocaleString()}</td>
                   <td>
                     <select
                       value={p.estado}
