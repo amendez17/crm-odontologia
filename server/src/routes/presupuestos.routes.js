@@ -169,19 +169,14 @@ router.put(
         );
 
         // RECALCULAR TOTAL
-        const subtotal = detalles.reduce(
-          (sum, d) => sum + parseFloat(d.precio),
-          0
-        );
+       const total = detalles.reduce(
+  (sum, d) => sum + parseFloat(d.precio),
+  0
+);
 
-        const total =
-          subtotal - parseFloat(descuento || 0);
-
-        await presupuesto.update({
-          total
-        }, {
-          transaction: t
-        });
+await presupuesto.update({
+  total
+});
       }
 
       await t.commit();
