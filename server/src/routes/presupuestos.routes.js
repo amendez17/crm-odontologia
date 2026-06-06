@@ -183,9 +183,14 @@ router.put(
   0
 );
 
-await presupuesto.update({
-  total
-});
+await presupuesto.update(
+  {
+    total
+  },
+  {
+    transaction: t
+  }
+);
       }
 
       await t.commit();
