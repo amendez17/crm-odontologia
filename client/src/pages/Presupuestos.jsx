@@ -980,12 +980,39 @@ const exportarCSV = async () => {
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
-                <tr className="border-t border-surface-200 font-semibold">
-                  <td colSpan={3} className="text-right">Total:</td>
-                  <td className="text-right text-dental-600">${Number(modalDetalle.total).toLocaleString()}</td>
-                </tr>
-              </tfoot>
+             <tfoot>
+  <tr className="border-t border-surface-200">
+    <td colSpan={3} className="text-right">
+      Subtotal:
+    </td>
+    <td className="text-right">
+      ${Number(modalDetalle.total).toLocaleString()}
+    </td>
+  </tr>
+
+  {Number(modalDetalle.descuento || 0) > 0 && (
+    <tr>
+      <td colSpan={3} className="text-right text-red-600">
+        Descuento:
+      </td>
+      <td className="text-right text-red-600">
+        -${Number(modalDetalle.descuento).toLocaleString()}
+      </td>
+    </tr>
+  )}
+
+  <tr className="border-t border-surface-200 font-bold">
+    <td colSpan={3} className="text-right">
+      Total Final:
+    </td>
+    <td className="text-right text-green-600">
+      ${(
+        Number(modalDetalle.total) -
+        Number(modalDetalle.descuento || 0)
+      ).toLocaleString()}
+    </td>
+  </tr>
+</tfoot>
             </table>
             {modalDetalle.pagos?.length > 0 && (
               <div>
