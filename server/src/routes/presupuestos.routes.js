@@ -230,14 +230,18 @@ req.app.get('io').emit(
 );
       res.json(actualizado);
 
-    } catch (error) {
+  } catch (error) {
 
-      await t.rollback();
+  console.error('ERROR ACTUALIZANDO PRESUPUESTO');
+  console.error(error);
 
-      res.status(400).json({
-        error: error.message
-      });
-    }
+  await t.rollback();
+
+  res.status(400).json({
+    error: error.message,
+    stack: error.stack
+  });
+}
   }
 );
 
