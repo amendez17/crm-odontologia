@@ -82,10 +82,19 @@ req.app.get('io').emit(
 );
 
     res.status(201).json(resultado);
-  } catch (error) {
-    await t.rollback();
-    res.status(400).json({ error: error.message });
-  }
+ } catch (err) {
+
+  console.error('ERROR COMPLETO');
+  console.log(err);
+  console.log(err.response);
+  console.log(err.response?.data);
+
+  toast.error(
+    err.response?.data?.error ||
+    'Error guardando presupuesto'
+  );
+
+}
 });
 
 
