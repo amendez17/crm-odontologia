@@ -77,7 +77,6 @@ export default function Presupuestos() {
       const params = {};
       if (filtroEstado) params.estado = filtroEstado;
       if (filtroPaciente) params.paciente_id = filtroPaciente;
-      if (busquedaPresupuesto)   params.buscar = busquedaPresupuesto;
       const { data } = await api.get('/presupuestos', { params });
       setPresupuestos( data.presupuestos || []);
     } catch {
@@ -106,7 +105,7 @@ export default function Presupuestos() {
     toast.error('Error cargando datos');
   }
 };
- useEffect(() => { cargar();}, [filtroEstado, filtroPaciente, busquedaPresupuesto]);
+ useEffect(() => { cargar();}, [filtroEstado, filtroPaciente]);
  useEffect(() => { cargarDatos(); }, []);
 useEffect(() => {
 
