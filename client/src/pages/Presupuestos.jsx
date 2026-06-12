@@ -30,14 +30,11 @@ export default function Presupuestos() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [filtroPaciente, setFiltroPaciente] = useState('');
   const [busquedaPresupuesto, setBusquedaPresupuesto] = useState('');
-const [mostrarPresupuestos, setMostrarPresupuestos] = useState(false);
-  const [buscar, setBuscar] = useState('');
+  const [mostrarPresupuestos, setMostrarPresupuestos] = useState(false);
   const [showFiltros, setShowFiltros] = useState(false);
-const [busquedaPaciente, setBusquedaPaciente] = useState('');
-const [mostrarPacientes, setMostrarPacientes] = useState(false);
-
-const pacientesFiltrados = useMemo(() => {
-
+  const [busquedaPaciente, setBusquedaPaciente] = useState('');
+  const [mostrarPacientes, setMostrarPacientes] = useState(false);
+  const pacientesFiltrados = useMemo(() => {
   const textoBusqueda = busquedaPaciente.toLowerCase();
 
   return pacientes.filter(p => {
@@ -80,7 +77,7 @@ const pacientesFiltrados = useMemo(() => {
       const params = {};
       if (filtroEstado) params.estado = filtroEstado;
       if (filtroPaciente) params.paciente_id = filtroPaciente;
-      if (buscar) params.buscar = buscar;
+      if (busquedaPresupuesto)   params.buscar = busquedaPresupuesto;
       const { data } = await api.get('/presupuestos', { params });
       setPresupuestos( data.presupuestos || []);
     } catch {
@@ -156,6 +153,30 @@ const guardar = async (e) => {
     toast.error('Agregue al menos un tratamiento');
     return;
   }
+      const piezasValidas = [
+  11,12,13,14,15,16,17,18,
+  21,22,23,24,25,26,27,28,
+  31,32,33,34,35,36,37,38,
+  41,42,43,44,45,46,47,48
+];
+
+for (const detalle of detalles) {
+
+  if (
+    detalle.pieza_dental &&
+    !piezasValidas.includes(
+      Number(detalle.pieza_dental)
+    )
+  ) {
+
+    toast.error(
+      `La pieza ${detalle.pieza_dental} no existe`
+    );
+
+    return;
+  }
+}
+
 
   try {
 
@@ -214,29 +235,6 @@ const guardar = async (e) => {
       notas: '',
       descuento: '0'
     });
-    const piezasValidas = [
-  11,12,13,14,15,16,17,18,
-  21,22,23,24,25,26,27,28,
-  31,32,33,34,35,36,37,38,
-  41,42,43,44,45,46,47,48
-];
-
-for (const detalle of detalles) {
-
-  if (
-    detalle.pieza_dental &&
-    !piezasValidas.includes(
-      Number(detalle.pieza_dental)
-    )
-  ) {
-
-    toast.error(
-      `La pieza ${detalle.pieza_dental} no existe`
-    );
-
-    return;
-  }
-}
 
     setDetalles([]);
 
@@ -972,9 +970,22 @@ const exportarCSV = async () => {
                       </select>
                     </div>
                     <div className="w-full md:w-24">
-                      <select value={d.pieza_dental} onChange={e =>   actualizarDetalle( i, 'pieza_dental', e.target.value} className="input-field">
-                      <option value="">Pieza</option> {[   11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,31,32,33,34,35,36,37,38,41,42,43,44,45,46,47,48].map(pieza => (
-                      <option key={pieza} value={pieza}> {pieza} </option> ))}
+                      <select value={d.pieza_dental} onChange={e =>   actualizarDetalle( i, 'pieza_dental', e.target.value)} className="input-field">
+                      <option value="">Pieza</option>
+
+                      {[
+                      11,12,13,14,15,16,17,18,
+                      21,22,23,24,25,26,27,28,
+                      31,32,33,34,35,36,37,38,
+                      41,42,43,44,45,46,47,48
+                      ].map(pieza => (
+                      <option
+                      key={pieza}
+                      value={pieza}
+                      >
+                      {pieza}
+                      </option>
+                      ))}
                       </select>
                     </div>
                     <div className="w-full md:w-28">
