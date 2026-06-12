@@ -29,6 +29,8 @@ export default function Presupuestos() {
   const [detalles, setDetalles] = useState([]);
   const [filtroEstado, setFiltroEstado] = useState('');
   const [filtroPaciente, setFiltroPaciente] = useState('');
+  const [busquedaPresupuesto, setBusquedaPresupuesto] = useState('');
+const [mostrarPresupuestos, setMostrarPresupuestos] = useState(false);
   const [buscar, setBuscar] = useState('');
   const [showFiltros, setShowFiltros] = useState(false);
 const [busquedaPaciente, setBusquedaPaciente] = useState('');
@@ -49,6 +51,28 @@ const pacientesFiltrados = useMemo(() => {
   });
 
 }, [pacientes, busquedaPaciente]);
+  const presupuestosFiltrados = useMemo(() => {
+
+  const texto = busquedaPresupuesto.toLowerCase();
+
+  if (!texto) return presupuestos;
+
+  return presupuestos.filter(p => {
+
+    const contenido = `
+      ${p.id}
+      ${p.paciente?.nombre || ''}
+      ${p.paciente?.apellido || ''}
+      ${p.paciente?.dni || ''}
+      ${p.doctor?.nombre || ''}
+      ${p.doctor?.apellido || ''}
+    `.toLowerCase();
+
+    return contenido.includes(texto);
+
+  });
+
+}, [presupuestos, busquedaPresupuesto]);
   
   const cargar = async () => {
     setLoading(true);
@@ -190,6 +214,29 @@ const guardar = async (e) => {
       notas: '',
       descuento: '0'
     });
+    const piezasValidas = [
+  11,12,13,14,15,16,17,18,
+  21,22,23,24,25,26,27,28,
+  31,32,33,34,35,36,37,38,
+  41,42,43,44,45,46,47,48
+];
+
+for (const detalle of detalles) {
+
+  if (
+    detalle.pieza_dental &&
+    !piezasValidas.includes(
+      Number(detalle.pieza_dental)
+    )
+  ) {
+
+    toast.error(
+      `La pieza ${detalle.pieza_dental} no existe`
+    );
+
+    return;
+  }
+}
 
     setDetalles([]);
 
@@ -689,13 +736,17 @@ const exportarCSV = async () => {
       {loading ? (
         <div className="text-center py-10 text-gray-500">Cargando...</div>
       ) : (
-        <div className="card overflow-x-auto p-0">
-          <table className="table-modern">
+  <div className="card mb-4">
+    <label className="block text-sm font-medium text-surface-600 mb-2"> Buscar Presupuesto </label>
+     <input type="text" value={busquedaPresupuesto} onChange={(e) => setBusquedaPresupuesto(e.target.value)} placeholder="Buscar por paciente, doctor, DNI o folio..." className=" input-field w-full text-sm sm:text-base "/>
+</div>
+        <div className="card overflow-x-auto w-full p-0">
+          <table className="table-modern min-w-[900px] lg:min-w-full">
             <thead>
               <tr>
                 <th>#</th>
-                <th>Paciente</th>
-                <th>Doctor</th>
+                <th className="whitespace-nowrap">Paciente</th>
+                <th className="whitespace-nowrap">Doctor</th>
                 <th>Total</th>
                 <th>Estado</th>
                 <th>Fecha</th>
@@ -703,13 +754,13 @@ const exportarCSV = async () => {
               </tr>
             </thead>
             <tbody>
-              {presupuestos.length === 0 ? (
+              {presupuestosFiltrados.length === 0 ? (
                 <tr><td colSpan={7} className="text-center py-1 text-surface-400">No hay presupuestos</td></tr>
-              ) : presupuestos.map(p => (
+              ) : presupuestosFiltrados.map(p => (
                 <tr key={p.id}>
                   <td className="text-surface-400 font-medium">#{p.id}</td>
-                  <td className="font-semibold text-primary-900">{p.paciente?.nombre} {p.paciente?.apellido}</td>
-                  <td className="text-surface-600">Dr. {p.doctor?.nombre} {p.doctor?.apellido}</td>
+                  <td className="font-semibold text-primary-900 whitespace-nowrap">{p.paciente?.nombre} {p.paciente?.apellido}</td>
+                  <td className="text-surface-600 whitespace-nowrap">Dr. {p.doctor?.nombre} {p.doctor?.apellido}</td>
                   <td className="font-semibold text-dental-600"> ${(Number(p.total) - Number(p.descuento || 0) ).toLocaleString()}</td>
                   <td>
                     <select
@@ -739,7 +790,7 @@ const exportarCSV = async () => {
       {/* Modal Nuevo Presupuesto */}
      <Modal isOpen={modal} onClose={() => { setModal(false); setEditandoId(null); setBusquedaPaciente(''); setMostrarPacientes(false); }} title={ editandoId ? `Editar Presupuesto #${editandoId}` : 'Nuevo Presupuesto' } size="xl">
         <form onSubmit={guardar} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> 
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"> 
             <div>
   <label className="block text-sm font-medium text-surface-600 mb-1">
     Cita Relacionada
@@ -913,17 +964,20 @@ const exportarCSV = async () => {
             ) : (
               <div className="space-y-2">
                 {detalles.map((d, i) => (
-                  <div key={i} className="flex gap-2 items-end">
+                  <div key={i} className="flex  flex-col md:flex-row gap-2 md:items-end">
                     <div className="flex-1">
                       <select value={d.tratamiento_id} onChange={e => actualizarDetalle(i, 'tratamiento_id', e.target.value)} className="input-field text-sm" required>
                         <option value="">Tratamiento</option>
                         {tratamientos.map(t => <option key={t.id} value={t.id}>{t.nombre} - ${Number(t.precio).toLocaleString()}</option>)}
                       </select>
                     </div>
-                    <div className="w-24">
-                      <input type="number" min="1" max="32" placeholder="Pieza" value={d.pieza_dental} onChange={e => actualizarDetalle(i, 'pieza_dental', e.target.value)} className="input-field text-sm" />
+                    <div className="w-full md:w-24">
+                      <select value={d.pieza_dental} onChange={e =>   actualizarDetalle( i, 'pieza_dental', e.target.value} className="input-field">
+                      <option value="">Pieza</option> {[   11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,31,32,33,34,35,36,37,38,41,42,43,44,45,46,47,48].map(pieza => (
+                      <option key={pieza} value={pieza}> {pieza} </option> ))}
+                      </select>
                     </div>
-                    <div className="w-28">
+                    <div className="w-full md:w-28">
                       <input type="number" step="0.01" placeholder="Precio" value={d.precio} onChange={e => actualizarDetalle(i, 'precio', e.target.value)} className="input-field text-sm" required />
                     </div>
                     <button type="button" onClick={() => eliminarDetalle(i)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><FiTrash2 size={16} /></button>
@@ -971,7 +1025,7 @@ const exportarCSV = async () => {
               <div><span className="text-gray-500">Paciente:</span> <span className="font-medium">{modalDetalle.paciente?.nombre} {modalDetalle.paciente?.apellido}</span></div>
               <div><span className="text-gray-500">Doctor:</span> <span className="font-medium">Dr. {modalDetalle.doctor?.nombre} {modalDetalle.doctor?.apellido}</span></div>
             </div>
-            <table className="table-modern">
+            <table className="table-modern min-w-[900px] lg:min-w-full">
               <thead><tr><th>Tratamiento</th><th>Pieza</th><th>Estado</th><th className="text-right">Precio</th></tr></thead>
               <tbody>
                 {modalDetalle.detalles?.map(d => (
