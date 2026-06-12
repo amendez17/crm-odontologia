@@ -3,28 +3,127 @@ const { Presupuesto, DetallePresupuesto, Paciente, Usuario, Tratamiento, Pago } 
 const { auth } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const sequelize = require('../config/database');
+const { Op } = require('sequelize');
 const router = express.Router();
 
-// GET /api/presupuestos
 router.get('/', auth, async (req, res) => {
   try {
-    const { paciente_id, estado } = req.query;
-    const where = {};
-    if (paciente_id) where.paciente_id = paciente_id;
-    if (estado) where.estado = estado;
 
-    const presupuestos = await Presupuesto.findAll({
-      where,
-      include: [
-        { model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido', 'dni'] },
-        { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] },
-        { model: DetallePresupuesto, as: 'detalles', include: [{ model: Tratamiento, as: 'tratamiento' }]},
-        { model: Pago, as: 'pagos'} ],
-      order: [['createdAt', 'DESC']]
+    const {
+      paciente_id,
+      estado,
+      buscar,
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    const where = {};
+
+    if (paciente_id) {
+      where.paciente_id = paciente_id;
+    }
+
+    if (estado) {
+      where.estado = estado;
+    }
+
+    const pacienteWhere = {};
+
+    if (buscar) {
+      pacienteWhere[Op.or] = [
+        {
+          nombre: {
+            [Op.like]: `%${buscar}%`
+          }
+        },
+        {
+          apellido: {
+            [Op.like]: `%${buscar}%`
+          }
+        },
+        {
+          dni: {
+            [Op.like]: `%${buscar}%`
+          }
+        }
+      ];
+    }
+
+    const offset =
+      (parseInt(page) - 1) *
+      parseInt(limit);
+
+    const { count, rows } =
+      await Presupuesto.findAndCountAll({
+        where,
+
+        include: [
+          {
+            model: Paciente,
+            as: 'paciente',
+            where:
+              buscar
+                ? pacienteWhere
+                : undefined,
+            attributes: [
+              'id',
+              'nombre',
+              'apellido',
+              'dni'
+            ]
+          },
+          {
+            model: Usuario,
+            as: 'doctor',
+            attributes: [
+              'id',
+              'nombre',
+              'apellido'
+            ]
+          },
+          {
+            model: DetallePresupuesto,
+            as: 'detalles',
+            include: [
+              {
+                model: Tratamiento,
+                as: 'tratamiento'
+              }
+            ]
+          },
+          {
+            model: Pago,
+            as: 'pagos'
+          }
+        ],
+
+        distinct: true,
+
+        order: [
+          ['createdAt', 'DESC']
+        ],
+
+        limit: parseInt(limit),
+
+        offset
+      });
+
+    res.json({
+      presupuestos: rows,
+      total: count,
+      pagina: parseInt(page),
+      totalPaginas: Math.ceil(
+        count / limit
+      )
     });
-    res.json(presupuestos);
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    console.error(error);
+
+    res.status(500).json({
+      error: error.message
+    });
   }
 });
 
