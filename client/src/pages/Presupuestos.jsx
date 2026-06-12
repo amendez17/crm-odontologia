@@ -729,7 +729,7 @@ const exportarCSV = async () => {
         </div>
       )}
 <div className="card mb-4">
-  <input type="text" placeholder="Buscar por paciente o número..." value={buscar} onChange={(e) => setBuscar(e.target.value) } className="input-field" />
+  <input type="text" placeholder="Buscar por paciente o número..." value={busquedaPresupuesto} onChange={(e) => setBuscar(e.target.value) } className="input-field" />
 </div>
       {loading ? (
         <div className="text-center py-10 text-gray-500">Cargando...</div>
