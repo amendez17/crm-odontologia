@@ -29,6 +29,7 @@ export default function Presupuestos() {
   const [detalles, setDetalles] = useState([]);
   const [filtroEstado, setFiltroEstado] = useState('');
   const [filtroPaciente, setFiltroPaciente] = useState('');
+  const [buscar, setBuscar] = useState('');
   const [showFiltros, setShowFiltros] = useState(false);
 const [busquedaPaciente, setBusquedaPaciente] = useState('');
 const [mostrarPacientes, setMostrarPacientes] = useState(false);
@@ -55,8 +56,9 @@ const pacientesFiltrados = useMemo(() => {
       const params = {};
       if (filtroEstado) params.estado = filtroEstado;
       if (filtroPaciente) params.paciente_id = filtroPaciente;
+      if (buscar) params.buscar = buscar;
       const { data } = await api.get('/presupuestos', { params });
-      setPresupuestos(data);
+      setPresupuestos( data.presupuestos || []);
     } catch {
       toast.error('Error al cargar presupuestos');
     } finally {
@@ -83,7 +85,7 @@ const pacientesFiltrados = useMemo(() => {
     toast.error('Error cargando datos');
   }
 };
-  useEffect(() => { cargar(); }, [filtroEstado, filtroPaciente]);
+  useEffect(() => {cargar();}, [filtroEstado,filtroPaciente,buscar]);
   useEffect(() => { cargarDatos(); }, []);
 useEffect(() => {
 
@@ -681,7 +683,9 @@ const exportarCSV = async () => {
           <button onClick={() => { setFiltroEstado(''); setFiltroPaciente(''); }} className="btn-secondary text-sm">Limpiar</button>
         </div>
       )}
-
+<div className="card mb-4">
+  <input type="text" placeholder="Buscar por paciente o número..." value={buscar} onChange={(e) => setBuscar(e.target.value) } className="input-field" />
+</div>
       {loading ? (
         <div className="text-center py-10 text-gray-500">Cargando...</div>
       ) : (
