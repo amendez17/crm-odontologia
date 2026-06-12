@@ -106,8 +106,8 @@ export default function Presupuestos() {
     toast.error('Error cargando datos');
   }
 };
-  useEffect(() => {cargar();}, [filtroEstado,filtroPaciente,buscar]);
-  useEffect(() => { cargarDatos(); }, []);
+ useEffect(() => { cargar();}, [filtroEstado, filtroPaciente, busquedaPresupuesto]);
+ useEffect(() => { cargarDatos(); }, []);
 useEffect(() => {
 
   const handleActualizar = () => {
