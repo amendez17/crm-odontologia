@@ -826,7 +826,6 @@ const exportarCSV = async () => {
     onFocus={() => setMostrarPacientes(true)}
    
     placeholder="Buscar paciente..."
-    className="input-field"
     required={!form.paciente_id}
   />
 

@@ -252,6 +252,31 @@ const calcularPosicionCita = (cita) => {
  const puedeUsarWhatsApp = useMemo(() => {
   return ['administrador', 'recepcionista'].includes(usuario?.rol);
 }, [usuario]);
+
+const ordenarPorHora = (lista) =>
+  [...lista].sort((a, b) => (a.hora_inicio || '').localeCompare(b.hora_inicio || ''));
+
+const upsertCita = (lista, cita) =>
+  ordenarPorHora([
+    ...lista.filter((item) => item.id !== cita.id),
+    cita
+  ]);
+
+const upsertCitaAgrupada = (grupos, cita) => {
+  const copia = { ...grupos };
+
+  Object.keys(copia).forEach((fechaGrupo) => {
+    copia[fechaGrupo] = copia[fechaGrupo].filter((item) => item.id !== cita.id);
+  });
+
+  if (!copia[cita.fecha]) {
+    copia[cita.fecha] = [];
+  }
+
+  copia[cita.fecha] = upsertCita(copia[cita.fecha], cita);
+
+  return copia;
+};
 useEffect(() => {
 socket.on('reconnect', () => {
   cargar();
@@ -259,121 +284,26 @@ socket.on('reconnect', () => {
   socket.on('cita-creada', (nuevaCita) => {
 
     // Vista día
-    setCitas(prev => {
-      const existe = prev.some(c => c.id === nuevaCita.id);
-
-      if (existe) return prev;
-
-      return [...prev, nuevaCita];
-    });
+    setCitas(prev => upsertCita(prev, nuevaCita));
 
     // Vista semana
-    setCitasSemana(prev => {
-
-      const copia = { ...prev };
-
-      if (!copia[nuevaCita.fecha]) {
-        copia[nuevaCita.fecha] = [];
-      }
-
-      const existe = copia[nuevaCita.fecha]
-        .some(c => c.id === nuevaCita.id);
-
-      if (!existe) {
-        copia[nuevaCita.fecha] = [
-          ...copia[nuevaCita.fecha],
-          nuevaCita
-        ];
-      }
-
-      return copia;
-    });
+    setCitasSemana(prev => upsertCitaAgrupada(prev, nuevaCita));
 
     // Vista mes
-    setCitasMes(prev => {
-
-      const copia = { ...prev };
-
-      if (!copia[nuevaCita.fecha]) {
-        copia[nuevaCita.fecha] = [];
-      }
-
-      const existe = copia[nuevaCita.fecha]
-        .some(c => c.id === nuevaCita.id);
-
-      if (!existe) {
-        copia[nuevaCita.fecha] = [
-          ...copia[nuevaCita.fecha],
-          nuevaCita
-        ];
-      }
-
-      return copia;
-    });
+    setCitasMes(prev => upsertCitaAgrupada(prev, nuevaCita));
 
   });
 
  socket.on('cita-editada', (citaActualizada) => {
 
   // Día
-  setCitas(prev => {
-
-    const sinVieja = prev.filter(
-      c => c.id !== citaActualizada.id
-    );
-
-    return [...sinVieja, citaActualizada];
-  });
+  setCitas(prev => upsertCita(prev, citaActualizada));
 
   // Semana
-  setCitasSemana(prev => {
-
-    const copia = { ...prev };
-
-    // eliminar de todos los días
-    Object.keys(copia).forEach(fecha => {
-      copia[fecha] = copia[fecha].filter(
-        c => c.id !== citaActualizada.id
-      );
-    });
-
-    // agregar al nuevo día
-    if (!copia[citaActualizada.fecha]) {
-      copia[citaActualizada.fecha] = [];
-    }
-
-    copia[citaActualizada.fecha] = [
-      ...copia[citaActualizada.fecha],
-      citaActualizada
-    ];
-
-    return copia;
-  });
+  setCitasSemana(prev => upsertCitaAgrupada(prev, citaActualizada));
 
   // Mes
-  setCitasMes(prev => {
-
-    const copia = { ...prev };
-
-    // eliminar de todos los días
-    Object.keys(copia).forEach(fecha => {
-      copia[fecha] = copia[fecha].filter(
-        c => c.id !== citaActualizada.id
-      );
-    });
-
-    // agregar al nuevo día
-    if (!copia[citaActualizada.fecha]) {
-      copia[citaActualizada.fecha] = [];
-    }
-
-    copia[citaActualizada.fecha] = [
-      ...copia[citaActualizada.fecha],
-      citaActualizada
-    ];
-
-    return copia;
-  });
+  setCitasMes(prev => upsertCitaAgrupada(prev, citaActualizada));
 
 });
 
@@ -583,45 +513,13 @@ const pacientesFiltrados = useMemo(() => {
   const citaActualizada = res.data;
 
   // Vista día
-  setCitas(prev =>
-    prev.map(c =>
-      c.id === citaActualizada.id
-        ? citaActualizada
-        : c
-    )
-  );
+  setCitas(prev => upsertCita(prev, citaActualizada));
 
   // Vista semana
-  setCitasSemana(prev => {
-
-    const copia = { ...prev };
-
-    Object.keys(copia).forEach(fecha => {
-      copia[fecha] = copia[fecha].map(c =>
-        c.id === citaActualizada.id
-          ? citaActualizada
-          : c
-      );
-    });
-
-    return copia;
-  });
+  setCitasSemana(prev => upsertCitaAgrupada(prev, citaActualizada));
 
   // Vista mes
-  setCitasMes(prev => {
-
-    const copia = { ...prev };
-
-    Object.keys(copia).forEach(fecha => {
-      copia[fecha] = copia[fecha].map(c =>
-        c.id === citaActualizada.id
-          ? citaActualizada
-          : c
-      );
-    });
-
-    return copia;
-  });
+  setCitasMes(prev => upsertCitaAgrupada(prev, citaActualizada));
 
   toast.success('Cita actualizada');
 }
@@ -632,41 +530,13 @@ const pacientesFiltrados = useMemo(() => {
   const nuevaCita = res.data;
 
   // Vista día
-  setCitas(prev => [...prev, nuevaCita]);
+  setCitas(prev => upsertCita(prev, nuevaCita));
 
   // Vista semana
-  setCitasSemana(prev => {
-
-    const copia = { ...prev };
-
-    if (!copia[nuevaCita.fecha]) {
-      copia[nuevaCita.fecha] = [];
-    }
-
-    copia[nuevaCita.fecha] = [
-      ...copia[nuevaCita.fecha],
-      nuevaCita
-    ];
-
-    return copia;
-  });
+  setCitasSemana(prev => upsertCitaAgrupada(prev, nuevaCita));
 
   // Vista mes
-  setCitasMes(prev => {
-
-    const copia = { ...prev };
-
-    if (!copia[nuevaCita.fecha]) {
-      copia[nuevaCita.fecha] = [];
-    }
-
-    copia[nuevaCita.fecha] = [
-      ...copia[nuevaCita.fecha],
-      nuevaCita
-    ];
-
-    return copia;
-  });
+  setCitasMes(prev => upsertCitaAgrupada(prev, nuevaCita));
 
   toast.success('Cita creada');
 }
