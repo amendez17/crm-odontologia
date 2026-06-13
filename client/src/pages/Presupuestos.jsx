@@ -757,12 +757,10 @@ const exportarCSV = async () => {
   type="text"
   value={textoBusqueda}
   onChange={(e) => setTextoBusqueda(e.target.value)}
-  placeholder="Buscar por paciente, doctor, DNI o folio..."
+  placeholder="Buscar por paciente, doctor, número de paciente o folio..."
   className="input-field w-full text-sm sm:text-base"
 />
-      <p className="text-sm text-surface-500">
-  {totalPresupuestos} presupuestos encontrados
-</p>
+    
     </div>
         <div className="card overflow-x-auto w-full p-0">
           <table className="table-modern min-w-[900px] lg:min-w-full">
