@@ -21,6 +21,7 @@ router.get('/', auth, async (req, res) => {
 const folioBusqueda = buscar
   ? buscar.replace('#', '').trim()
   : '';
+  
     
     if (paciente_id) {
       where.paciente_id = paciente_id;
@@ -29,35 +30,9 @@ const folioBusqueda = buscar
     if (estado) {
       where.estado = estado;
     }
-    if (folioBusqueda && !isNaN(folioBusqueda)) {
-  where[Op.or] = [
-    {
-      id: parseInt(folioBusqueda)
-    }
-  ];
-}
   
 
-    if (buscar) {
-      pacienteWhere[Op.or] = [
-        {
-          nombre: {
-            [Op.like]: `%${buscar}%`
-          }
-        },
-        {
-          apellido: {
-            [Op.like]: `%${buscar}%`
-          }
-        },
-        {
-          dni: {
-            [Op.like]: `%${buscar}%`
-          }
-        }
-      ];
-    }
-
+   
 if (buscar) {
   where[Op.or] = [
     {
@@ -104,7 +79,7 @@ if (buscar) {
     const { count, rows } =
       await Presupuesto.findAndCountAll({
         where,
-
+        subQuery: false,
         include: [
           {
           model: Paciente,
