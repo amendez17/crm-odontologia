@@ -18,7 +18,10 @@ router.get('/', auth, async (req, res) => {
     } = req.query;
 
     const where = {};
-
+const folioBusqueda = buscar
+  ? buscar.replace('#', '').trim()
+  : '';
+    
     if (paciente_id) {
       where.paciente_id = paciente_id;
     }
@@ -26,8 +29,14 @@ router.get('/', auth, async (req, res) => {
     if (estado) {
       where.estado = estado;
     }
-
-    const pacienteWhere = {};
+    if (folioBusqueda && !isNaN(folioBusqueda)) {
+  where[Op.or] = [
+    {
+      id: parseInt(folioBusqueda)
+    }
+  ];
+}
+  
 
     if (buscar) {
       pacienteWhere[Op.or] = [
@@ -49,6 +58,45 @@ router.get('/', auth, async (req, res) => {
       ];
     }
 
+if (buscar) {
+  where[Op.or] = [
+    {
+      id: !isNaN(folioBusqueda)
+        ? parseInt(folioBusqueda)
+        : -1
+    },
+
+    {
+      '$paciente.nombre$': {
+        [Op.like]: `%${buscar}%`
+      }
+    },
+
+    {
+      '$paciente.apellido$': {
+        [Op.like]: `%${buscar}%`
+      }
+    },
+
+    {
+      '$paciente.dni$': {
+        [Op.like]: `%${buscar}%`
+      }
+    },
+
+    {
+      '$doctor.nombre$': {
+        [Op.like]: `%${buscar}%`
+      }
+    },
+
+    {
+      '$doctor.apellido$': {
+        [Op.like]: `%${buscar}%`
+      }
+    }
+  ];
+}
     const offset =
       (parseInt(page) - 1) *
       parseInt(limit);
@@ -59,28 +107,24 @@ router.get('/', auth, async (req, res) => {
 
         include: [
           {
-            model: Paciente,
-            as: 'paciente',
-            where:
-              buscar
-                ? pacienteWhere
-                : undefined,
-            attributes: [
-              'id',
-              'nombre',
-              'apellido',
-              'dni'
-            ]
+          model: Paciente,
+          as: 'paciente',
+          attributes: [
+          'id',
+          'nombre',
+          'apellido',
+          'dni'
+          ]
           },
           {
-            model: Usuario,
-            as: 'doctor',
-            attributes: [
-              'id',
-              'nombre',
-              'apellido'
-            ]
-          },
+          model: Usuario,
+          as: 'doctor',
+          attributes: [
+          'id',
+          'nombre',
+          'apellido'
+          ]
+          },         
           {
             model: DetallePresupuesto,
             as: 'detalles',
