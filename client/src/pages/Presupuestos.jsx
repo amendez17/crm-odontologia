@@ -30,10 +30,14 @@ export default function Presupuestos() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [filtroPaciente, setFiltroPaciente] = useState('');
   const [busquedaPresupuesto, setBusquedaPresupuesto] = useState('');
+  const [textoBusqueda, setTextoBusqueda] = useState('');
   const [mostrarPresupuestos, setMostrarPresupuestos] = useState(false);
   const [showFiltros, setShowFiltros] = useState(false);
   const [busquedaPaciente, setBusquedaPaciente] = useState('');
   const [mostrarPacientes, setMostrarPacientes] = useState(false);
+  const [pagina, setPagina] = useState(1);
+const [totalPaginas, setTotalPaginas] = useState(1);
+const [totalPresupuestos, setTotalPresupuestos] = useState(0);
   const pacientesFiltrados = useMemo(() => {
   const textoBusqueda = busquedaPaciente.toLowerCase();
 
@@ -77,8 +81,13 @@ export default function Presupuestos() {
       const params = {};
       if (filtroEstado) params.estado = filtroEstado;
       if (filtroPaciente) params.paciente_id = filtroPaciente;
+      if (busquedaPresupuesto) params.buscar = busquedaPresupuesto;
+      params.page = pagina;
+      params.limit = 20;
       const { data } = await api.get('/presupuestos', { params });
       setPresupuestos( data.presupuestos || []);
+      setTotalPaginas(data.totalPaginas || 1);
+setTotalPresupuestos(data.total || 0);
     } catch {
       toast.error('Error al cargar presupuestos');
     } finally {
@@ -105,7 +114,15 @@ export default function Presupuestos() {
     toast.error('Error cargando datos');
   }
 };
- useEffect(() => { cargar();}, [filtroEstado, filtroPaciente]);
+ useEffect(() => {
+  const timer = setTimeout(() => {
+    setBusquedaPresupuesto(textoBusqueda);
+    setPagina(1);
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, [textoBusqueda]);
+useEffect(() => {cargar();}, [filtroEstado, filtroPaciente, busquedaPresupuesto, pagina]);
  useEffect(() => { cargarDatos(); }, []);
 useEffect(() => {
 
@@ -727,9 +744,7 @@ const exportarCSV = async () => {
           <button onClick={() => { setFiltroEstado(''); setFiltroPaciente(''); }} className="btn-secondary text-sm">Limpiar</button>
         </div>
       )}
-<div className="card mb-4">
-  <input type="text" placeholder="Buscar por paciente o número..." value={busquedaPresupuesto} onChange={(e) => setBuscar(e.target.value) } className="input-field" />
-</div>
+
       {loading ? (
         <div className="text-center py-10 text-gray-500">Cargando...</div>
      ) : (
@@ -739,12 +754,15 @@ const exportarCSV = async () => {
         Buscar Presupuesto
       </label>
       <input
-        type="text"
-        value={busquedaPresupuesto}
-        onChange={(e) => setBusquedaPresupuesto(e.target.value)}
-        placeholder="Buscar por paciente, doctor, DNI o folio..."
-        className="input-field w-full text-sm sm:text-base"
-      />
+  type="text"
+  value={textoBusqueda}
+  onChange={(e) => setTextoBusqueda(e.target.value)}
+  placeholder="Buscar por paciente, doctor, DNI o folio..."
+  className="input-field w-full text-sm sm:text-base"
+/>
+      <p className="text-sm text-surface-500">
+  {totalPresupuestos} presupuestos encontrados
+</p>
     </div>
         <div className="card overflow-x-auto w-full p-0">
           <table className="table-modern min-w-[900px] lg:min-w-full">
@@ -790,6 +808,97 @@ const exportarCSV = async () => {
               ))}
             </tbody>
           </table>
+          <p className="text-sm text-surface-500">
+  {totalPresupuestos.toLocaleString()} presupuestos encontrados
+</p>
+          <div className="text-center text-sm text-surface-500 mb-3">
+  Página {pagina} de {totalPaginas}
+</div>
+  {totalPaginas > 1 && (
+  <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+
+    <button
+      onClick={() => setPagina(p => Math.max(1, p - 1))}
+      disabled={pagina === 1}
+      className="px-3 py-2 rounded-xl border border-surface-200 disabled:opacity-50"
+    >
+      ◀
+    </button>
+
+    {/* Primera página */}
+    {pagina > 3 && (
+      <>
+        <button
+          onClick={() => setPagina(1)}
+          className="w-10 h-10 rounded-xl border border-surface-200"
+        >
+          1
+        </button>
+
+        {pagina > 4 && (
+          <span className="px-2 text-surface-400">
+            ...
+          </span>
+        )}
+      </>
+    )}
+
+    {/* Páginas cercanas */}
+    {Array.from(
+      { length: totalPaginas },
+      (_, i) => i + 1
+    )
+      .filter(
+        num =>
+          num >= pagina - 2 &&
+          num <= pagina + 2
+      )
+      .map(num => (
+        <button
+          key={num}
+          onClick={() => setPagina(num)}
+          className={`w-10 h-10 rounded-xl text-sm font-medium transition-all ${
+            pagina === num
+              ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md'
+              : 'bg-white border border-surface-200 text-surface-600 hover:bg-primary-50'
+          }`}
+        >
+          {num}
+        </button>
+      ))}
+
+    {/* Última página */}
+    {pagina < totalPaginas - 2 && (
+      <>
+        {pagina < totalPaginas - 3 && (
+          <span className="px-2 text-surface-400">
+            ...
+          </span>
+        )}
+
+        <button
+          onClick={() => setPagina(totalPaginas)}
+          className="w-10 h-10 rounded-xl border border-surface-200"
+        >
+          {totalPaginas}
+        </button>
+      </>
+    )}
+
+    <button
+      onClick={() =>
+        setPagina(p =>
+          Math.min(totalPaginas, p + 1)
+        )
+      }
+      disabled={pagina === totalPaginas}
+      className="px-3 py-2 rounded-xl border border-surface-200 disabled:opacity-50"
+    >
+      ▶
+    </button>
+
+  </div>
+)}
         </div>
      </>
       )}
