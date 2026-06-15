@@ -39,7 +39,7 @@ const getId = (p) => p.id;
         api.get('/presupuestos')
       ]);
       setPacientes(pacRes.data.pacientes || []);
-      setPresupuestos(presRes.data);
+      setPresupuestos(   Array.isArray(presRes.data.presupuestos)     ? presRes.data.presupuestos     : [] );
     } catch {}
   };
 useEffect(() => {
