@@ -264,7 +264,7 @@ win.onload = () => {
       ${h.diagnostico ? `<p><strong>Diagnóstico:</strong> ${h.diagnostico}</p>` : ''}
       ${h.tratamiento_realizado ? `<p><strong>Tratamiento:</strong> ${h.tratamiento_realizado}</p>` : ''}
       ${h.piezas_tratadas ? `<p><strong>Piezas:</strong> ${h.piezas_tratadas}</p>` : ''}
-      ${h.receta ? `<p><strong>Receta:</strong> ${h.receta}</p>` : ''}
+      ${h.receta ? `<p><strong>Plan de tratamiento:</strong> ${h.receta}</p>` : ''}
       ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
     </div>
   `).join('');
@@ -1049,7 +1049,7 @@ window.onload = () => window.print();
                 <input value={formHistoria.piezas_tratadas} onChange={e => setFormHistoria({ ...formHistoria, piezas_tratadas: e.target.value })} className="input-field" placeholder="Ej: 11, 21, 36" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Receta</label>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Plan de tratamiento</label>
                 <textarea value={formHistoria.receta} onChange={e => setFormHistoria({ ...formHistoria, receta: e.target.value })} className="input-field" rows={2} />
               </div>
               <div>
