@@ -750,7 +750,7 @@ const exportarCSV = async () => {
      ) : (
   <>
     <div className="relative max-w-md">
-       <label className="block text-sm font-medium text-surface-600 mb-2">
+       <label>
         Buscar Presupuesto
       </label>
    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 text-[#000000] z-50" size={18} />
