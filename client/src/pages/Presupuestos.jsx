@@ -749,17 +749,16 @@ const exportarCSV = async () => {
         <div className="text-center py-10 text-gray-500">Cargando...</div>
      ) : (
   <>
-    <div className="card mb-4">
-      <label className="block text-sm font-medium text-surface-600 mb-2">
+    <div className="relative max-w-md">
+       <label className="block text-sm font-medium text-surface-600 mb-2">
         Buscar Presupuesto
       </label>
-      <input
-  type="text"
-  value={textoBusqueda}
-  onChange={(e) => setTextoBusqueda(e.target.value)}
-  placeholder="Buscar por paciente, doctor, número de paciente o folio..."
-  className="input-field w-full text-sm sm:text-base"
-/>
+    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" size={18} />
+      <input type="text"placeholder="Buscar por paciente, doctor, número de paciente o folio..."
+          value={textoBusqueda}
+          onChange={(e) => { setTextoBusqueda(e.target.value)}}
+          className="input-field pl-11"
+        />
     
     </div>
         <div className="card overflow-x-auto w-full p-0">
