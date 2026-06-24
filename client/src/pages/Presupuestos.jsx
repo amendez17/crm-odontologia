@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-import { FiPlus, FiEye, FiTrash2, FiPrinter, FiFilter, FiDownload, FiEdit} from 'react-icons/fi';
+import { FiPlus, FiSearch, FiEye, FiTrash2, FiPrinter, FiFilter, FiDownload, FiEdit} from 'react-icons/fi';
 import { formatearFecha, fechaHoy } from '../utils/fecha';
 import socket from '../socket';
 import { useMemo } from 'react';
