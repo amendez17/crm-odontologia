@@ -1029,7 +1029,7 @@ window.onload = () => window.print();
               {h.diagnostico && <p className="text-sm"><span className="font-medium">Diagnóstico:</span> {h.diagnostico}</p>}
               {h.tratamiento_realizado && <p className="text-sm"><span className="font-medium">Tratamiento:</span> {h.tratamiento_realizado}</p>}
               {h.piezas_tratadas && <p className="text-sm"><span className="font-medium">Piezas:</span> {h.piezas_tratadas}</p>}
-              {h.receta && <p className="text-sm"><span className="font-medium">Receta:</span> {h.receta}</p>}
+              {h.receta && <p className="text-sm"><span className="font-medium">Plan de Tratamiento:</span> {h.receta}</p>}
               {h.notas && <p className="text-sm text-surface-500 mt-1 italic">{h.notas}</p>}
             </div>
           ))}
