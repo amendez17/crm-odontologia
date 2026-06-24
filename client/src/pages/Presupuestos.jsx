@@ -753,7 +753,7 @@ const exportarCSV = async () => {
        <label className="block text-sm font-medium text-surface-600 mb-2">
         Buscar Presupuesto
       </label>
-    <FiSearch className="absolute left-4 top-3/4 -translate-y-1/2 text-surface-400className text-[#000000] z-50" size={18} />
+   <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 text-[#000000] z-50" size={18} />
       <input type="text"placeholder="Buscar por paciente, doctor, número de paciente o folio..."
           value={textoBusqueda}
           onChange={(e) => { setTextoBusqueda(e.target.value)}}
