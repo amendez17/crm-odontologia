@@ -150,7 +150,7 @@ const exportarPagos = async () => {
       <h1 className="text-2xl font-bold text-primary-800">Reportes</h1>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-surface-100 p-1 rounded-2xl w-fit">
+      <div className="flex gap-1 bg-surface-100 p-1 rounded-2xl w-fit flex-wrap">
         {tabs.map(t => (
           <button
             key={t.key}
