@@ -261,7 +261,7 @@ export default function Layout() {
                         {pac.nombre[0]}{pac.apellido[0]}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{pac.apellido}, {pac.nombre}</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">{pac.nombre}, {pac.apellido}</p>
                         <p className="text-xs text-surface-400">DNI: {pac.dni}</p>
                       </div>
                     </button>
