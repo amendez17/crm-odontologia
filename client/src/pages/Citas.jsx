@@ -621,7 +621,7 @@ const fechaFmt = fechaLarga(cita.fecha);
   `📅 ${fechaFmt}\n` +
   `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
   `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
-  `📍 Ubicación: https://maps.app.goo.gl/XiteCNz3cjRLTEuZ8\n\n` +
+  `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
   `Si necesita reprogramar, por favor avísenos con anticipación.\n\n` +
     ` Nos encontramos en el segundo piso justo arriba de Depósito Dental del Pacifico.\n` +
     `Le recordamos llegar 10 minutos antes.\n`+
@@ -647,7 +647,7 @@ const fechaFmt = fechaLarga(cita.fecha);
     `📅 ${fechaFmt}\n` +
     `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
     `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
-    `📍 Ubicación: https://maps.app.goo.gl/XiteCNz3cjRLTEuZ8` +
+    `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa` +
     ` Nos encontramos en el segundo piso justo arriba de Depósito Dental del Pacifico.\n` +
     `Le recordamos llegar 10 minutos antes.\n`+
     `Será un gusto atenderle.\n`+
