@@ -621,7 +621,7 @@ const fechaFmt = fechaLarga(cita.fecha);
   `📅 ${fechaFmt}\n` +
   `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
   `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
-  `📍 Ubicación: https://www.google.com/maps/place/Clinica+Dental+Almar/@23.2751709,-106.4229659,17z/data=!3m1!4b1!4m6!3m5!1s0x8698ad7a7f31e3d3:0xc4f256b31e700d62!8m2!3d23.275166!4d-106.4203856!16s%2Fg%2F11nhglt267\n\n` +
+  `📍 Ubicación: https://maps.app.goo.gl/XiteCNz3cjRLTEuZ8\n\n` +
   `Si necesita reprogramar, por favor avísenos con anticipación.\n\n` +
     ` Nos encontramos en el segundo piso justo arriba de Depósito Dental del Pacifico.\n` +
     `Le recordamos llegar 10 minutos antes.\n`+
@@ -647,7 +647,7 @@ const fechaFmt = fechaLarga(cita.fecha);
     `📅 ${fechaFmt}\n` +
     `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
     `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
-    `📍 Ubicación: https://www.google.com/maps/search/?api=1&query=Clinica%20Dental%20Almar%20Mazatlan` +
+    `📍 Ubicación: https://maps.app.goo.gl/XiteCNz3cjRLTEuZ8` +
     ` Nos encontramos en el segundo piso justo arriba de Depósito Dental del Pacifico.\n` +
     `Le recordamos llegar 10 minutos antes.\n`+
     `Será un gusto atenderle.\n`+
