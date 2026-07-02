@@ -621,9 +621,13 @@ const fechaFmt = fechaLarga(cita.fecha);
   `📅 ${fechaFmt}\n` +
   `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
   `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
-  `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n\n` +
+  `📍 Ubicación: https://www.google.com/maps/search/?api=1&query=Clinica%20Dental%20Almar%20Mazatlan\n\n` +
   `Si necesita reprogramar, por favor avísenos con anticipación.\n\n` +
-  `Por favor confirme su asistencia. ¡Gracias!`
+    ` Nos encontramos en el segundo piso justo arriba de Depósito Dental del Pacifico.\n` +
+    `Le recordamos llegar 10 minutos antes.\n`+
+    `Será un gusto atenderle.\n`+
+    `Cualquier duda estamos a sus órdenes.\n`+
+    `Por favor confirme su asistencia. ¡Gracias!`
 );
   window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
 };
@@ -643,11 +647,12 @@ const fechaFmt = fechaLarga(cita.fecha);
     `📅 ${fechaFmt}\n` +
     `🕐 ${formatHora12(cita.hora_inicio)} hs\n` +
     `${cita.motivo ? `📋 Motivo: ${cita.motivo}\n` : ''}` +
-    `📍 Ubicación: https://share.google/wqMNC1dw6leUb5SLa\n Nos encontramos en el segundo piso justo arriba de Depósito Dental del Pacifico.\n` +
+    `📍 Ubicación: https://www.google.com/maps/search/?api=1&query=Clinica%20Dental%20Almar%20Mazatlan` +
+    ` Nos encontramos en el segundo piso justo arriba de Depósito Dental del Pacifico.\n` +
     `Le recordamos llegar 10 minutos antes.\n`+
     `Será un gusto atenderle.\n`+
     `Cualquier duda estamos a sus órdenes.\n`+
-    `Por favor confirme su asistencia. ¡Gracias!`
+    `¡Gracias!`
   );
 
   window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
