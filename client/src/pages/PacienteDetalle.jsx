@@ -581,9 +581,9 @@ body{
   position:relative;
   z-index:1;
   max-width:850px;
-  margin:20px auto;
+  margin:10px auto;
   background:#fff;
-  padding:35px;
+  padding:26px;
   border-radius:14px;
   box-shadow:0 15px 40px rgba(0,0,0,0.08);
 }
@@ -697,13 +697,63 @@ body{
 }
 
 /* PRINT */
-@media print{
-  body{
-    background:white;
+@media print {
+  @page {
+    size: letter;
+    margin: 8mm;
   }
 
-  .container{
-    box-shadow:none;
+  body {
+    background: white;
+  }
+
+  .container {
+    margin: 0 auto;
+    padding: 22px;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .header {
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+  }
+
+  .logo {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 5px;
+  }
+
+  .info {
+    margin-bottom: 14px;
+  }
+
+  .card {
+    padding: 10px;
+  }
+
+  .section {
+    margin-top: 10px;
+  }
+
+  .section-header {
+    padding: 8px 12px;
+  }
+
+  .section-content {
+    padding: 12px;
+    min-height: 45px;
+    line-height: 1.45;
+    font-size: 13px;
+  }
+
+  .firma {
+    margin-top: 38px;
+  }
+
+  .footer {
+    margin-top: 22px;
   }
 }
 
