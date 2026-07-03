@@ -273,7 +273,7 @@ router.get('/:id/recetas', auth, async (req, res) => {
       include: [{
         model: Usuario,
         as: 'doctor',
-        attributes: ['nombre', 'apellido']
+        attributes: ['nombre', 'apellido', 'especialidad', 'cedula']
       }],
 
       order: [['id', 'DESC']]
