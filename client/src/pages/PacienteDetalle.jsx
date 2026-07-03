@@ -856,7 +856,7 @@ body{
     </div>
 
     <div class="section-content">
-      ${r.medicamentos || 'Sin medicamentos'}
+     ${r.medicamentos || 'Sin medicamentos'}
     </div>
 
   </div>
