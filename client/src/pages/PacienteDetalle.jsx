@@ -779,7 +779,7 @@ body{
       </div>
 
       <div style="font-size:12px;color:#6b7280">
-        Folio: ${r.folio || ''}
+        Folio: RX-${new Date(r.createdAt).getFullYear()}-${String(r.id).padStart(5, '0')}
       </div>
     </div>
 
