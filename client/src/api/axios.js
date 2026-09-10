@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const apiUrl = import.meta.env.VITE_API_URL || 'https://crm-odontologia.onrender.com/api';
+
 const api = axios.create({
-  baseURL: "https://crm-odontologia.onrender.com/api",
+  baseURL: apiUrl,
   headers: { 'Content-Type': 'application/json' }
 });
 

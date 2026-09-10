@@ -11,15 +11,23 @@ const { sequelize, Usuario } = require('./models');
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: [
-      'http://localhost:5173',
-      'https://clinicadental-almar.vercel.app',
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
+const origenesPermitidos = [
+  'http://localhost:5173',
+  'https://clinicadental-almar.vercel.app',
+  ...(process.env.CLIENT_URLS || '').split(',').map(url => url.trim()).filter(Boolean)
+];
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || origenesPermitidos.includes(origin)) return callback(null, true);
+    return callback(new Error('Origen no permitido por CORS'));
   },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+};
+
+const io = new Server(server, {
+  cors: corsOptions,
 
   transports: ['websocket'],
 
@@ -36,7 +44,7 @@ io.on('connection', (socket) => {
 });
 app.set('io', io);
 // Middleware
-app.use(cors({   origin: [     'http://localhost:5173',     'https://clinicadental-almar.vercel.app'   ],   credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use((req, res, next) => {
