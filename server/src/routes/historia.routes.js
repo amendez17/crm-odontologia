@@ -27,11 +27,23 @@ const subirCloudinary = (file, pacienteId) => new Promise((resolve, reject) => {
   const stream = cloudinary.uploader.upload_stream({
     folder: `clinica-almar/pacientes/${pacienteId}/historia-clinica`,
     resource_type: 'auto',
+    type: 'authenticated',
     use_filename: true,
     unique_filename: true
   }, (error, result) => error ? reject(error) : resolve(result));
   stream.end(file.buffer);
 });
+
+const urlTemporal = (archivo) => cloudinary.utils.private_download_url(
+  archivo.public_id,
+  archivo.formato || undefined,
+  {
+    resource_type: archivo.resource_type,
+    type: archivo.delivery_type || 'authenticated',
+    expires_at: Math.floor(Date.now() / 1000) + (10 * 60),
+    attachment: false
+  }
+);
 
 // GET /api/historia/:pacienteId
 router.get('/:pacienteId', auth, async (req, res) => {
@@ -45,7 +57,16 @@ router.get('/:pacienteId', auth, async (req, res) => {
       ],
       order: [['fecha', 'DESC']]
     });
-    res.json(historias);
+    const respuesta = historias.map(historia => {
+      const data = historia.toJSON();
+      data.archivos = (data.archivos || []).map(archivo => ({
+        ...archivo,
+        url: urlTemporal(archivo),
+        public_id: undefined
+      }));
+      return data;
+    });
+    res.json(respuesta);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -76,12 +97,14 @@ router.post('/:historiaId/archivos', auth, esDoctor, upload.array('archivos', 10
       tamano: file.size,
       url: resultado.secure_url,
       public_id: resultado.public_id,
-      resource_type: resultado.resource_type
+      resource_type: resultado.resource_type,
+      formato: resultado.format || (file.mimetype === 'application/pdf' ? 'pdf' : null),
+      delivery_type: resultado.type || 'authenticated'
     })));
-    res.status(201).json(archivos);
+    res.status(201).json({ mensaje: 'Archivos guardados correctamente.', total: archivos.length });
   } catch (error) {
     await Promise.allSettled(subidos.map(({ resultado }) =>
-      cloudinary.uploader.destroy(resultado.public_id, { resource_type: resultado.resource_type })
+      cloudinary.uploader.destroy(resultado.public_id, { resource_type: resultado.resource_type, type: resultado.type || 'authenticated' })
     ));
     res.status(400).json({ error: error.message || 'No fue posible subir los archivos.' });
   }
@@ -92,7 +115,7 @@ router.delete('/archivos/:archivoId', auth, esDoctor, async (req, res) => {
   try {
     const archivo = await ArchivoHistoria.findByPk(req.params.archivoId);
     if (!archivo) return res.status(404).json({ error: 'Archivo no encontrado.' });
-    await cloudinary.uploader.destroy(archivo.public_id, { resource_type: archivo.resource_type });
+    await cloudinary.uploader.destroy(archivo.public_id, { resource_type: archivo.resource_type, type: archivo.delivery_type });
     await archivo.destroy();
     res.json({ mensaje: 'Archivo eliminado correctamente.' });
   } catch (error) {

@@ -11,7 +11,9 @@ const ArchivoHistoria = sequelize.define('ArchivoHistoria', {
   tamano: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
   url: { type: DataTypes.TEXT, allowNull: false },
   public_id: { type: DataTypes.STRING(255), allowNull: false },
-  resource_type: { type: DataTypes.STRING(30), allowNull: false, defaultValue: 'image' }
+  resource_type: { type: DataTypes.STRING(30), allowNull: false, defaultValue: 'image' },
+  formato: { type: DataTypes.STRING(20), allowNull: true },
+  delivery_type: { type: DataTypes.STRING(30), allowNull: false, defaultValue: 'authenticated' }
 }, {
   tableName: 'archivos_historia',
   timestamps: true,
