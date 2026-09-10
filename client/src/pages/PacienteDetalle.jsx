@@ -4,7 +4,7 @@ import api from '../api/axios';
 import Odontograma from '../components/Odontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock, FiUploadCloud, FiImage, FiExternalLink } from 'react-icons/fi';
 import { fechaHoy } from '../utils/fecha';
 import socket from '../socket';
 
@@ -20,6 +20,8 @@ export default function PacienteDetalle() {
   const [modalCita, setModalCita] = useState(false);
   const [doctores, setDoctores] = useState([]);
   const [formHistoria, setFormHistoria] = useState({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+  const [archivosHistoria, setArchivosHistoria] = useState([]);
+  const [subiendoArchivos, setSubiendoArchivos] = useState(null);
   const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '',  notas: ''});
   const [formCita, setFormCita] = useState({ doctor_id: '', fecha: new Date().toISOString().split('T')[0], hora_inicio: '', hora_fin: '', motivo: '' });
   const [consentimientos, setConsentimientos] = useState([]);
@@ -129,12 +131,64 @@ useEffect(() => {
       toast.error('Error al guardar odontograma');
     }};
  
+  const validarArchivos = (files) => {
+    const permitidos = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (files.some(file => !permitidos.includes(file.type))) {
+      toast.error('Solo se permiten imágenes JPG, PNG, WEBP y archivos PDF');
+      return false;
+    }
+    if (files.some(file => file.size > 10 * 1024 * 1024)) {
+      toast.error('Cada archivo debe pesar máximo 10 MB');
+      return false;
+    }
+    if (files.length > 10) {
+      toast.error('Puedes subir máximo 10 archivos a la vez');
+      return false;
+    }
+    return true;
+  };
+
+  const subirAdjuntos = async (historiaId, files, mostrarMensaje = true) => {
+    const seleccionados = Array.from(files || []);
+    if (!seleccionados.length || !validarArchivos(seleccionados)) return false;
+    const data = new FormData();
+    seleccionados.forEach(file => data.append('archivos', file));
+    setSubiendoArchivos(historiaId);
+    try {
+      await api.post(`/historia/${historiaId}/archivos`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const { data: historiasActualizadas } = await api.get(`/historia/${id}`);
+      setHistorias(historiasActualizadas);
+      if (mostrarMensaje) toast.success('Archivos agregados correctamente');
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error al subir los archivos');
+      return false;
+    } finally {
+      setSubiendoArchivos(null);
+    }
+  };
+
+  const eliminarAdjunto = async (archivoId) => {
+    if (!confirm('¿Eliminar este archivo de la historia clínica?')) return;
+    try {
+      await api.delete(`/historia/archivos/${archivoId}`);
+      const { data } = await api.get(`/historia/${id}`);
+      setHistorias(data);
+      toast.success('Archivo eliminado');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error al eliminar el archivo');
+    }
+  };
+
   const guardarHistoria = async (e) => {
     e.preventDefault();
-    try { await api.post('/historia', { ...formHistoria, paciente_id: parseInt(id), fecha: new Date().toISOString().split('T')[0] });
-      toast.success('Registro añadido');
+    try {
+      const { data: nuevaHistoria } = await api.post('/historia', { ...formHistoria, paciente_id: parseInt(id), fecha: new Date().toISOString().split('T')[0] });
+      if (archivosHistoria.length) await subirAdjuntos(nuevaHistoria.id, archivosHistoria, false);
+      toast.success(archivosHistoria.length ? 'Registro y archivos añadidos' : 'Registro añadido');
       setModalHistoria(false);
       setFormHistoria({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+      setArchivosHistoria([]);
       const { data } = await api.get(`/historia/${id}`);
       setHistorias(data);
     } catch {
@@ -1081,6 +1135,33 @@ window.onload = () => window.print();
               {h.piezas_tratadas && <p className="text-sm"><span className="font-medium">Piezas:</span> {h.piezas_tratadas}</p>}
               {h.receta && <p className="text-sm"><span className="font-medium">Plan de Tratamiento:</span> {h.receta}</p>}
               {h.notas && <p className="text-sm text-surface-500 mt-1 italic">{h.notas}</p>}
+              {h.archivos?.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {h.archivos.map(archivo => (
+                    <div key={archivo.id} className="relative border border-surface-200 rounded-lg overflow-hidden bg-white group">
+                      {archivo.tipo === 'imagen' ? (
+                        <a href={archivo.url} target="_blank" rel="noreferrer" title="Abrir imagen">
+                          <img src={archivo.url} alt={archivo.nombre_original} className="w-full h-28 object-cover" loading="lazy" />
+                        </a>
+                      ) : (
+                        <a href={archivo.url} target="_blank" rel="noreferrer" className="h-28 flex flex-col items-center justify-center text-red-600 bg-red-50">
+                          <FiFileText size={32} />
+                          <span className="text-xs font-medium mt-1">Ver PDF</span>
+                        </a>
+                      )}
+                      <div className="p-2 flex items-center gap-1">
+                        <span className="text-xs text-surface-600 truncate flex-1" title={archivo.nombre_original}>{archivo.nombre_original}</span>
+                        <a href={archivo.url} target="_blank" rel="noreferrer" className="text-primary-600" title="Abrir archivo"><FiExternalLink size={14} /></a>
+                        <button type="button" onClick={() => eliminarAdjunto(archivo.id)} className="text-red-500" title="Eliminar archivo"><FiTrash2 size={14} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label className={`mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary-600 cursor-pointer ${subiendoArchivos === h.id ? 'opacity-50 pointer-events-none' : ''}`}>
+                <FiUploadCloud size={16} /> {subiendoArchivos === h.id ? 'Subiendo...' : 'Agregar imágenes o PDF'}
+                <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => { subirAdjuntos(h.id, e.target.files); e.target.value = ''; }} />
+              </label>
             </div>
           ))}
 
@@ -1106,9 +1187,26 @@ window.onload = () => window.print();
                 <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>
                 <textarea value={formHistoria.notas} onChange={e => setFormHistoria({ ...formHistoria, notas: e.target.value })} className="input-field" rows={2} />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Imágenes y estudios PDF</label>
+                <label className="border-2 border-dashed border-surface-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors">
+                  <div className="flex items-center gap-2 text-primary-600 font-medium"><FiUploadCloud size={20} /> Seleccionar archivos</div>
+                  <span className="text-xs text-surface-500 mt-1">JPG, PNG, WEBP o PDF · máximo 10 MB por archivo</span>
+                  <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => {
+                    const files = Array.from(e.target.files || []);
+                    if (validarArchivos(files)) setArchivosHistoria(files);
+                  }} />
+                </label>
+                {archivosHistoria.length > 0 && (
+                  <div className="mt-2 text-sm text-surface-600 flex items-center gap-2">
+                    <FiImage /> {archivosHistoria.length} archivo{archivosHistoria.length !== 1 ? 's' : ''} seleccionado{archivosHistoria.length !== 1 ? 's' : ''}
+                    <button type="button" onClick={() => setArchivosHistoria([])} className="text-red-500 ml-auto">Quitar</button>
+                  </div>
+                )}
+              </div>
               <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setModalHistoria(false)} className="btn-secondary">Cancelar</button>
-                <button type="submit" className="btn-primary">Guardar</button>
+                <button type="button" onClick={() => { setModalHistoria(false); setArchivosHistoria([]); }} className="btn-secondary">Cancelar</button>
+                <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Guardando...' : 'Guardar'}</button>
               </div>
             </form>
           </Modal>
