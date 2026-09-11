@@ -249,6 +249,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const [observacion, setObservacion] = useState('');
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [cambioPendiente, setCambioPendiente] = useState(null);
+  const [filtroPieza, setFiltroPieza] = useState('todas');
 
   // Hidrata caras por diente desde registros del backend (cara !== 'completa')
   const carasPorDiente = useMemo(() => {
@@ -271,6 +272,18 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
       .sort((a, b) => b.id - a.id)[0];
     return reg ? reg.estado : 'sano';
   };
+
+  const idsVigentes = useMemo(() => {
+    const claves = new Set();
+    const ids = new Set();
+    [...registros].sort((a, b) => b.id - a.id).forEach(registro => {
+      const clave = `${registro.pieza_dental}-${registro.cara || 'completa'}`;
+      if (!claves.has(clave)) { claves.add(clave); ids.add(registro.id); }
+    });
+    return ids;
+  }, [registros]);
+  const piezasConHistorial = useMemo(() => [...new Set(registros.map(registro => Number(registro.pieza_dental)))].sort((a, b) => a - b), [registros]);
+  const registrosHistorial = filtroPieza === 'todas' ? registros : registros.filter(registro => Number(registro.pieza_dental) === Number(filtroPieza));
 
   const handleDienteClick = (numero) => {
     if (readOnly) return;
@@ -471,12 +484,21 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
             {mostrarHistorial ? 'Ocultar historial' : `Ver historial clínico (${registros.length})`}
           </button>
           {mostrarHistorial && (
-            <div className="mt-3 max-h-80 overflow-auto rounded-xl border border-surface-200 divide-y divide-surface-100">
-              {registros.map(registro => (
+            <div className="mt-3">
+              <label className="mb-2 flex items-center gap-2 text-xs text-surface-600">
+                Filtrar por pieza
+                <select value={filtroPieza} onChange={e => setFiltroPieza(e.target.value)} className="input-field py-1 w-auto">
+                  <option value="todas">Todas</option>
+                  {piezasConHistorial.map(numero => <option key={numero} value={numero}>Pieza {numero}</option>)}
+                </select>
+              </label>
+              <div className="max-h-80 overflow-auto rounded-xl border border-surface-200 divide-y divide-surface-100">
+              {registrosHistorial.map(registro => (
                 <div key={registro.id} className="p-3 text-xs">
                   <div className="flex flex-wrap justify-between gap-2">
                     <span className="font-semibold text-primary-900">
                       Pieza {registro.pieza_dental} · {nombreCara(registro.cara || 'completa', registro.pieza_dental)} · {LABELS[registro.estado] || registro.estado}
+                      <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${idsVigentes.has(registro.id) ? 'bg-green-100 text-green-700' : 'bg-surface-100 text-surface-500'}`}>{idsVigentes.has(registro.id) ? 'Vigente' : 'Anterior'}</span>
                     </span>
                     <span className="text-surface-500">{new Date(registro.createdAt || registro.fecha).toLocaleString('es-MX')}</span>
                   </div>
@@ -484,6 +506,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
                   {registro.observacion && <p className="mt-1 text-surface-700">Observación: {registro.observacion}</p>}
                 </div>
               ))}
+              </div>
             </div>
           )}
         </div>
