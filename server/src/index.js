@@ -82,6 +82,7 @@ app.use('/api/configuracion', require('./routes/configuracion.routes'));
 app.use('/api/exportar', require('./routes/exportar.routes'));
 app.use('/api/consentimiento', require('./routes/consentimiento.routes'));
 app.use('/api/actividad', require('./routes/actividad.routes'));
+app.use('/api/notificaciones', require('./routes/notificaciones.routes'));
 app.use('/api/mantenimiento', require('./routes/mantenimiento.routes'));
 
 // Health check
