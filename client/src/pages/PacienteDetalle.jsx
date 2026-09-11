@@ -168,9 +168,11 @@ useEffect(() => {
       const { data: refreshed } = await api.get(`/odontograma/${id}`);
       setOdontograma(refreshed);
       toast.success('Odontograma actualizado');
+      return true;
     } catch (error) {
       console.error('Error guardando odontograma:', error.response?.data || error);
       toast.error('Error al guardar odontograma');
+      return false;
     }};
  
   const validarArchivos = (files) => {
