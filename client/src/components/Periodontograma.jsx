@@ -74,13 +74,13 @@ export default function Periodontograma({ pacienteId, paciente }) {
     </div>
     <div className="border border-surface-200 rounded-xl overflow-x-auto">
       <div className="p-3 bg-surface-50 font-semibold text-sm">Pieza {pieza}</div>
-      <table className="w-full text-xs min-w-[700px]">
-        <thead><tr className="border-b"><th className="p-2 text-left">Sitio</th><th>Profundidad mm</th><th>Recesión mm</th><th>Sangrado</th><th>Placa</th><th>Supuración</th></tr></thead>
+      <table className="w-full min-w-[480px] sm:min-w-[700px] text-[10px] sm:text-xs">
+        <thead><tr className="border-b"><th className="p-1.5 sm:p-2 text-left">Sitio</th><th><span className="sm:hidden">Prof.</span><span className="hidden sm:inline">Profundidad mm</span></th><th><span className="sm:hidden">Rec.</span><span className="hidden sm:inline">Recesión mm</span></th><th><span className="sm:hidden">Sang.</span><span className="hidden sm:inline">Sangrado</span></th><th>Placa</th><th><span className="sm:hidden">Sup.</span><span className="hidden sm:inline">Supuración</span></th></tr></thead>
         <tbody>{datosPieza.sitios.map((sitio, indice) => <tr key={sitio.sitio} className="border-b last:border-0">
-          <td className="p-2 font-semibold">{sitio.sitio}</td>
-          <td className="p-2"><input type="number" min="0" max="15" value={sitio.profundidad} onChange={e => actualizarSitio(indice, 'profundidad', e.target.value)} className="input-field py-1" /></td>
-          <td className="p-2"><input type="number" min="-10" max="15" value={sitio.recesion} onChange={e => actualizarSitio(indice, 'recesion', e.target.value)} className="input-field py-1" /></td>
-          {['sangrado','placa','supuracion'].map(campo => <td key={campo} className="text-center"><input type="checkbox" checked={sitio[campo]} onChange={e => actualizarSitio(indice, campo, e.target.checked)} /></td>)}
+          <td className="p-1.5 sm:p-2 font-semibold">{sitio.sitio}</td>
+          <td className="p-1 sm:p-2 text-center"><input type="number" min="0" max="15" value={sitio.profundidad} onChange={e => actualizarSitio(indice, 'profundidad', e.target.value)} className="input-field mx-auto !w-14 !px-1 !py-1 text-center" /></td>
+          <td className="p-1 sm:p-2 text-center"><input type="number" min="-10" max="15" value={sitio.recesion} onChange={e => actualizarSitio(indice, 'recesion', e.target.value)} className="input-field mx-auto !w-14 !px-1 !py-1 text-center" /></td>
+          {['sangrado','placa','supuracion'].map(campo => <td key={campo} className="px-1 text-center"><input type="checkbox" checked={sitio[campo]} onChange={e => actualizarSitio(indice, campo, e.target.checked)} className="h-4 w-4" /></td>)}
         </tr>)}</tbody>
       </table>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 border-t">
@@ -102,10 +102,10 @@ export default function Periodontograma({ pacienteId, paciente }) {
           {e.observaciones && <p className="text-xs"><span className="font-semibold">Observaciones:</span> {e.observaciones}</p>}
           {(e.mediciones || []).map(medicion => <div key={medicion.pieza} className="border border-surface-200 rounded-lg overflow-x-auto">
             <div className="px-3 py-2 bg-surface-50 font-semibold">Pieza {medicion.pieza} · Movilidad {medicion.movilidad ?? 0} · Furca {medicion.furca ?? 0}</div>
-            <table className="w-full min-w-[650px] text-xs">
-              <thead><tr className="border-b"><th className="p-2 text-left">Sitio</th><th>Profundidad</th><th>Recesión</th><th>NIC</th><th>Sangrado</th><th>Placa</th><th>Supuración</th></tr></thead>
+            <table className="w-full min-w-[520px] sm:min-w-[650px] text-[10px] sm:text-xs">
+              <thead><tr className="border-b"><th className="p-1.5 sm:p-2 text-left">Sitio</th><th><span className="sm:hidden">Prof.</span><span className="hidden sm:inline">Profundidad</span></th><th><span className="sm:hidden">Rec.</span><span className="hidden sm:inline">Recesión</span></th><th>NIC</th><th><span className="sm:hidden">Sang.</span><span className="hidden sm:inline">Sangrado</span></th><th>Placa</th><th><span className="sm:hidden">Sup.</span><span className="hidden sm:inline">Supuración</span></th></tr></thead>
               <tbody>{(medicion.sitios || []).map(sitio => <tr key={sitio.sitio} className="border-b last:border-0 text-center">
-                <td className="p-2 text-left font-semibold">{sitio.sitio}</td>
+                <td className="p-1.5 sm:p-2 text-left font-semibold">{sitio.sitio}</td>
                 <td>{sitio.profundidad} mm</td><td>{sitio.recesion} mm</td><td>{Number(sitio.profundidad || 0) + Number(sitio.recesion || 0)} mm</td>
                 <td>{sitio.sangrado ? 'Sí' : 'No'}</td><td>{sitio.placa ? 'Sí' : 'No'}</td><td>{sitio.supuracion ? 'Sí' : 'No'}</td>
               </tr>)}</tbody>
