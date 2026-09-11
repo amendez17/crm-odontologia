@@ -256,7 +256,7 @@ const exportarPagos = async () => {
               </select>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Monto *</label>
               <input name="monto" type="number" step="0.01" value={form.monto} onChange={handleChange} className="input-field" required />
@@ -266,7 +266,7 @@ const exportarPagos = async () => {
               <input name="fecha" type="date" value={form.fecha} onChange={handleChange} className="input-field" required />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Método de Pago *</label>
               <select name="metodo_pago" value={form.metodo_pago} onChange={handleChange} className="input-field" required>
