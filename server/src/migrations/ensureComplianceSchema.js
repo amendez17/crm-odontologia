@@ -53,6 +53,18 @@ async function ensureComplianceSchema(sequelize) {
     if (!consentTable[name]) await queryInterface.addColumn('consentimientos', name, definition);
   }
 
+  const odontogramaTable = await queryInterface.describeTable('odontograma');
+  const odontogramaColumns = {
+    fecha_hora: { type: DataTypes.DATE, allowNull: true },
+    doctor_nombre: { type: DataTypes.STRING(220), allowNull: true },
+    doctor_cedula: { type: DataTypes.STRING(80), allowNull: true },
+    firma_hash: { type: DataTypes.STRING(64), allowNull: true },
+    registro_previo_hash: { type: DataTypes.STRING(64), allowNull: true }
+  };
+  for (const [name, definition] of Object.entries(odontogramaColumns)) {
+    if (!odontogramaTable[name]) await queryInterface.addColumn('odontograma', name, definition);
+  }
+
   const userTable = await queryInterface.describeTable('usuarios');
   if (!userTable.token_version) {
     await queryInterface.addColumn('usuarios', 'token_version', { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 });
