@@ -27,6 +27,7 @@ export default function PacienteDetalle() {
   const [balance, setBalance] = useState(null);
   const [tab, setTab] = useState('info');
   const [modalHistoria, setModalHistoria] = useState(false);
+  const [pasoHistoria, setPasoHistoria] = useState(1);
   const [modalAdenda, setModalAdenda] = useState(false);
   const [historiaOrigen, setHistoriaOrigen] = useState(null);
   const [modalPago, setModalPago] = useState(false);
@@ -199,6 +200,7 @@ useEffect(() => {
       if (archivosHistoria.length) await subirAdjuntos(nuevaHistoria.id, archivosHistoria, false);
       toast.success(archivosHistoria.length ? 'Registro y archivos añadidos' : 'Registro añadido');
       setModalHistoria(false);
+      setPasoHistoria(1);
       setFormHistoria(notaClinicaVacia());
       setArchivosHistoria([]);
       const { data } = await api.get(`/historia/${id}`);
@@ -206,6 +208,13 @@ useEffect(() => {
     } catch (error) {
       toast.error(error.response?.data?.error || 'Error al guardar');
     }};
+
+  const avanzarHistoria = () => {
+    if (pasoHistoria === 1 && !formHistoria.motivo_consulta.trim()) return toast.error('Captura el motivo de consulta');
+    if (pasoHistoria === 1 && formHistoria.tipo_nota === 'inicial' && !formHistoria.interrogatorio.trim()) return toast.error('Captura el padecimiento actual');
+    if (pasoHistoria === 2 && formHistoria.tipo_nota === 'inicial' && !formHistoria.exploracion_intraoral.trim()) return toast.error('Captura la exploración intraoral');
+    setPasoHistoria(paso => paso + 1);
+  };
 
   const guardarAdenda = async (e) => {
     e.preventDefault();
@@ -1205,7 +1214,7 @@ window.onload = () => window.print();
       {tab === 'historia' && (
         <div className="space-y-4">
           <div className="flex gap-2">
-            {puedeModificarClinico && <button onClick={() => { setFormHistoria({ ...notaClinicaVacia(), tipo_nota: historias.length === 0 ? 'inicial' : 'subsecuente' }); setModalHistoria(true); }} className="btn-primary flex items-center gap-2">
+            {puedeModificarClinico && <button onClick={() => { setFormHistoria({ ...notaClinicaVacia(), tipo_nota: historias.length === 0 ? 'inicial' : 'subsecuente' }); setPasoHistoria(1); setModalHistoria(true); }} className="btn-primary flex items-center gap-2">
               <FiPlus size={16} /> Nuevo Registro
             </button>}
             {historias.length > 0 && (
@@ -1290,6 +1299,11 @@ window.onload = () => window.print();
           <Modal isOpen={modalHistoria} onClose={() => setModalHistoria(false)} title="Nueva Entrada - Historia Clínica" size="lg">
             <form onSubmit={guardarHistoria} className="space-y-4">
               <div>
+                <div className="flex justify-between text-xs text-surface-500 mb-2"><span>Paso {pasoHistoria} de {formHistoria.tipo_nota === 'inicial' ? 4 : 3}</span><span>{Math.round((pasoHistoria / (formHistoria.tipo_nota === 'inicial' ? 4 : 3)) * 100)}%</span></div>
+                <div className="h-2 rounded-full bg-surface-100 overflow-hidden"><div className="h-full bg-primary-500 transition-all" style={{ width: `${(pasoHistoria / (formHistoria.tipo_nota === 'inicial' ? 4 : 3)) * 100}%` }} /></div>
+              </div>
+              {pasoHistoria === 1 && <>
+              <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Tipo de atención *</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button type="button" onClick={() => setFormHistoria({ ...formHistoria, tipo_nota: 'inicial' })} className={`p-3 rounded-xl border text-sm font-medium ${formHistoria.tipo_nota === 'inicial' ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200'}`}>Primera consulta · extensa</button>
@@ -1303,10 +1317,13 @@ window.onload = () => window.print();
               <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">{formHistoria.tipo_nota === 'inicial' ? 'Padecimiento actual y evolución *' : 'Evolución desde la consulta anterior'}</label>
                 <textarea required={formHistoria.tipo_nota === 'inicial'} value={formHistoria.interrogatorio} onChange={e => setFormHistoria({ ...formHistoria, interrogatorio: e.target.value })} className="input-field" rows={3} />
+                {formHistoria.tipo_nota === 'subsecuente' && <button type="button" onClick={() => setFormHistoria({ ...formHistoria, interrogatorio: 'Sin cambios clínicos referidos desde la consulta anterior.' })} className="mt-2 text-xs font-medium text-primary-600">Marcar sin cambios referidos</button>}
               </div>
-              {formHistoria.tipo_nota === 'inicial' && <>
+              </>}
+              {formHistoria.tipo_nota === 'inicial' && pasoHistoria === 2 && <>
               <fieldset className="border border-surface-200 rounded-xl p-4 space-y-3">
                 <legend className="px-2 text-sm font-semibold text-primary-700">Antecedentes de primera consulta</legend>
+                <button type="button" onClick={() => setFormHistoria({ ...formHistoria, antecedentes_heredofamiliares: 'Negados por el paciente.', antecedentes_patologicos: 'Negados por el paciente.', antecedentes_no_patologicos: 'Sin antecedentes relevantes referidos.', antecedentes_odontologicos: 'Sin antecedentes odontológicos relevantes referidos.', habitos_orales: 'Sin hábitos orales de riesgo referidos.', interrogatorio_sistemas: 'Sin datos positivos referidos.' })} className="text-xs font-medium text-primary-600">Marcar antecedentes sin datos relevantes</button>
                 <textarea value={formHistoria.antecedentes_heredofamiliares} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_heredofamiliares: e.target.value })} className="input-field" rows={2} placeholder="Heredofamiliares: diabetes, hipertensión, cáncer u otros" />
                 <textarea value={formHistoria.antecedentes_patologicos} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_patologicos: e.target.value })} className="input-field" rows={2} placeholder="Patológicos: enfermedades, cirugías, hospitalizaciones y transfusiones" />
                 <textarea value={formHistoria.antecedentes_no_patologicos} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_no_patologicos: e.target.value })} className="input-field" rows={2} placeholder="No patológicos: tabaco, alcohol, alimentación e higiene" />
@@ -1325,6 +1342,7 @@ window.onload = () => window.print();
                 </div>
               </div>
               </>}
+              {pasoHistoria === (formHistoria.tipo_nota === 'inicial' ? 3 : 2) &&
               <fieldset className="border border-surface-200 rounded-xl p-4">
                 <legend className="px-2 text-sm font-medium text-surface-600">Signos vitales y somatometría</legend>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1335,7 +1353,8 @@ window.onload = () => window.print();
                   <input type="number" min="1" max="500" step="0.01" value={formHistoria.peso} onChange={e => setFormHistoria({ ...formHistoria, peso: e.target.value })} className="input-field" placeholder="Peso kg" />
                   <input type="number" min="30" max="250" step="0.1" value={formHistoria.talla} onChange={e => setFormHistoria({ ...formHistoria, talla: e.target.value })} className="input-field" placeholder="Talla cm" />
                 </div>
-              </fieldset>
+              </fieldset>}
+              {pasoHistoria === (formHistoria.tipo_nota === 'inicial' ? 4 : 3) && <>
               <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Diagnóstico o problemas clínicos *</label>
                 <textarea required value={formHistoria.diagnostico} onChange={e => setFormHistoria({ ...formHistoria, diagnostico: e.target.value })} className="input-field" rows={2} />
@@ -1381,9 +1400,12 @@ window.onload = () => window.print();
                   </div>
                 )}
               </div>
+              </>}
               <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => { setModalHistoria(false); setArchivosHistoria([]); }} className="btn-secondary">Cancelar</button>
-                <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Guardando...' : 'Guardar'}</button>
+                {pasoHistoria === 1 ? <button type="button" onClick={() => { setModalHistoria(false); setArchivosHistoria([]); setPasoHistoria(1); }} className="btn-secondary">Cancelar</button> : <button type="button" onClick={() => setPasoHistoria(paso => paso - 1)} className="btn-secondary">Anterior</button>}
+                {pasoHistoria < (formHistoria.tipo_nota === 'inicial' ? 4 : 3)
+                  ? <button type="button" onClick={avanzarHistoria} className="btn-primary">Siguiente</button>
+                  : <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Guardando...' : 'Revisar y guardar'}</button>}
               </div>
             </form>
           </Modal>
