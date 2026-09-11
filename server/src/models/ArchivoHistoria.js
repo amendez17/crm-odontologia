@@ -13,7 +13,13 @@ const ArchivoHistoria = sequelize.define('ArchivoHistoria', {
   public_id: { type: DataTypes.STRING(255), allowNull: false },
   resource_type: { type: DataTypes.STRING(30), allowNull: false, defaultValue: 'image' },
   formato: { type: DataTypes.STRING(20), allowNull: true },
-  delivery_type: { type: DataTypes.STRING(30), allowNull: false, defaultValue: 'authenticated' }
+  delivery_type: { type: DataTypes.STRING(30), allowNull: false, defaultValue: 'authenticated' },
+  interpretacion: { type: DataTypes.TEXT, allowNull: true },
+  interpretado_por_id: { type: DataTypes.INTEGER, allowNull: true },
+  interpretado_por_nombre: { type: DataTypes.STRING(220), allowNull: true },
+  interpretado_por_cedula: { type: DataTypes.STRING(80), allowNull: true },
+  fecha_interpretacion: { type: DataTypes.DATE, allowNull: true },
+  interpretacion_hash: { type: DataTypes.STRING(64), allowNull: true }
 }, {
   tableName: 'archivos_historia',
   timestamps: true,
