@@ -94,7 +94,12 @@ router.post(
       }
 
       // CREAR PAGO
-      const pago = await Pago.create(req.body);
+      const pago = await Pago.create({
+        ...req.body,
+        requiere_factura: req.body.requiere_factura === true,
+        factura_emitida: false,
+        fecha_factura: null
+      });
 
      // SI HAY PRESUPUESTO → ACTUALIZAR ESTADO
 if (presupuesto) {
