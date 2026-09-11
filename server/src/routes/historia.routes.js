@@ -4,6 +4,7 @@ const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { HistoriaClinica, ArchivoHistoria, Usuario, Cita } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
+const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
 
 const contenidoFirma = data => JSON.stringify({
@@ -98,7 +99,10 @@ const urlTemporal = (archivo) => cloudinary.utils.private_download_url(
 );
 
 // GET /api/historia/:pacienteId
-router.get('/:pacienteId', auth, async (req, res) => {
+router.get('/:pacienteId', auth, esDoctor, registrarActividad('consultar', 'expediente_clinico', {
+  entidadId: req => req.params.pacienteId,
+  contexto: req => ({ paciente_id: Number(req.params.pacienteId) })
+}), async (req, res) => {
   try {
     const historias = await HistoriaClinica.findAll({
       where: { paciente_id: req.params.pacienteId },
@@ -126,7 +130,10 @@ router.get('/:pacienteId', auth, async (req, res) => {
 });
 
 // POST /api/historia/:historiaId/archivos
-router.post('/:historiaId/archivos', auth, esDoctor, upload.array('archivos', 10), async (req, res) => {
+router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_archivo', 'historia_clinica', {
+  entidadId: req => req.params.historiaId,
+  contexto: (_req, respuesta) => ({ total_archivos: respuesta?.total || 0 })
+}), upload.array('archivos', 10), async (req, res) => {
   const subidos = [];
   try {
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
@@ -164,16 +171,8 @@ router.post('/:historiaId/archivos', auth, esDoctor, upload.array('archivos', 10
 });
 
 // DELETE /api/historia/archivos/:archivoId
-router.delete('/archivos/:archivoId', auth, esDoctor, async (req, res) => {
-  try {
-    const archivo = await ArchivoHistoria.findByPk(req.params.archivoId);
-    if (!archivo) return res.status(404).json({ error: 'Archivo no encontrado.' });
-    await cloudinary.uploader.destroy(archivo.public_id, { resource_type: archivo.resource_type, type: archivo.delivery_type });
-    await archivo.destroy();
-    res.json({ mensaje: 'Archivo eliminado correctamente.' });
-  } catch (error) {
-    res.status(400).json({ error: error.message || 'No fue posible eliminar el archivo.' });
-  }
+router.delete('/archivos/:archivoId', auth, esDoctor, registrarActividad('intento_eliminar', 'archivo_historia'), async (_req, res) => {
+  res.status(409).json({ error: 'Los anexos del expediente no pueden eliminarse. Registra una adenda si necesitas aclarar o sustituir un documento.' });
 });
 
 router.use((error, _req, res, next) => {
@@ -184,7 +183,9 @@ router.use((error, _req, res, next) => {
 });
 
 // POST /api/historia
-router.post('/', auth, esDoctor, async (req, res) => {
+router.post('/', auth, esDoctor, registrarActividad('crear', 'historia_clinica', {
+  contexto: (req, respuesta) => ({ paciente_id: Number(respuesta?.paciente_id || req.body.paciente_id) })
+}), async (req, res) => {
   try {
     const historia = await crearRegistroInmutable({ body: req.body, usuario: req.usuario });
     res.status(201).json(historia);
@@ -194,7 +195,9 @@ router.post('/', auth, esDoctor, async (req, res) => {
 });
 
 // POST /api/historia/:id/adendas - las correcciones se agregan, nunca sobrescriben
-router.post('/:id/adendas', auth, esDoctor, async (req, res) => {
+router.post('/:id/adendas', auth, esDoctor, registrarActividad('crear_adenda', 'historia_clinica', {
+  contexto: (req, respuesta) => ({ historia_origen_id: Number(req.params.id), paciente_id: Number(respuesta?.paciente_id) || null })
+}), async (req, res) => {
   try {
     const origen = await HistoriaClinica.findByPk(req.params.id);
     if (!origen) return res.status(404).json({ error: 'Registro original no encontrado.' });

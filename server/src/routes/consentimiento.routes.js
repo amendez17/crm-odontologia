@@ -1,6 +1,7 @@
 const express = require('express');
 const { Consentimiento, Paciente, Usuario } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
+const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
 
 const PLANTILLAS = {
@@ -225,12 +226,15 @@ Yo, el/la paciente abajo firmante, declaro que:
 };
 
 // GET /api/consentimiento/plantillas
-router.get('/plantillas', auth, (req, res) => {
+router.get('/plantillas', auth, esDoctor, (req, res) => {
   res.json(Object.keys(PLANTILLAS).map(tipo => ({ tipo, contenido: PLANTILLAS[tipo] })));
 });
 
 // GET /api/consentimiento/paciente/:pacienteId
-router.get('/paciente/:pacienteId', auth, async (req, res) => {
+router.get('/paciente/:pacienteId', auth, esDoctor, registrarActividad('consultar', 'consentimiento', {
+  entidadId: req => req.params.pacienteId,
+  contexto: req => ({ paciente_id: Number(req.params.pacienteId) })
+}), async (req, res) => {
   try {
     const consentimientos = await Consentimiento.findAll({
       where: { paciente_id: req.params.pacienteId },
@@ -244,7 +248,7 @@ router.get('/paciente/:pacienteId', auth, async (req, res) => {
 });
 
 // POST /api/consentimiento
-router.post('/', auth, esDoctor, async (req, res) => {
+router.post('/', auth, esDoctor, registrarActividad('crear', 'consentimiento'), async (req, res) => {
   try {
     const { paciente_id, tipo, contenido } = req.body;
     const consentimiento = await Consentimiento.create({
@@ -260,7 +264,7 @@ router.post('/', auth, esDoctor, async (req, res) => {
 });
 
 // PUT /api/consentimiento/:id/firmar
-router.put('/:id/firmar', auth, async (req, res) => {
+router.put('/:id/firmar', auth, esDoctor, registrarActividad('firmar', 'consentimiento'), async (req, res) => {
   try {
     const consentimiento = await Consentimiento.findByPk(req.params.id);
     if (!consentimiento) return res.status(404).json({ error: 'Consentimiento no encontrado.' });

@@ -7,8 +7,11 @@ import toast from 'react-hot-toast';
 import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock, FiUploadCloud, FiImage, FiExternalLink } from 'react-icons/fi';
 import { fechaHoy } from '../utils/fecha';
 import socket from '../socket';
+import { useAuth } from '../context/AuthContext';
 
 export default function PacienteDetalle() {
+  const { usuario } = useAuth();
+  const puedeVerClinico = ['administrador', 'doctor'].includes(usuario?.rol);
   const { id } = useParams();
   const [paciente, setPaciente] = useState(null);
   const [odontograma, setOdontograma] = useState([]);
@@ -89,7 +92,13 @@ useEffect(() => {
   cargarBalance();
 }, [id]);
   const cargar = async () => {
-    try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([api.get(`/pacientes/${id}`), api.get(`/odontograma/${id}`), api.get(`/historia/${id}`), api.get(`/reportes/balance/${id}`), api.get(`/consentimiento/paciente/${id}`)]);
+    try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([
+      api.get(`/pacientes/${id}`),
+      puedeVerClinico ? api.get(`/odontograma/${id}`) : Promise.resolve({ data: [] }),
+      puedeVerClinico ? api.get(`/historia/${id}`) : Promise.resolve({ data: [] }),
+      api.get(`/reportes/balance/${id}`),
+      puedeVerClinico ? api.get(`/consentimiento/paciente/${id}`) : Promise.resolve({ data: [] })
+    ]);
       setPaciente(pacRes.data);
       setOdontograma(odonRes.data);
       setHistorias(histRes.data);
@@ -101,6 +110,7 @@ useEffect(() => {
       setLoading(false);
     }};
  const cargarRecetas = async () => {
+  if (!puedeVerClinico) { setRecetas([]); setLoadingRecetas(false); return; }
   try {setLoadingRecetas(true);
   const { data } = await api.get(`/pacientes/${id}/recetas`);
     setRecetas(data || []);
@@ -168,18 +178,6 @@ useEffect(() => {
       return false;
     } finally {
       setSubiendoArchivos(null);
-    }
-  };
-
-  const eliminarAdjunto = async (archivoId) => {
-    if (!confirm('¿Eliminar este archivo de la historia clínica?')) return;
-    try {
-      await api.delete(`/historia/archivos/${archivoId}`);
-      const { data } = await api.get(`/historia/${id}`);
-      setHistorias(data);
-      toast.success('Archivo eliminado');
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Error al eliminar el archivo');
     }
   };
 
@@ -614,10 +612,12 @@ window.onload = () => window.print();
 
  const tabs = [
   { key: 'info', label: 'Información' },
-  { key: 'odontograma', label: 'Odontograma' },
-  { key: 'historia', label: 'Historia Clínica' },
-  { key: 'consentimientos', label: 'Consentimientos' },
-  { key: 'recetas', label: 'Recetas' }, // 👈 AQUÍ
+  ...(puedeVerClinico ? [
+    { key: 'odontograma', label: 'Odontograma' },
+    { key: 'historia', label: 'Historia Clínica' },
+    { key: 'consentimientos', label: 'Consentimientos' },
+    { key: 'recetas', label: 'Recetas' }
+  ] : []),
   { key: 'balance', label: 'Cuenta Corriente' },
   { key: 'citas', label: 'Citas' },
   { key: 'pagos', label: 'Pagos' }
@@ -1147,7 +1147,7 @@ window.onload = () => window.print();
               ))}
             </dl>
           </div>
-          <div className="card">
+          {puedeVerClinico && <div className="card">
             <h3 className="font-semibold text-primary-900 mb-4">Información Médica</h3>
             <dl className="space-y-3 text-sm">
               <div><dt className="text-surface-500 mb-1">Antecedentes Médicos</dt><dd className="text-primary-900">{paciente.antecedentes_medicos || 'Sin antecedentes'}</dd></div>
@@ -1155,7 +1155,7 @@ window.onload = () => window.print();
               <div><dt className="text-surface-500 mb-1">Medicamentos</dt><dd className="text-primary-900">{paciente.medicamentos || 'Ninguno'}</dd></div>
               <div><dt className="text-surface-500 mb-1">Notas</dt><dd className="text-primary-900">{paciente.notas || '-'}</dd></div>
             </dl>
-          </div>
+          </div>}
         </div>
       )}
 
@@ -1220,7 +1220,6 @@ window.onload = () => window.print();
                       <div className="p-2 flex items-center gap-1">
                         <span className="text-xs text-surface-600 truncate flex-1" title={archivo.nombre_original}>{archivo.nombre_original}</span>
                         <a href={archivo.url} target="_blank" rel="noreferrer" className="text-primary-600" title="Abrir archivo"><FiExternalLink size={14} /></a>
-                        <button type="button" onClick={() => eliminarAdjunto(archivo.id)} className="text-red-500" title="Eliminar archivo"><FiTrash2 size={14} /></button>
                       </div>
                     </div>
                   ))}
