@@ -106,7 +106,7 @@ export default function Layout() {
     }
   };
 
-  const sidebarW = collapsed   ? 'w-[72px]'   : 'w-[260px] xl:w-[280px]';
+  const sidebarW = collapsed ? 'w-[min(86vw,300px)] lg:w-[72px]' : 'w-[min(86vw,300px)] lg:w-[260px] xl:w-[280px]';
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -120,7 +120,7 @@ export default function Layout() {
       {/* Logo */}
 <div
   className={`flex items-center border-b border-white/5 h-[70px] flex-shrink-0 ${
-    collapsed ? 'justify-center px-0' : 'px-4 gap-3'
+    collapsed ? 'px-4 gap-3 lg:justify-center lg:px-0 lg:gap-0' : 'px-4 gap-3'
   }`}
 >
   {/* Logo glass */}
@@ -146,8 +146,7 @@ export default function Layout() {
   />
 </div>
   {/* Texto */}
-  {!collapsed && (
-    <div className="min-w-0">
+    <div className={`min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
       <p className="text-white font-bold text-base leading-tight truncate">
         Clinica Dental Almar
       </p>
@@ -156,7 +155,6 @@ export default function Layout() {
         Sistema dental
       </p>
     </div>
-  )}
 
   {/* Mobile close */}
   <button
@@ -176,11 +174,11 @@ export default function Layout() {
               onClick={() => setSidebarOpen(false)}
               title={collapsed ? label : undefined}
               className={({ isActive }) =>
-                `nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${collapsed ? 'justify-center px-0' : ''}`
+                `nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${collapsed ? 'lg:justify-center lg:px-0' : ''}`
               }
             >
               <Icon size={19} className="flex-shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
+              <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>{label}</span>
             </NavLink>
           ))}
         </nav>
@@ -190,18 +188,18 @@ export default function Layout() {
           <button
             onClick={() => setModalPassword(true)}
             title={collapsed ? 'Cambiar contraseña' : undefined}
-            className={`nav-item nav-item-inactive ${collapsed ? 'justify-center px-0' : ''}`}
+            className={`nav-item nav-item-inactive ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
           >
             <FiLock size={18} className="flex-shrink-0" />
-            {!collapsed && <span className="truncate">Cambiar clave</span>}
+            <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>Cambiar clave</span>
           </button>
           <button
             onClick={handleLogout}
             title={collapsed ? 'Cerrar sesión' : undefined}
-            className={`nav-item text-red-300 hover:bg-red-500/20 hover:text-red-200 ${collapsed ? 'justify-center px-0' : ''}`}
+            className={`nav-item text-red-300 hover:bg-red-500/20 hover:text-red-200 ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
           >
             <FiLogOut size={18} className="flex-shrink-0" />
-            {!collapsed && <span className="truncate">Cerrar sesión</span>}
+            <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>Cerrar sesión</span>
           </button>
 
           {/* Collapse toggle (desktop only) */}
@@ -290,7 +288,7 @@ export default function Layout() {
             {showNotif && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />
-                <div className="absolute right-0 top-14 z-[9999] w-80 bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-slide-up">
+                <div className="fixed left-3 right-3 top-[72px] z-[9999] sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-80 bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-slide-up">
                   <div className="px-4 py-3 bg-gradient-to-r from-[#cbb27c] to-[#b89a5f] text-white">
                     <h3 className="font-semibold text-sm">Citas pendientes</h3>
                     <p className="text-xs text-white/80">Hoy y mañana</p>
