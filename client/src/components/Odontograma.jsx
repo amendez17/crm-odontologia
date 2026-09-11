@@ -507,10 +507,11 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
                       Pieza {registro.pieza_dental} · {nombreCara(registro.cara || 'completa', registro.pieza_dental)} · {LABELS[registro.estado] || registro.estado}
                       <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${idsVigentes.has(registro.id) ? 'bg-green-100 text-green-700' : 'bg-surface-100 text-surface-500'}`}>{idsVigentes.has(registro.id) ? 'Vigente' : 'Anterior'}</span>
                     </span>
-                    <span className="text-surface-500">{new Date(registro.createdAt || registro.fecha).toLocaleString('es-MX')}</span>
+                    <span className="text-surface-500">{new Date(registro.fecha_hora || registro.createdAt || registro.fecha).toLocaleString('es-MX')}</span>
                   </div>
-                  <p className="mt-1 text-surface-600">Dr. {[registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}</p>
+                  <p className="mt-1 text-surface-600">Dr. {registro.doctor_nombre || [registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}{registro.doctor_cedula ? ` · Cédula ${registro.doctor_cedula}` : ''}</p>
                   {registro.observacion && <p className="mt-1 text-surface-700">Observación: {registro.observacion}</p>}
+                  <p className={`mt-1 text-[10px] ${registro.integridad_valida === true ? 'text-green-700' : registro.integridad_valida === false ? 'text-red-700' : 'text-surface-400'}`}>{registro.integridad_valida === true ? 'Integridad verificada' : registro.integridad_valida === false ? 'Revisar integridad' : 'Registro anterior sin sello electrónico'}</p>
                 </div>
               ))}
               </div>
