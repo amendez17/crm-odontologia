@@ -10,6 +10,8 @@ import socket from '../socket';
 import { useAuth } from '../context/AuthContext';
 
 const notaClinicaVacia = () => ({
+  tipo_nota: 'subsecuente', antecedentes_heredofamiliares: '', antecedentes_patologicos: '', antecedentes_no_patologicos: '',
+  antecedentes_odontologicos: '', habitos_orales: '', interrogatorio_sistemas: '',
   motivo_consulta: '', interrogatorio: '', exploracion_extraoral: '', exploracion_intraoral: '',
   presion_arterial: '', frecuencia_cardiaca: '', frecuencia_respiratoria: '', temperatura: '', peso: '', talla: '',
   diagnostico: '', pronostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', indicaciones: '', notas: ''
@@ -348,11 +350,18 @@ win.onload = () => {
         ${h.fecha_hora ? new Date(h.fecha_hora).toLocaleString('es-MX') : h.fecha} - Dr. ${h.doctor_nombre || `${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}`}
         ${h.doctor_cedula || h.doctor?.cedula ? ` · Cédula: ${h.doctor_cedula || h.doctor.cedula}` : ''}
         ${h.es_adenda ? ' · ADENDA' : ''}
+        ${h.tipo_nota === 'inicial' ? ' · PRIMERA CONSULTA' : h.tipo_nota === 'subsecuente' ? ' · SUBSECUENTE' : ''}
       </div>
 
       ${h.diagnostico ? `<p><strong>Diagnóstico:</strong> ${h.diagnostico}</p>` : ''}
       ${h.motivo_consulta ? `<p><strong>Motivo de consulta:</strong> ${h.motivo_consulta}</p>` : ''}
       ${h.interrogatorio ? `<p><strong>Interrogatorio:</strong> ${h.interrogatorio}</p>` : ''}
+      ${h.antecedentes_heredofamiliares ? `<p><strong>Antecedentes heredofamiliares:</strong> ${h.antecedentes_heredofamiliares}</p>` : ''}
+      ${h.antecedentes_patologicos ? `<p><strong>Antecedentes patológicos:</strong> ${h.antecedentes_patologicos}</p>` : ''}
+      ${h.antecedentes_no_patologicos ? `<p><strong>Antecedentes no patológicos:</strong> ${h.antecedentes_no_patologicos}</p>` : ''}
+      ${h.antecedentes_odontologicos ? `<p><strong>Antecedentes odontológicos:</strong> ${h.antecedentes_odontologicos}</p>` : ''}
+      ${h.habitos_orales ? `<p><strong>Hábitos orales:</strong> ${h.habitos_orales}</p>` : ''}
+      ${h.interrogatorio_sistemas ? `<p><strong>Interrogatorio por sistemas:</strong> ${h.interrogatorio_sistemas}</p>` : ''}
       ${h.exploracion_extraoral ? `<p><strong>Exploración extraoral:</strong> ${h.exploracion_extraoral}</p>` : ''}
       ${h.exploracion_intraoral ? `<p><strong>Exploración intraoral:</strong> ${h.exploracion_intraoral}</p>` : ''}
       ${(h.presion_arterial || h.frecuencia_cardiaca || h.frecuencia_respiratoria || h.temperatura || h.peso || h.talla) ? `<p><strong>Signos vitales:</strong> ${[
@@ -1196,7 +1205,7 @@ window.onload = () => window.print();
       {tab === 'historia' && (
         <div className="space-y-4">
           <div className="flex gap-2">
-            {puedeModificarClinico && <button onClick={() => setModalHistoria(true)} className="btn-primary flex items-center gap-2">
+            {puedeModificarClinico && <button onClick={() => { setFormHistoria({ ...notaClinicaVacia(), tipo_nota: historias.length === 0 ? 'inicial' : 'subsecuente' }); setModalHistoria(true); }} className="btn-primary flex items-center gap-2">
               <FiPlus size={16} /> Nuevo Registro
             </button>}
             {historias.length > 0 && (
@@ -1217,6 +1226,8 @@ window.onload = () => window.print();
                   {(h.doctor_cedula || h.doctor?.cedula) && <p className="text-xs text-surface-500">Cédula profesional: {h.doctor_cedula || h.doctor.cedula}</p>}
                 </div>
                 <div className="flex flex-wrap justify-end gap-2">
+                  {h.tipo_nota === 'inicial' && <span className="badge bg-blue-100 text-blue-700">Primera consulta</span>}
+                  {h.tipo_nota === 'subsecuente' && <span className="badge bg-surface-100 text-surface-700">Subsecuente</span>}
                   {h.es_adenda && <span className="badge bg-amber-100 text-amber-700">Adenda</span>}
                   {h.integridad_valida === true && <span className="badge bg-green-100 text-green-700">Integridad verificada</span>}
                   {h.integridad_valida === false && <span className="badge bg-red-100 text-red-700">Revisar integridad</span>}
@@ -1225,6 +1236,12 @@ window.onload = () => window.print();
               {h.diagnostico && <p className="text-sm"><span className="font-medium">Diagnóstico:</span> {h.diagnostico}</p>}
               {h.motivo_consulta && <p className="text-sm"><span className="font-medium">Motivo de consulta:</span> {h.motivo_consulta}</p>}
               {h.interrogatorio && <p className="text-sm"><span className="font-medium">Interrogatorio:</span> {h.interrogatorio}</p>}
+              {h.antecedentes_heredofamiliares && <p className="text-sm"><span className="font-medium">Antecedentes heredofamiliares:</span> {h.antecedentes_heredofamiliares}</p>}
+              {h.antecedentes_patologicos && <p className="text-sm"><span className="font-medium">Antecedentes patológicos:</span> {h.antecedentes_patologicos}</p>}
+              {h.antecedentes_no_patologicos && <p className="text-sm"><span className="font-medium">Antecedentes no patológicos:</span> {h.antecedentes_no_patologicos}</p>}
+              {h.antecedentes_odontologicos && <p className="text-sm"><span className="font-medium">Antecedentes odontológicos:</span> {h.antecedentes_odontologicos}</p>}
+              {h.habitos_orales && <p className="text-sm"><span className="font-medium">Hábitos orales:</span> {h.habitos_orales}</p>}
+              {h.interrogatorio_sistemas && <p className="text-sm"><span className="font-medium">Interrogatorio por sistemas:</span> {h.interrogatorio_sistemas}</p>}
               {h.exploracion_extraoral && <p className="text-sm"><span className="font-medium">Exploración extraoral:</span> {h.exploracion_extraoral}</p>}
               {h.exploracion_intraoral && <p className="text-sm"><span className="font-medium">Exploración intraoral:</span> {h.exploracion_intraoral}</p>}
               {(h.presion_arterial || h.frecuencia_cardiaca || h.frecuencia_respiratoria || h.temperatura || h.peso || h.talla) && <p className="text-sm"><span className="font-medium">Signos vitales:</span> {[
@@ -1273,13 +1290,30 @@ window.onload = () => window.print();
           <Modal isOpen={modalHistoria} onClose={() => setModalHistoria(false)} title="Nueva Entrada - Historia Clínica" size="lg">
             <form onSubmit={guardarHistoria} className="space-y-4">
               <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Tipo de atención *</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setFormHistoria({ ...formHistoria, tipo_nota: 'inicial' })} className={`p-3 rounded-xl border text-sm font-medium ${formHistoria.tipo_nota === 'inicial' ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200'}`}>Primera consulta · extensa</button>
+                  <button type="button" onClick={() => setFormHistoria({ ...formHistoria, tipo_nota: 'subsecuente' })} className={`p-3 rounded-xl border text-sm font-medium ${formHistoria.tipo_nota === 'subsecuente' ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200'}`}>Consulta subsecuente · básica</button>
+                </div>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Motivo de consulta *</label>
                 <textarea required value={formHistoria.motivo_consulta} onChange={e => setFormHistoria({ ...formHistoria, motivo_consulta: e.target.value })} className="input-field" rows={2} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Interrogatorio y evolución del padecimiento</label>
-                <textarea value={formHistoria.interrogatorio} onChange={e => setFormHistoria({ ...formHistoria, interrogatorio: e.target.value })} className="input-field" rows={3} />
+                <label className="block text-sm font-medium text-surface-600 mb-1">{formHistoria.tipo_nota === 'inicial' ? 'Padecimiento actual y evolución *' : 'Evolución desde la consulta anterior'}</label>
+                <textarea required={formHistoria.tipo_nota === 'inicial'} value={formHistoria.interrogatorio} onChange={e => setFormHistoria({ ...formHistoria, interrogatorio: e.target.value })} className="input-field" rows={3} />
               </div>
+              {formHistoria.tipo_nota === 'inicial' && <>
+              <fieldset className="border border-surface-200 rounded-xl p-4 space-y-3">
+                <legend className="px-2 text-sm font-semibold text-primary-700">Antecedentes de primera consulta</legend>
+                <textarea value={formHistoria.antecedentes_heredofamiliares} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_heredofamiliares: e.target.value })} className="input-field" rows={2} placeholder="Heredofamiliares: diabetes, hipertensión, cáncer u otros" />
+                <textarea value={formHistoria.antecedentes_patologicos} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_patologicos: e.target.value })} className="input-field" rows={2} placeholder="Patológicos: enfermedades, cirugías, hospitalizaciones y transfusiones" />
+                <textarea value={formHistoria.antecedentes_no_patologicos} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_no_patologicos: e.target.value })} className="input-field" rows={2} placeholder="No patológicos: tabaco, alcohol, alimentación e higiene" />
+                <textarea value={formHistoria.antecedentes_odontologicos} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_odontologicos: e.target.value })} className="input-field" rows={2} placeholder="Odontológicos: última consulta, tratamientos y experiencias previas" />
+                <textarea value={formHistoria.habitos_orales} onChange={e => setFormHistoria({ ...formHistoria, habitos_orales: e.target.value })} className="input-field" rows={2} placeholder="Hábitos: cepillado, hilo dental, bruxismo, respiración bucal u otros" />
+                <textarea value={formHistoria.interrogatorio_sistemas} onChange={e => setFormHistoria({ ...formHistoria, interrogatorio_sistemas: e.target.value })} className="input-field" rows={2} placeholder="Interrogatorio por aparatos y sistemas" />
+              </fieldset>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-surface-600 mb-1">Exploración extraoral</label>
@@ -1287,9 +1321,10 @@ window.onload = () => window.print();
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-surface-600 mb-1">Exploración intraoral</label>
-                  <textarea value={formHistoria.exploracion_intraoral} onChange={e => setFormHistoria({ ...formHistoria, exploracion_intraoral: e.target.value })} className="input-field" rows={3} />
+                  <textarea required value={formHistoria.exploracion_intraoral} onChange={e => setFormHistoria({ ...formHistoria, exploracion_intraoral: e.target.value })} className="input-field" rows={3} />
                 </div>
               </div>
+              </>}
               <fieldset className="border border-surface-200 rounded-xl p-4">
                 <legend className="px-2 text-sm font-medium text-surface-600">Signos vitales y somatometría</legend>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

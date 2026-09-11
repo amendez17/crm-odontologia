@@ -57,6 +57,13 @@ const HistoriaClinica = sequelize.define('HistoriaClinica', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  tipo_nota: { type: DataTypes.ENUM('inicial', 'subsecuente', 'adenda'), allowNull: false, defaultValue: 'subsecuente' },
+  antecedentes_heredofamiliares: { type: DataTypes.TEXT, allowNull: true },
+  antecedentes_patologicos: { type: DataTypes.TEXT, allowNull: true },
+  antecedentes_no_patologicos: { type: DataTypes.TEXT, allowNull: true },
+  antecedentes_odontologicos: { type: DataTypes.TEXT, allowNull: true },
+  habitos_orales: { type: DataTypes.TEXT, allowNull: true },
+  interrogatorio_sistemas: { type: DataTypes.TEXT, allowNull: true },
   motivo_consulta: { type: DataTypes.TEXT, allowNull: true },
   interrogatorio: { type: DataTypes.TEXT, allowNull: true },
   exploracion_extraoral: { type: DataTypes.TEXT, allowNull: true },

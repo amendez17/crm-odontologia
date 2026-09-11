@@ -11,6 +11,13 @@ const contenidoFirma = data => JSON.stringify({
   paciente_id: Number(data.paciente_id),
   doctor_id: Number(data.doctor_id),
   fecha_hora: new Date(data.fecha_hora).toISOString(),
+  tipo_nota: data.tipo_nota || 'subsecuente',
+  antecedentes_heredofamiliares: data.antecedentes_heredofamiliares || '',
+  antecedentes_patologicos: data.antecedentes_patologicos || '',
+  antecedentes_no_patologicos: data.antecedentes_no_patologicos || '',
+  antecedentes_odontologicos: data.antecedentes_odontologicos || '',
+  habitos_orales: data.habitos_orales || '',
+  interrogatorio_sistemas: data.interrogatorio_sistemas || '',
   motivo_consulta: data.motivo_consulta || '',
   interrogatorio: data.interrogatorio || '',
   exploracion_extraoral: data.exploracion_extraoral || '',
@@ -41,7 +48,10 @@ const firmarRegistro = data => crypto
   .digest('hex');
 
 const validarNotaClinica = body => {
+  if (!['inicial', 'subsecuente'].includes(body.tipo_nota)) return 'Selecciona si es primera consulta o consulta subsecuente.';
   if (!body.motivo_consulta?.trim()) return 'El motivo de consulta es obligatorio.';
+  if (body.tipo_nota === 'inicial' && !body.interrogatorio?.trim()) return 'El padecimiento actual es obligatorio en la primera consulta.';
+  if (body.tipo_nota === 'inicial' && !body.exploracion_intraoral?.trim()) return 'La exploración intraoral es obligatoria en la primera consulta.';
   if (!body.diagnostico?.trim()) return 'El diagnóstico o problema clínico es obligatorio.';
   if (!body.receta?.trim()) return 'El plan de tratamiento es obligatorio.';
   const limites = [
@@ -69,6 +79,13 @@ const crearRegistroInmutable = async ({ body, usuario, origen = null }) => {
     order: [['id', 'DESC']]
   });
   const data = {
+    tipo_nota: origen ? 'adenda' : (body.tipo_nota === 'inicial' ? 'inicial' : 'subsecuente'),
+    antecedentes_heredofamiliares: body.antecedentes_heredofamiliares || null,
+    antecedentes_patologicos: body.antecedentes_patologicos || null,
+    antecedentes_no_patologicos: body.antecedentes_no_patologicos || null,
+    antecedentes_odontologicos: body.antecedentes_odontologicos || null,
+    habitos_orales: body.habitos_orales || null,
+    interrogatorio_sistemas: body.interrogatorio_sistemas || null,
     motivo_consulta: body.motivo_consulta || null,
     interrogatorio: body.interrogatorio || null,
     exploracion_extraoral: body.exploracion_extraoral || null,
@@ -232,6 +249,10 @@ router.post('/', auth, esDoctor, registrarActividad('crear', 'historia_clinica',
   contexto: (req, respuesta) => ({ paciente_id: Number(respuesta?.paciente_id || req.body.paciente_id) })
 }), async (req, res) => {
   try {
+    const totalPrevio = await HistoriaClinica.count({ where: { paciente_id: Number(req.body.paciente_id) } });
+    if (totalPrevio === 0 && req.body.tipo_nota !== 'inicial') {
+      return res.status(400).json({ error: 'El primer registro del paciente debe ser una historia clínica inicial extensa.' });
+    }
     const errorValidacion = validarNotaClinica(req.body);
     if (errorValidacion) return res.status(400).json({ error: errorValidacion });
     const historia = await crearRegistroInmutable({ body: req.body, usuario: req.usuario });
