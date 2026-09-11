@@ -1,8 +1,12 @@
 const express = require('express');
+const crypto = require('crypto');
 const { Consentimiento, Paciente, Usuario } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
+
+const hash = value => crypto.createHmac('sha256', process.env.EXPEDIENTE_SIGNING_SECRET || process.env.JWT_SECRET)
+  .update(JSON.stringify(value)).digest('hex');
 
 const PLANTILLAS = {
   'Extracción dental': `CONSENTIMIENTO INFORMADO PARA EXTRACCIÓN DENTAL
@@ -262,8 +266,12 @@ router.post('/', auth, registrarActividad('crear', 'consentimiento', {
     const consentimiento = await Consentimiento.create({
       paciente_id,
       doctor_id: doctor.id,
+      creado_por_id: req.usuario.id,
+      doctor_nombre: `${doctor.nombre} ${doctor.apellido}`.trim(),
+      doctor_cedula: doctor.cedula || null,
       tipo: tipo.trim(),
-      contenido: texto
+      contenido: texto,
+      documento_hash: hash({ paciente_id: Number(paciente_id), doctor_id: doctor.id, tipo: tipo.trim(), contenido: texto })
     });
     res.status(201).json(consentimiento);
   } catch (error) {
@@ -276,10 +284,28 @@ router.put('/:id/firmar', auth, esDoctor, registrarActividad('firmar', 'consenti
   try {
     const consentimiento = await Consentimiento.findByPk(req.params.id);
     if (!consentimiento) return res.status(404).json({ error: 'Consentimiento no encontrado.' });
+    if (consentimiento.firmado) return res.status(409).json({ error: 'El consentimiento ya fue firmado y es inmutable.' });
+    const { firmante_nombre, firmante_caracter, aceptacion_explicita } = req.body;
+    const caracteresValidos = ['paciente', 'madre_padre', 'tutor', 'representante_legal'];
+    if (!firmante_nombre?.trim()) return res.status(400).json({ error: 'El nombre completo del firmante es obligatorio.' });
+    if (!caracteresValidos.includes(firmante_caracter)) return res.status(400).json({ error: 'Indica el carácter con el que firma.' });
+    if (aceptacion_explicita !== true) return res.status(400).json({ error: 'Se requiere la aceptación expresa del consentimiento.' });
+    const fechaFirma = new Date();
+    const documentoHash = consentimiento.documento_hash || hash({
+      paciente_id: Number(consentimiento.paciente_id), doctor_id: Number(consentimiento.doctor_id),
+      tipo: consentimiento.tipo, contenido: consentimiento.contenido
+    });
+    const firmaHash = hash({ documento_hash: documentoHash, firmante_nombre: firmante_nombre.trim(), firmante_caracter, fecha_firma: fechaFirma.toISOString() });
     await consentimiento.update({
       firmado: true,
-      fecha_firma: new Date(),
-      ip_firma: req.ip
+      fecha_firma: fechaFirma,
+      ip_firma: req.ip,
+      firmado_por_id: req.usuario.id,
+      firmante_nombre: firmante_nombre.trim(),
+      firmante_caracter,
+      aceptacion_explicita: true,
+      documento_hash: documentoHash,
+      firma_hash: firmaHash
     });
     res.json(consentimiento);
   } catch (error) {

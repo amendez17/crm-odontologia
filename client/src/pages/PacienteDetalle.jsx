@@ -34,6 +34,9 @@ export default function PacienteDetalle() {
   const [plantillas, setPlantillas] = useState([]);
   const [modalConsentimiento, setModalConsentimiento] = useState(false);
   const [formConsent, setFormConsent] = useState({ doctor_id: '', tipo: '', contenido: '' });
+  const [modalFirmaConsentimiento, setModalFirmaConsentimiento] = useState(false);
+  const [consentimientoFirma, setConsentimientoFirma] = useState(null);
+  const [formFirma, setFormFirma] = useState({ firmante_nombre: '', firmante_caracter: 'paciente', aceptacion_explicita: false });
   const [loading, setLoading] = useState(true);
   const [formReceta, setFormReceta] = useState({diagnostico: '',medicamentos: '', indicaciones: '' });
   const [modalReceta, setModalReceta] = useState(false);
@@ -219,12 +222,14 @@ useEffect(() => {
       const { data } = await api.get(`/consentimiento/paciente/${id}`);
       setConsentimientos(data);
     } catch { toast.error('Error al crear consentimiento'); }};
-  const firmarConsentimiento = async (consentId) => { if (!confirm('¿Confirmar firma del consentimiento?')) return;
-    try { await api.put(`/consentimiento/${consentId}/firmar`);
+  const firmarConsentimiento = async (e) => { e.preventDefault();
+    try { await api.put(`/consentimiento/${consentimientoFirma.id}/firmar`, formFirma);
       toast.success('Consentimiento firmado');
+      setModalFirmaConsentimiento(false);
+      setConsentimientoFirma(null);
       const { data } = await api.get(`/consentimiento/paciente/${id}`);
       setConsentimientos(data);
-    } catch { toast.error('Error al firmar'); }};
+    } catch (error) { toast.error(error.response?.data?.error || 'Error al firmar'); }};
 
   const imprimirConsentimiento = (c) => {
   const win = window.open('', '_blank', 'width=700,height=900');
@@ -297,8 +302,11 @@ body{ font-family: 'Segoe UI', Arial, sans-serif; margin:0; padding:5px 10px 10p
   <div class="content">${c.contenido || 'Sin contenido'} </div>
 
   ${c.firmado  ? `<div class="estado">
-          ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-MX')}
+          ✔ ACEPTADO Y FIRMADO el ${new Date(c.fecha_firma).toLocaleString('es-MX')}<br>
+          Firmante: ${c.firmante_nombre || 'No registrado'} · Carácter: ${(c.firmante_caracter || '').replace('_', ' ')}
         </div>` : '' }
+
+  ${c.firma_hash ? `<div style="font-size:8px;color:#6b7280;overflow-wrap:anywhere"><strong>Sello de integridad:</strong> ${c.firma_hash}</div>` : ''}
 
   <div class="firma-section">
     <div>
@@ -1340,7 +1348,7 @@ window.onload = () => window.print();
                   {c.firmado ? (
                     <span className="badge bg-green-100 text-green-700">Firmado {c.fecha_firma ? new Date(c.fecha_firma).toLocaleDateString('es-AR') : ''}</span>
                   ) : puedeModificarClinico ? (
-                    <button onClick={() => firmarConsentimiento(c.id)} className="btn-success text-xs px-3 py-1">
+                    <button onClick={() => { setConsentimientoFirma(c); setFormFirma({ firmante_nombre: `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim(), firmante_caracter: 'paciente', aceptacion_explicita: false }); setModalFirmaConsentimiento(true); }} className="btn-success text-xs px-3 py-1">
                       Firmar
                     </button>
                   ) : <span className="badge bg-gray-100 text-gray-600">Pendiente</span>}
@@ -1388,6 +1396,35 @@ window.onload = () => window.print();
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setModalConsentimiento(false)} className="btn-secondary">Cancelar</button>
                 <button type="submit" className="btn-primary">Crear Consentimiento</button>
+              </div>
+            </form>
+          </Modal>
+
+          <Modal isOpen={modalFirmaConsentimiento} onClose={() => { setModalFirmaConsentimiento(false); setConsentimientoFirma(null); }} title="Confirmar consentimiento informado" size="lg">
+            <form onSubmit={firmarConsentimiento} className="space-y-4">
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                Confirma que el contenido fue explicado, que se resolvieron las dudas y que el firmante manifestó su voluntad. Después de confirmar, el documento será inmutable.
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Nombre completo del firmante *</label>
+                <input required value={formFirma.firmante_nombre} onChange={e => setFormFirma({ ...formFirma, firmante_nombre: e.target.value })} className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Firma en carácter de *</label>
+                <select required value={formFirma.firmante_caracter} onChange={e => setFormFirma({ ...formFirma, firmante_caracter: e.target.value })} className="input-field">
+                  <option value="paciente">Paciente</option>
+                  <option value="madre_padre">Madre o padre</option>
+                  <option value="tutor">Tutor</option>
+                  <option value="representante_legal">Representante legal</option>
+                </select>
+              </div>
+              <label className="flex items-start gap-3 text-sm text-surface-700">
+                <input type="checkbox" required checked={formFirma.aceptacion_explicita} onChange={e => setFormFirma({ ...formFirma, aceptacion_explicita: e.target.checked })} className="mt-1" />
+                <span>El firmante declara haber recibido y comprendido la información, riesgos, beneficios y alternativas, y acepta libremente el procedimiento descrito.</span>
+              </label>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => { setModalFirmaConsentimiento(false); setConsentimientoFirma(null); }} className="btn-secondary">Cancelar</button>
+                <button type="submit" className="btn-primary">Aceptar y firmar</button>
               </div>
             </form>
           </Modal>
