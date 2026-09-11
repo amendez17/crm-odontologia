@@ -40,8 +40,7 @@ const firmarRegistro = data => crypto
   .update(contenidoFirma(data))
   .digest('hex');
 
-const validarNotaClinica = (body, usuario) => {
-  if (!usuario.cedula?.trim()) return 'El profesional debe tener registrada su cédula antes de crear notas clínicas.';
+const validarNotaClinica = body => {
   if (!body.motivo_consulta?.trim()) return 'El motivo de consulta es obligatorio.';
   if (!body.diagnostico?.trim()) return 'El diagnóstico o problema clínico es obligatorio.';
   if (!body.receta?.trim()) return 'El plan de tratamiento es obligatorio.';
@@ -233,7 +232,7 @@ router.post('/', auth, esDoctor, registrarActividad('crear', 'historia_clinica',
   contexto: (req, respuesta) => ({ paciente_id: Number(respuesta?.paciente_id || req.body.paciente_id) })
 }), async (req, res) => {
   try {
-    const errorValidacion = validarNotaClinica(req.body, req.usuario);
+    const errorValidacion = validarNotaClinica(req.body);
     if (errorValidacion) return res.status(400).json({ error: errorValidacion });
     const historia = await crearRegistroInmutable({ body: req.body, usuario: req.usuario });
     res.status(201).json(historia);
