@@ -448,8 +448,20 @@ win.onload = () => {
   win.document.write('<p style="font-family:Arial;padding:30px">Preparando expediente clínico completo…</p>');
   const esc = valor => String(valor ?? '').replace(/[&<>'"]/g, caracter => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[caracter]));
   const fecha = valor => valor ? new Date(valor).toLocaleString('es-MX') : '—';
+  const fechaGeneracion = new Date();
+  const responsable = [usuario?.nombre, usuario?.apellido].filter(Boolean).join(' ') || 'Usuario autenticado';
   let evaluacionesPeriodontales = [];
   try { evaluacionesPeriodontales = (await api.get(`/periodontograma/${id}`)).data || []; } catch {}
+
+  try {
+    await api.post(`/historia/${id}/exportar`, {
+      formato: 'impresion_pdf',
+      secciones: ['historia_clinica', 'odontograma', 'periodontograma', 'consentimientos', 'recetas'],
+      totales: { historias: historias.length, odontograma: odontograma.length, consentimientos: consentimientos.length, recetas: recetas.length }
+    });
+  } catch {
+    toast.error('El expediente se imprimirá, pero no fue posible registrar la exportación en auditoría.');
+  }
 
   const nombresEstado = { sano: 'Sano', caries: 'Caries', obturacion: 'Obturación', corona: 'Corona', extraccion: 'Extracción', endodoncia: 'Endodoncia', implante: 'Implante', protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura' };
   const nombresTipo = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
@@ -468,14 +480,14 @@ win.onload = () => {
 
   win.document.open();
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Expediente clínico - ${esc(paciente.nombre)} ${esc(paciente.apellido)}</title><style>@page{size:Letter;margin:11mm}body{font-family:Arial,sans-serif;color:#263248;font-size:10px;margin:0}.header{text-align:center;border-bottom:2px solid #c8a24a;padding-bottom:8px}.logo{width:60px}.header h1{color:#b58b23;margin:2px;font-size:18px}.paciente{margin:12px 0;padding:10px;background:#fffaf0;border-left:4px solid #c8a24a;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.seccion{page-break-before:auto;margin-top:18px}.seccion>h2{font-size:14px;color:#8a6a20;border-bottom:1px solid #c8a24a;padding-bottom:4px}.registro,.pieza{page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:6px;padding:8px;margin:7px 0}.registro h3{font-size:11px;color:#8a6a20;margin:0 0 5px}.registro p{margin:3px 0;white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin-top:5px;page-break-inside:avoid}th,td{border:1px solid #e5e7eb;padding:4px;text-align:left}th{background:#f8f4e8}.anexos{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:7px}.anexo{border:1px solid #eee;padding:5px;page-break-inside:avoid}.anexo img{width:100%;height:150px;object-fit:contain}.anexo small{display:block;color:#64748b;margin-top:3px}.pdf{height:45px;display:flex;align-items:center;justify-content:center;background:#fee2e2;color:#b91c1c;font-weight:bold}.footer{text-align:center;border-top:1px solid #ddd;margin-top:20px;padding-top:6px;color:#64748b;font-size:8px}</style></head><body>
-  <div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><div>Expediente clínico integral</div></div>
+  <div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><div>Expediente clínico integral</div><small>Generado por ${esc(responsable)} (${esc(usuario?.rol || 'usuario')}) · ${fecha(fechaGeneracion)}</small></div>
   <div class="paciente"><div><b>Paciente:</b> ${esc(paciente.nombre)} ${esc(paciente.apellido)}</div><div><b>Número:</b> ${esc(paciente.dni)}</div><div><b>Edad:</b> ${edad !== null ? edad+' años' : '—'}</div><div><b>Teléfono:</b> ${esc(paciente.telefono || '—')}</div><div><b>Alergias:</b> ${esc(paciente.alergias || 'No referidas')}</div><div><b>Antecedentes:</b> ${esc(paciente.antecedentes_medicos || 'No referidos')}</div></div>
   <section class="seccion"><h2>Historia clínica</h2>${historiaHtml || '<p>Sin notas clínicas.</p>'}</section>
   <section class="seccion"><h2>Odontograma actual</h2><table><thead><tr><th>Pieza</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha</th></tr></thead><tbody>${odontogramaHtml || '<tr><td colspan="7">Sin registros.</td></tr>'}</tbody></table></section>
   <section class="seccion"><h2>Último periodontograma</h2>${periodontalHtml}</section>
   <section class="seccion"><h2>Consentimientos informados</h2>${consentimientosHtml || '<p>Sin consentimientos.</p>'}</section>
   <section class="seccion"><h2>Recetas</h2>${recetasHtml || '<p>Sin recetas.</p>'}</section>
-  <div class="footer">Expediente generado ${new Date().toLocaleString('es-MX')} · ${historias.length} notas · ${odontograma.length} movimientos odontológicos · ${consentimientos.length} consentimientos · ${recetas.length} recetas</div></body></html>`);
+  <div class="footer">Expediente generado por ${esc(responsable)} · ${fecha(fechaGeneracion)} · ${historias.length} notas · ${odontograma.length} movimientos odontológicos · ${consentimientos.length} consentimientos · ${recetas.length} recetas</div></body></html>`);
   win.document.close();
   win.onload = () => setTimeout(() => { win.focus(); win.print(); }, 400);
  };
