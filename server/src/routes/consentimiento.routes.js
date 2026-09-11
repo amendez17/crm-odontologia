@@ -231,7 +231,7 @@ router.get('/plantillas', auth, esDoctor, (req, res) => {
 });
 
 // GET /api/consentimiento/paciente/:pacienteId
-router.get('/paciente/:pacienteId', auth, esDoctor, registrarActividad('consultar', 'consentimiento', {
+router.get('/paciente/:pacienteId', auth, registrarActividad('consultar', 'consentimiento', {
   entidadId: req => req.params.pacienteId,
   contexto: req => ({ paciente_id: Number(req.params.pacienteId) })
 }), async (req, res) => {

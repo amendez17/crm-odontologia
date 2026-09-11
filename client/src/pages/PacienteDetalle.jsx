@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function PacienteDetalle() {
   const { usuario } = useAuth();
-  const puedeVerClinico = ['administrador', 'doctor'].includes(usuario?.rol);
+  const puedeModificarClinico = ['administrador', 'doctor'].includes(usuario?.rol);
   const { id } = useParams();
   const [paciente, setPaciente] = useState(null);
   const [odontograma, setOdontograma] = useState([]);
@@ -94,10 +94,10 @@ useEffect(() => {
   const cargar = async () => {
     try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([
       api.get(`/pacientes/${id}`),
-      puedeVerClinico ? api.get(`/odontograma/${id}`) : Promise.resolve({ data: [] }),
-      puedeVerClinico ? api.get(`/historia/${id}`) : Promise.resolve({ data: [] }),
+      puedeModificarClinico ? api.get(`/odontograma/${id}`) : Promise.resolve({ data: [] }),
+      api.get(`/historia/${id}`),
       api.get(`/reportes/balance/${id}`),
-      puedeVerClinico ? api.get(`/consentimiento/paciente/${id}`) : Promise.resolve({ data: [] })
+      api.get(`/consentimiento/paciente/${id}`)
     ]);
       setPaciente(pacRes.data);
       setOdontograma(odonRes.data);
@@ -110,7 +110,7 @@ useEffect(() => {
       setLoading(false);
     }};
  const cargarRecetas = async () => {
-  if (!puedeVerClinico) { setRecetas([]); setLoadingRecetas(false); return; }
+  if (!puedeModificarClinico) { setRecetas([]); setLoadingRecetas(false); return; }
   try {setLoadingRecetas(true);
   const { data } = await api.get(`/pacientes/${id}/recetas`);
     setRecetas(data || []);
@@ -612,12 +612,12 @@ window.onload = () => window.print();
 
  const tabs = [
   { key: 'info', label: 'Información' },
-  ...(puedeVerClinico ? [
+  ...(puedeModificarClinico ? [
     { key: 'odontograma', label: 'Odontograma' },
-    { key: 'historia', label: 'Historia Clínica' },
-    { key: 'consentimientos', label: 'Consentimientos' },
     { key: 'recetas', label: 'Recetas' }
   ] : []),
+  { key: 'historia', label: 'Historia Clínica' },
+  { key: 'consentimientos', label: 'Consentimientos' },
   { key: 'balance', label: 'Cuenta Corriente' },
   { key: 'citas', label: 'Citas' },
   { key: 'pagos', label: 'Pagos' }
@@ -1147,7 +1147,7 @@ window.onload = () => window.print();
               ))}
             </dl>
           </div>
-          {puedeVerClinico && <div className="card">
+          {puedeModificarClinico && <div className="card">
             <h3 className="font-semibold text-primary-900 mb-4">Información Médica</h3>
             <dl className="space-y-3 text-sm">
               <div><dt className="text-surface-500 mb-1">Antecedentes Médicos</dt><dd className="text-primary-900">{paciente.antecedentes_medicos || 'Sin antecedentes'}</dd></div>
@@ -1171,9 +1171,9 @@ window.onload = () => window.print();
       {tab === 'historia' && (
         <div className="space-y-4">
           <div className="flex gap-2">
-            <button onClick={() => setModalHistoria(true)} className="btn-primary flex items-center gap-2">
+            {puedeModificarClinico && <button onClick={() => setModalHistoria(true)} className="btn-primary flex items-center gap-2">
               <FiPlus size={16} /> Nuevo Registro
-            </button>
+            </button>}
             {historias.length > 0 && (
               <button onClick={imprimirHistoria} className="btn-secondary flex items-center gap-2">
                 <FiPrinter size={16} /> Imprimir Historia
@@ -1225,13 +1225,13 @@ window.onload = () => window.print();
                   ))}
                 </div>
               )}
-              <label className={`mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary-600 cursor-pointer ${subiendoArchivos === h.id ? 'opacity-50 pointer-events-none' : ''}`}>
+              {puedeModificarClinico && <label className={`mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary-600 cursor-pointer ${subiendoArchivos === h.id ? 'opacity-50 pointer-events-none' : ''}`}>
                 <FiUploadCloud size={16} /> {subiendoArchivos === h.id ? 'Subiendo...' : 'Agregar imágenes o PDF'}
                 <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => { subirAdjuntos(h.id, e.target.files); e.target.value = ''; }} />
-              </label>
-              <button type="button" onClick={() => { setHistoriaOrigen(h); setFormAdenda({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' }); setModalAdenda(true); }} className="mt-3 ml-4 text-sm font-medium text-amber-700 hover:text-amber-800">
+              </label>}
+              {puedeModificarClinico && <button type="button" onClick={() => { setHistoriaOrigen(h); setFormAdenda({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' }); setModalAdenda(true); }} className="mt-3 ml-4 text-sm font-medium text-amber-700 hover:text-amber-800">
                 Agregar adenda
-              </button>
+              </button>}
             </div>
           ))}
 
@@ -1322,9 +1322,9 @@ window.onload = () => window.print();
       {/* Tab Consentimientos */}
       {tab === 'consentimientos' && (
         <div className="space-y-4">
-          <button onClick={() => { setFormConsent({ tipo: '', contenido: '' }); setModalConsentimiento(true); }} className="btn-primary flex items-center gap-2">
+          {puedeModificarClinico && <button onClick={() => { setFormConsent({ tipo: '', contenido: '' }); setModalConsentimiento(true); }} className="btn-primary flex items-center gap-2">
             <FiPlus size={16} /> Nuevo Consentimiento
-          </button>
+          </button>}
           {consentimientos.length === 0 ? (
             <div className="card text-center text-gray-500">No hay consentimientos registrados</div>
           ) : consentimientos.map(c => (
@@ -1339,11 +1339,11 @@ window.onload = () => window.print();
                 <div className="flex items-center gap-2">
                   {c.firmado ? (
                     <span className="badge bg-green-100 text-green-700">Firmado {c.fecha_firma ? new Date(c.fecha_firma).toLocaleDateString('es-AR') : ''}</span>
-                  ) : (
+                  ) : puedeModificarClinico ? (
                     <button onClick={() => firmarConsentimiento(c.id)} className="btn-success text-xs px-3 py-1">
                       Firmar
                     </button>
-                  )}
+                  ) : <span className="badge bg-gray-100 text-gray-600">Pendiente</span>}
                   <button onClick={() => imprimirConsentimiento(c)} className="p-1 text-primary-600 hover:bg-primary-50 rounded" title="Imprimir">
                     <FiPrinter size={16} />
                   </button>

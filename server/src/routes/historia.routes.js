@@ -99,7 +99,7 @@ const urlTemporal = (archivo) => cloudinary.utils.private_download_url(
 );
 
 // GET /api/historia/:pacienteId
-router.get('/:pacienteId', auth, esDoctor, registrarActividad('consultar', 'expediente_clinico', {
+router.get('/:pacienteId', auth, registrarActividad('consultar', 'expediente_clinico', {
   entidadId: req => req.params.pacienteId,
   contexto: req => ({ paciente_id: Number(req.params.pacienteId) })
 }), async (req, res) => {
