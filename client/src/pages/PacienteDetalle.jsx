@@ -442,6 +442,44 @@ win.onload = () => {
   win.onload = () => { win.focus(); win.print(); };
  };
 
+ const imprimirExpedienteCompleto = async () => {
+  const win = window.open('', '_blank', 'width=900,height=950');
+  if (!win) return toast.error('Permite las ventanas emergentes para exportar');
+  win.document.write('<p style="font-family:Arial;padding:30px">Preparando expediente clínico completo…</p>');
+  const esc = valor => String(valor ?? '').replace(/[&<>'"]/g, caracter => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[caracter]));
+  const fecha = valor => valor ? new Date(valor).toLocaleString('es-MX') : '—';
+  let evaluacionesPeriodontales = [];
+  try { evaluacionesPeriodontales = (await api.get(`/periodontograma/${id}`)).data || []; } catch {}
+
+  const nombresEstado = { sano: 'Sano', caries: 'Caries', obturacion: 'Obturación', corona: 'Corona', extraccion: 'Extracción', endodoncia: 'Endodoncia', implante: 'Implante', protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura' };
+  const nombresTipo = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
+  const odontogramaActual = [...odontograma].sort((a, b) => b.id - a.id).filter((r, i, lista) => i === lista.findIndex(x => x.pieza_dental === r.pieza_dental && (x.cara || 'completa') === (r.cara || 'completa') && (x.tipo_registro || 'hallazgo') === (r.tipo_registro || 'hallazgo')));
+  const odontogramaHtml = odontogramaActual.map(r => `<tr><td>${r.pieza_dental}</td><td>${esc(r.cara === 'completa' ? 'Diente completo' : r.cara)}</td><td>${esc(nombresTipo[r.tipo_registro || 'hallazgo'])}</td><td>${esc(nombresEstado[r.estado] || r.estado)}</td><td>${esc(r.observacion || '—')}</td><td>${esc(r.doctor_nombre || [r.doctor?.nombre, r.doctor?.apellido].filter(Boolean).join(' ') || '—')}</td><td>${fecha(r.fecha_hora || r.createdAt || r.fecha)}</td></tr>`).join('');
+
+  const historiaHtml = historias.map(h => `<article class="registro"><h3>${fecha(h.fecha_hora || h.fecha)} · Dr. ${esc(h.doctor_nombre || [h.doctor?.nombre, h.doctor?.apellido].filter(Boolean).join(' '))}${h.es_adenda ? ' · ADENDA' : ''}</h3>
+    ${[['Motivo',h.motivo_consulta],['Interrogatorio',h.interrogatorio],['Antecedentes heredofamiliares',h.antecedentes_heredofamiliares],['Antecedentes patológicos',h.antecedentes_patologicos],['Antecedentes no patológicos',h.antecedentes_no_patologicos],['Antecedentes odontológicos',h.antecedentes_odontologicos],['Hábitos',h.habitos_orales],['Exploración extraoral',h.exploracion_extraoral],['Exploración intraoral',h.exploracion_intraoral],['Diagnóstico',h.diagnostico],['Pronóstico',h.pronostico],['Tratamiento realizado',h.tratamiento_realizado],['Piezas',h.piezas_tratadas],['Plan',h.receta],['Indicaciones',h.indicaciones],['Notas',h.notas],['Motivo de adenda',h.motivo_adenda]].filter(([,v]) => v).map(([k,v]) => `<p><b>${k}:</b> ${esc(v)}</p>`).join('')}
+    ${(h.archivos || []).length ? `<div class="anexos">${h.archivos.map(a => `<div class="anexo">${a.tipo === 'imagen' ? `<img src="${esc(a.url)}" alt="${esc(a.nombre_original)}">` : '<div class="pdf">PDF</div>'}<b>${esc(a.nombre_original)}</b>${a.interpretacion ? `<p><b>Interpretación:</b> ${esc(a.interpretacion)}</p><small>${esc(a.interpretado_por_nombre || '')} · ${fecha(a.fecha_interpretacion)}</small>` : '<small>Sin interpretación registrada</small>'}</div>`).join('')}</div>` : ''}
+    <small>${h.integridad_valida === true ? 'Integridad verificada' : h.integridad_valida === false ? 'Revisar integridad' : 'Registro legado'}</small></article>`).join('');
+
+  const periodontal = evaluacionesPeriodontales[0];
+  const periodontalHtml = periodontal ? `<p><b>Evaluación:</b> ${fecha(periodontal.fecha_hora)} · Dr. ${esc(periodontal.doctor_nombre)} · ${periodontal.integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</p>${esc(periodontal.observaciones || '')}${(periodontal.mediciones || []).map(m => `<div class="pieza"><b>Pieza ${m.pieza} · Movilidad ${m.movilidad ?? 0} · Furca ${m.furca ?? 0}</b><table><thead><tr><th>Sitio</th><th>Prof.</th><th>Rec.</th><th>NIC</th><th>Sang.</th><th>Placa</th><th>Sup.</th></tr></thead><tbody>${(m.sitios || []).map(s => `<tr><td>${s.sitio}</td><td>${s.profundidad}</td><td>${s.recesion}</td><td>${Number(s.profundidad || 0)+Number(s.recesion || 0)}</td><td>${s.sangrado?'Sí':'No'}</td><td>${s.placa?'Sí':'No'}</td><td>${s.supuracion?'Sí':'No'}</td></tr>`).join('')}</tbody></table></div>`).join('')}` : '<p>Sin evaluaciones periodontales.</p>';
+  const consentimientosHtml = consentimientos.map(c => `<article class="registro"><h3>${esc(c.tipo)} · ${fecha(c.createdAt)}</h3><p>${esc(c.contenido)}</p><p><b>Odontólogo:</b> ${esc(c.doctor_nombre || [c.doctor?.nombre,c.doctor?.apellido].filter(Boolean).join(' '))}</p><small>${c.firmado ? `Firmado por ${esc(c.firmante_nombre || 'paciente')} · ${fecha(c.fecha_firma)}` : 'Pendiente de firma'}${c.integridad_valida === true ? ' · Integridad verificada' : ''}</small></article>`).join('');
+  const recetasHtml = recetas.map(r => `<article class="registro"><h3>Receta ${esc(r.folio || '')} · ${fecha(r.createdAt)}</h3><p><b>Odontólogo:</b> ${esc([r.doctor?.nombre,r.doctor?.apellido].filter(Boolean).join(' '))}</p><p><b>Diagnóstico:</b> ${esc(r.diagnostico)}</p><p><b>Medicamentos:</b> ${esc(r.medicamentos)}</p><p><b>Indicaciones:</b> ${esc(r.indicaciones)}</p></article>`).join('');
+
+  win.document.open();
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Expediente clínico - ${esc(paciente.nombre)} ${esc(paciente.apellido)}</title><style>@page{size:Letter;margin:11mm}body{font-family:Arial,sans-serif;color:#263248;font-size:10px;margin:0}.header{text-align:center;border-bottom:2px solid #c8a24a;padding-bottom:8px}.logo{width:60px}.header h1{color:#b58b23;margin:2px;font-size:18px}.paciente{margin:12px 0;padding:10px;background:#fffaf0;border-left:4px solid #c8a24a;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.seccion{page-break-before:auto;margin-top:18px}.seccion>h2{font-size:14px;color:#8a6a20;border-bottom:1px solid #c8a24a;padding-bottom:4px}.registro,.pieza{page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:6px;padding:8px;margin:7px 0}.registro h3{font-size:11px;color:#8a6a20;margin:0 0 5px}.registro p{margin:3px 0;white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin-top:5px;page-break-inside:avoid}th,td{border:1px solid #e5e7eb;padding:4px;text-align:left}th{background:#f8f4e8}.anexos{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:7px}.anexo{border:1px solid #eee;padding:5px;page-break-inside:avoid}.anexo img{width:100%;height:150px;object-fit:contain}.anexo small{display:block;color:#64748b;margin-top:3px}.pdf{height:45px;display:flex;align-items:center;justify-content:center;background:#fee2e2;color:#b91c1c;font-weight:bold}.footer{text-align:center;border-top:1px solid #ddd;margin-top:20px;padding-top:6px;color:#64748b;font-size:8px}</style></head><body>
+  <div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><div>Expediente clínico integral</div></div>
+  <div class="paciente"><div><b>Paciente:</b> ${esc(paciente.nombre)} ${esc(paciente.apellido)}</div><div><b>Número:</b> ${esc(paciente.dni)}</div><div><b>Edad:</b> ${edad !== null ? edad+' años' : '—'}</div><div><b>Teléfono:</b> ${esc(paciente.telefono || '—')}</div><div><b>Alergias:</b> ${esc(paciente.alergias || 'No referidas')}</div><div><b>Antecedentes:</b> ${esc(paciente.antecedentes_medicos || 'No referidos')}</div></div>
+  <section class="seccion"><h2>Historia clínica</h2>${historiaHtml || '<p>Sin notas clínicas.</p>'}</section>
+  <section class="seccion"><h2>Odontograma actual</h2><table><thead><tr><th>Pieza</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha</th></tr></thead><tbody>${odontogramaHtml || '<tr><td colspan="7">Sin registros.</td></tr>'}</tbody></table></section>
+  <section class="seccion"><h2>Último periodontograma</h2>${periodontalHtml}</section>
+  <section class="seccion"><h2>Consentimientos informados</h2>${consentimientosHtml || '<p>Sin consentimientos.</p>'}</section>
+  <section class="seccion"><h2>Recetas</h2>${recetasHtml || '<p>Sin recetas.</p>'}</section>
+  <div class="footer">Expediente generado ${new Date().toLocaleString('es-MX')} · ${historias.length} notas · ${odontograma.length} movimientos odontológicos · ${consentimientos.length} consentimientos · ${recetas.length} recetas</div></body></html>`);
+  win.document.close();
+  win.onload = () => setTimeout(() => { win.focus(); win.print(); }, 400);
+ };
+
  const imprimirHistoria = () => {
   const win = window.open('', '_blank', 'width=700,height=900');
   const registros = historias.map(h => {
@@ -1326,6 +1364,7 @@ window.onload = () => window.print();
                 <FiPrinter size={16} /> Imprimir Historia
               </button>
             )}
+            {puedeModificarClinico && <button onClick={imprimirExpedienteCompleto} className="btn-primary flex items-center gap-2"><FiFileText size={16} /> Expediente completo</button>}
           </div>
           {historias.length === 0 ? (
             <div className="card text-center text-gray-500">Sin registros en historia clínica</div>
