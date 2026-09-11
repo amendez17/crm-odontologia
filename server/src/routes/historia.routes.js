@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
-const { HistoriaClinica, ArchivoHistoria, Usuario, Cita } = require('../models');
+const { HistoriaClinica, ArchivoHistoria, Usuario, Cita, Paciente } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
@@ -194,6 +194,26 @@ router.get('/:pacienteId', auth, registrarActividad('consultar', 'expediente_cli
       return data;
     });
     res.json(respuesta);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/historia/:pacienteId/exportar
+// Deja constancia independiente de cada impresión o exportación del expediente.
+router.post('/:pacienteId/exportar', auth, registrarActividad('exportar', 'expediente_clinico', {
+  entidadId: req => req.params.pacienteId,
+  contexto: req => ({
+    paciente_id: Number(req.params.pacienteId),
+    formato: req.body?.formato === 'impresion_pdf' ? 'impresion_pdf' : 'impresion',
+    secciones: Array.isArray(req.body?.secciones) ? req.body.secciones.slice(0, 10) : [],
+    totales: req.body?.totales && typeof req.body.totales === 'object' ? req.body.totales : {}
+  })
+}), async (req, res) => {
+  try {
+    const paciente = await Paciente.findByPk(req.params.pacienteId, { attributes: ['id'] });
+    if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado.' });
+    res.json({ registrado: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
