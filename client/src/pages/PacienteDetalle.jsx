@@ -33,7 +33,7 @@ export default function PacienteDetalle() {
   const [consentimientos, setConsentimientos] = useState([]);
   const [plantillas, setPlantillas] = useState([]);
   const [modalConsentimiento, setModalConsentimiento] = useState(false);
-  const [formConsent, setFormConsent] = useState({ tipo: '', contenido: '' });
+  const [formConsent, setFormConsent] = useState({ doctor_id: '', tipo: '', contenido: '' });
   const [loading, setLoading] = useState(true);
   const [formReceta, setFormReceta] = useState({diagnostico: '',medicamentos: '', indicaciones: '' });
   const [modalReceta, setModalReceta] = useState(false);
@@ -213,7 +213,7 @@ useEffect(() => {
 
   const crearConsentimiento = async (e) => {e.preventDefault();
     try {
-      await api.post('/consentimiento', { paciente_id: parseInt(id), tipo: formConsent.tipo, contenido: formConsent.contenido });
+      await api.post('/consentimiento', { paciente_id: parseInt(id), doctor_id: formConsent.doctor_id, tipo: formConsent.tipo, contenido: formConsent.contenido });
       toast.success('Consentimiento creado');
       setModalConsentimiento(false);
       const { data } = await api.get(`/consentimiento/paciente/${id}`);
@@ -1322,9 +1322,9 @@ window.onload = () => window.print();
       {/* Tab Consentimientos */}
       {tab === 'consentimientos' && (
         <div className="space-y-4">
-          {puedeModificarClinico && <button onClick={() => { setFormConsent({ tipo: '', contenido: '' }); setModalConsentimiento(true); }} className="btn-primary flex items-center gap-2">
+          <button onClick={() => { setFormConsent({ doctor_id: usuario?.rol === 'doctor' ? String(usuario.id) : '', tipo: '', contenido: '' }); setModalConsentimiento(true); }} className="btn-primary flex items-center gap-2">
             <FiPlus size={16} /> Nuevo Consentimiento
-          </button>}
+          </button>
           {consentimientos.length === 0 ? (
             <div className="card text-center text-gray-500">No hay consentimientos registrados</div>
           ) : consentimientos.map(c => (
@@ -1357,12 +1357,20 @@ window.onload = () => window.print();
           <Modal isOpen={modalConsentimiento} onClose={() => setModalConsentimiento(false)} title="Nuevo Consentimiento Informado" size="lg">
             <form onSubmit={crearConsentimiento} className="space-y-4">
               <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Doctor responsable *</label>
+                <select value={formConsent.doctor_id} onChange={e => setFormConsent({ ...formConsent, doctor_id: e.target.value })} className="input-field" required disabled={usuario?.rol === 'doctor'}>
+                  <option value="">Seleccionar doctor...</option>
+                  {doctores.map(d => <option key={d.id} value={d.id}>Dr. {d.nombre} {d.apellido}{d.cedula ? ` · Cédula ${d.cedula}` : ''}</option>)}
+                </select>
+                {usuario?.rol === 'doctor' && <p className="text-xs text-surface-500 mt-1">El consentimiento quedará asignado a tu usuario.</p>}
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Plantilla</label>
                 <select
                   className="input-field"
                   onChange={e => {
                     const p = plantillas.find(pl => pl.tipo === e.target.value);
-                    if (p) setFormConsent({ tipo: p.tipo, contenido: p.contenido });
+                    if (p) setFormConsent(actual => ({ ...actual, tipo: p.tipo, contenido: p.contenido }));
                   }}
                 >
                   <option value="">Seleccionar plantilla...</option>

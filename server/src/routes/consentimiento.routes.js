@@ -226,7 +226,7 @@ Yo, el/la paciente abajo firmante, declaro que:
 };
 
 // GET /api/consentimiento/plantillas
-router.get('/plantillas', auth, esDoctor, (req, res) => {
+router.get('/plantillas', auth, (req, res) => {
   res.json(Object.keys(PLANTILLAS).map(tipo => ({ tipo, contenido: PLANTILLAS[tipo] })));
 });
 
@@ -238,7 +238,7 @@ router.get('/paciente/:pacienteId', auth, registrarActividad('consultar', 'conse
   try {
     const consentimientos = await Consentimiento.findAll({
       where: { paciente_id: req.params.pacienteId },
-      include: [{ model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] }],
+      include: [{ model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido', 'cedula'] }],
       order: [['createdAt', 'DESC']]
     });
     res.json(consentimientos);
@@ -248,14 +248,22 @@ router.get('/paciente/:pacienteId', auth, registrarActividad('consultar', 'conse
 });
 
 // POST /api/consentimiento
-router.post('/', auth, esDoctor, registrarActividad('crear', 'consentimiento'), async (req, res) => {
+router.post('/', auth, registrarActividad('crear', 'consentimiento', {
+  contexto: (req, respuesta) => ({ paciente_id: Number(req.body.paciente_id), doctor_id: Number(respuesta?.doctor_id || req.body.doctor_id) })
+}), async (req, res) => {
   try {
-    const { paciente_id, tipo, contenido } = req.body;
+    const { paciente_id, doctor_id, tipo, contenido } = req.body;
+    const doctorResponsableId = req.usuario.rol === 'doctor' ? req.usuario.id : Number(doctor_id);
+    const doctor = await Usuario.findOne({ where: { id: doctorResponsableId, rol: 'doctor', activo: true } });
+    if (!doctor) return res.status(400).json({ error: 'Selecciona un doctor activo responsable del consentimiento.' });
+    if (!tipo?.trim()) return res.status(400).json({ error: 'El tipo de consentimiento es obligatorio.' });
+    const texto = contenido || PLANTILLAS[tipo] || PLANTILLAS['Procedimiento general'];
+    if (!texto?.trim()) return res.status(400).json({ error: 'El contenido del consentimiento es obligatorio.' });
     const consentimiento = await Consentimiento.create({
       paciente_id,
-      doctor_id: req.usuario.id,
-      tipo,
-      contenido: contenido || PLANTILLAS[tipo] || PLANTILLAS['Procedimiento general']
+      doctor_id: doctor.id,
+      tipo: tipo.trim(),
+      contenido: texto
     });
     res.status(201).json(consentimiento);
   } catch (error) {
