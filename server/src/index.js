@@ -73,6 +73,7 @@ app.use('/api/citas', require('./routes/citas.routes'));
 app.use('/api/tratamientos', require('./routes/tratamientos.routes'));
 app.use('/api/presupuestos', require('./routes/presupuestos.routes'));
 app.use('/api/odontograma', require('./routes/odontograma.routes'));
+app.use('/api/periodontograma', require('./routes/periodontograma.routes'));
 app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/historia', require('./routes/historia.routes'));
 app.use('/api/dashboard', require('./routes/dashboard.routes'));

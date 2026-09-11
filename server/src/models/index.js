@@ -14,6 +14,7 @@ const Configuracion = require('./Configuracion');
 const Consentimiento = require('./Consentimiento');
 const LogActividad = require('./LogActividad');
 const Receta = require('./Receta')(sequelize, require('sequelize').DataTypes);
+const Periodontograma = require('./Periodontograma');
 
 // --- Asociaciones ---
 
@@ -67,6 +68,11 @@ ArchivoHistoria.belongsTo(HistoriaClinica, { foreignKey: 'historia_id', as: 'his
 Usuario.hasMany(ArchivoHistoria, { foreignKey: 'usuario_id', as: 'archivosHistoria' });
 ArchivoHistoria.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 
+Paciente.hasMany(Periodontograma, { foreignKey: 'paciente_id', as: 'periodontogramas' });
+Periodontograma.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+Usuario.hasMany(Periodontograma, { foreignKey: 'doctor_id', as: 'periodontogramas' });
+Periodontograma.belongsTo(Usuario, { foreignKey: 'doctor_id', as: 'doctor' });
+
 // Consentimientos
 Paciente.hasMany(Consentimiento, { foreignKey: 'paciente_id', as: 'consentimientos' });
 Consentimiento.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
@@ -112,5 +118,6 @@ module.exports = {
   Configuracion,
   Consentimiento,
   LogActividad,
-  Receta
+  Receta,
+  Periodontograma
 };

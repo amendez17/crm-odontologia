@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import Odontograma from '../components/Odontograma';
+import Periodontograma from '../components/Periodontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock, FiUploadCloud, FiImage, FiExternalLink } from 'react-icons/fi';
@@ -694,6 +695,7 @@ window.onload = () => window.print();
   { key: 'info', label: 'Información' },
   ...(puedeModificarClinico ? [
     { key: 'odontograma', label: 'Odontograma' },
+    { key: 'periodontograma', label: 'Periodontograma' },
     { key: 'recetas', label: 'Recetas' }
   ] : []),
   { key: 'historia', label: 'Historia Clínica' },
@@ -1245,6 +1247,10 @@ window.onload = () => window.print();
           <h3 className="font-semibold text-primary-900 mb-4">Odontograma Digital</h3>
           <Odontograma registros={odontograma} onPiezaClick={handleOdontograma} />
         </div>
+      )}
+
+      {tab === 'periodontograma' && (
+        <div className="card"><Periodontograma pacienteId={id} /></div>
       )}
 
       {/* Tab Historia */}
