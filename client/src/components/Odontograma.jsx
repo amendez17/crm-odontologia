@@ -139,7 +139,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     return (
   <g>
     {/* Tooth crown base */}
-    <rect x={cx-r} y={cy-r} width={r*2} height={r*2} rx={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} ry={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} fill={baseFill} stroke={baseStroke} strokeWidth="1.2"/>
+    <rect x={cx-r} y={cy-r} width={r*2} height={r*2} rx={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} ry={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} fill={dienteFill} stroke={dienteStroke} strokeWidth={dienteEstadoActivo ? '2' : '1.2'}/>
 
         {/* Top surface (vestibular) */}
         <path
