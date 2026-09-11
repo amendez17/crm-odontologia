@@ -1207,14 +1207,14 @@ window.onload = () => window.print();
 };
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <Link to="/pacientes" className="p-2.5 hover:bg-white/80 rounded-xl border border-surface-200 transition-all hover:shadow-sm"><FiArrowLeft size={20} className="text-surface-600" /></Link>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-primary-800">{paciente.nombre}, {paciente.apellido}</h1>
           <p className="text-surface-500">Número de paciente: {paciente.dni} {edad !== null && `| ${edad} años`}</p>
         </div>
         {balance && (
-          <div className={`text-right px-5 py-3 rounded-2xl ${balance.saldo > 0 ? 'bg-red-50 border border-red-200' : 'bg-dental-50 border border-dental-200'}`}>
+          <div className={`w-full text-left sm:w-auto sm:text-right px-5 py-3 rounded-2xl ${balance.saldo > 0 ? 'bg-red-50 border border-red-200' : 'bg-dental-50 border border-dental-200'}`}>
             <p className="text-xs text-surface-500">Saldo</p>
             <p className={`text-lg font-bold ${balance.saldo > 0 ? 'text-red-600' : 'text-dental-600'}`}>
               {balance.saldo > 0 ? `Debe: $${Number(balance.saldo).toLocaleString()}` : 'Al día'}
@@ -1249,12 +1249,12 @@ window.onload = () => window.print();
       })()}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-surface-100 p-1 rounded-2xl w-fit flex-wrap">
+      <div className="flex w-full gap-1 overflow-x-auto rounded-2xl bg-surface-100 p-1 sm:w-fit sm:flex-wrap">
         {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${tab === t.key ? 'bg-white text-primary-700 shadow-md' : 'text-surface-500 hover:text-primary-600'}`}
+            className={`shrink-0 px-3 sm:px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${tab === t.key ? 'bg-white text-primary-700 shadow-md' : 'text-surface-500 hover:text-primary-600'}`}
           >
             {t.label}
           </button>
@@ -2202,7 +2202,7 @@ window.onload = () => window.print();
           {/* Modal Pago */}
           <Modal isOpen={modalPago} onClose={() => setModalPago(false)} title="Registrar Pago">
             <form onSubmit={registrarPago} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-surface-600 mb-1">Monto *</label>
                   <input type="number" step="0.01" value={formPago.monto} onChange={e => setFormPago({ ...formPago, monto: e.target.value })} className="input-field" required />
@@ -2212,7 +2212,7 @@ window.onload = () => window.print();
                   <input type="date" value={formPago.fecha} onChange={e => setFormPago({ ...formPago, fecha: e.target.value })} className="input-field" required />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-surface-600 mb-1">Método *</label>
                   <select value={formPago.metodo_pago} onChange={e => setFormPago({ ...formPago, metodo_pago: e.target.value })} className="input-field" required>
@@ -2268,7 +2268,7 @@ window.onload = () => window.print();
                   {doctores.map(d => <option key={d.id} value={d.id}>Dr. {d.nombre} {d.apellido} - {d.especialidad || 'General'}</option>)}
                 </select>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-surface-600 mb-1">Fecha *</label>
                   <input type="date" value={formCita.fecha} onChange={e => setFormCita({ ...formCita, fecha: e.target.value })} className="input-field" required />
