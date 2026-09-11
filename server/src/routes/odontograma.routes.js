@@ -13,7 +13,7 @@ router.get('/:pacienteId', auth, esDoctor, registrarActividad('consultar', 'odon
     const registros = await Odontograma.findAll({
       where: { paciente_id: req.params.pacienteId },
       include: [{ model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] }],
-      order: [['fecha', 'DESC'], ['pieza_dental', 'ASC']]
+      order: [['createdAt', 'DESC'], ['id', 'DESC']]
     });
     res.json(registros);
   } catch (error) {
@@ -25,7 +25,11 @@ router.get('/:pacienteId', auth, esDoctor, registrarActividad('consultar', 'odon
 router.post('/', auth, esDoctor, registrarActividad('crear', 'odontograma'), async (req, res) => {
   try {
     const registro = await Odontograma.create({
-      ...req.body,
+      paciente_id: req.body.paciente_id,
+      pieza_dental: req.body.pieza_dental,
+      cara: req.body.cara || 'completa',
+      estado: req.body.estado || 'sano',
+      observacion: req.body.observacion || null,
       doctor_id: req.usuario.id
     });
     res.status(201).json(registro);
@@ -35,12 +39,22 @@ router.post('/', auth, esDoctor, registrarActividad('crear', 'odontograma'), asy
 });
 
 // PUT /api/odontograma/:id
+// Los cambios clínicos no sobrescriben el registro original: generan una nueva
+// versión para conservar la trazabilidad del expediente odontológico.
 router.put('/:id', auth, esDoctor, registrarActividad('actualizar', 'odontograma'), async (req, res) => {
   try {
     const registro = await Odontograma.findByPk(req.params.id);
     if (!registro) return res.status(404).json({ error: 'Registro no encontrado.' });
-    await registro.update(req.body);
-    res.json(registro);
+    const nuevaVersion = await Odontograma.create({
+      paciente_id: registro.paciente_id,
+      pieza_dental: registro.pieza_dental,
+      cara: req.body.cara || registro.cara,
+      estado: req.body.estado || registro.estado,
+      observacion: req.body.observacion ?? registro.observacion,
+      doctor_id: req.usuario.id,
+      fecha: new Date()
+    });
+    res.json(nuevaVersion);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
