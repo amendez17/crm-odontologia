@@ -26,6 +26,11 @@ const ESTADOS_POR_MODO = {
 
 const DIENTES_SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const DIENTES_INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const nombreCara = (cara, pieza) => {
+  if (cara === 'completa') return 'Diente completo';
+  if (cara === 'lingual') return Number(pieza) < 30 ? 'Palatina' : 'Lingual';
+  return cara.charAt(0).toUpperCase() + cara.slice(1);
+};
 
 // Tooth types by position for SVG rendering
 const TIPO_DIENTE = {
@@ -128,7 +133,9 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
 
     // Surface paths using diamond/cross pattern
     const topColor = getCaraColor('vestibular');
-    const bottomColor = getCaraColor(esInferior ? 'palatino' : 'lingual');
+    // Se almacena como "lingual" para mantener compatibilidad con el modelo;
+    // clínicamente se presenta como palatina en la arcada superior.
+    const bottomColor = getCaraColor('lingual');
     const leftColor = getCaraColor('mesial');
     const rightColor = getCaraColor('distal');
     const centerColor = getCaraColor('oclusal');
@@ -157,7 +164,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
           stroke={bottomColor ? bottomColor.stroke : baseStroke}
           strokeWidth={bottomColor ? '1.5' : '0.5'}
           className={!readOnly && !esAusente ? 'cursor-pointer hover:opacity-75' : ''}
-          onClick={(e) => handleCaraClick(esInferior ? 'palatino' : 'lingual', e)}
+          onClick={(e) => handleCaraClick('lingual', e)}
         />
 
         {/* Left surface (mesial) */}
@@ -457,7 +464,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
                 <div key={registro.id} className="p-3 text-xs">
                   <div className="flex flex-wrap justify-between gap-2">
                     <span className="font-semibold text-primary-900">
-                      Pieza {registro.pieza_dental} · {registro.cara === 'completa' ? 'Diente completo' : registro.cara} · {LABELS[registro.estado] || registro.estado}
+                      Pieza {registro.pieza_dental} · {nombreCara(registro.cara || 'completa', registro.pieza_dental)} · {LABELS[registro.estado] || registro.estado}
                     </span>
                     <span className="text-surface-500">{new Date(registro.createdAt || registro.fecha).toLocaleString('es-MX')}</span>
                   </div>
