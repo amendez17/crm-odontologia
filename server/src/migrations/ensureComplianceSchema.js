@@ -65,6 +65,19 @@ async function ensureComplianceSchema(sequelize) {
     if (!odontogramaTable[name]) await queryInterface.addColumn('odontograma', name, definition);
   }
 
+  const archivosTable = await queryInterface.describeTable('archivos_historia');
+  const archivoColumns = {
+    interpretacion: { type: DataTypes.TEXT, allowNull: true },
+    interpretado_por_id: { type: DataTypes.INTEGER, allowNull: true },
+    interpretado_por_nombre: { type: DataTypes.STRING(220), allowNull: true },
+    interpretado_por_cedula: { type: DataTypes.STRING(80), allowNull: true },
+    fecha_interpretacion: { type: DataTypes.DATE, allowNull: true },
+    interpretacion_hash: { type: DataTypes.STRING(64), allowNull: true }
+  };
+  for (const [name, definition] of Object.entries(archivoColumns)) {
+    if (!archivosTable[name]) await queryInterface.addColumn('archivos_historia', name, definition);
+  }
+
   const userTable = await queryInterface.describeTable('usuarios');
   if (!userTable.token_version) {
     await queryInterface.addColumn('usuarios', 'token_version', { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 });
