@@ -108,6 +108,35 @@ export default function Configuracion() {
           </div>
         </div>
 
+        <div className="card">
+          <h3 className="font-semibold text-primary-900 mb-2">Aviso de Privacidad</h3>
+          <p className="text-sm text-surface-500 mb-4">Estos datos se incorporan a la plantilla de autorización para el tratamiento de datos personales sensibles.</p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-surface-600 mb-1">Responsable del tratamiento de datos</label>
+              <input value={config.privacidad_responsable || ''} onChange={e => handleChange('privacidad_responsable', e.target.value)} className="input-field" disabled={!esAdmin} placeholder="Nombre o razón social" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Correo para derechos ARCO</label>
+                <input type="email" value={config.privacidad_email_arco || ''} onChange={e => handleChange('privacidad_email_arco', e.target.value)} className="input-field" disabled={!esAdmin} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Versión del aviso</label>
+                <input type="date" value={config.privacidad_version || ''} onChange={e => handleChange('privacidad_version', e.target.value)} className="input-field" disabled={!esAdmin} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-surface-600 mb-1">Domicilio para solicitudes ARCO</label>
+              <input value={config.privacidad_domicilio_arco || ''} onChange={e => handleChange('privacidad_domicilio_arco', e.target.value)} className="input-field" disabled={!esAdmin} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-surface-600 mb-1">Transferencias de datos previstas</label>
+              <textarea value={config.privacidad_transferencias || ''} onChange={e => handleChange('privacidad_transferencias', e.target.value)} className="input-field" rows={3} disabled={!esAdmin} />
+            </div>
+          </div>
+        </div>
+
         {/* Horarios */}
         <div className="card">
           <h3 className="font-semibold text-primary-900 mb-4">Horarios de Atención</h3>

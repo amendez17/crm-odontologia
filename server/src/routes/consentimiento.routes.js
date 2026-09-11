@@ -1,6 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
-const { Consentimiento, Paciente, Usuario } = require('../models');
+const { Consentimiento, Paciente, Usuario, Configuracion } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
@@ -229,9 +229,36 @@ Yo, el/la paciente abajo firmante, declaro que:
 5. Entiendo que pueden surgir situaciones imprevistas durante el procedimiento que requieran modificaciones al plan original.`
 };
 
+const cargarConfiguracion = async () => {
+  const filas = await Configuracion.findAll();
+  return Object.fromEntries(filas.map(fila => [fila.clave, fila.valor || '']));
+};
+
+const construirAvisoPrivacidad = config => `AVISO DE PRIVACIDAD Y AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES SENSIBLES
+
+Responsable: ${config.privacidad_responsable || config.clinica_nombre || '[PENDIENTE DE CONFIGURAR]'}.
+Domicilio: ${config.clinica_direccion || '[PENDIENTE DE CONFIGURAR]'}.
+
+Los datos personales y datos personales sensibles relativos a la salud serán utilizados para identificación, integración y conservación del expediente clínico, diagnóstico, tratamiento odontológico, seguimiento, gestión de citas, facturación, contacto y cumplimiento de obligaciones sanitarias y legales.
+
+El titular puede ejercer sus derechos de Acceso, Rectificación, Cancelación u Oposición (ARCO), así como revocar su consentimiento, mediante solicitud presentada en ${config.privacidad_domicilio_arco || '[PENDIENTE DE CONFIGURAR]'} o al correo ${config.privacidad_email_arco || '[PENDIENTE DE CONFIGURAR]'}. La solicitud deberá permitir acreditar la identidad del titular y describir el derecho que desea ejercer.
+
+Transferencias: ${config.privacidad_transferencias || 'No se realizarán transferencias distintas de las legalmente permitidas o necesarias para la atención médica.'}
+
+Los cambios a este aviso se comunicarán en el domicilio del responsable y por los medios de contacto registrados. Versión: ${config.privacidad_version || '[PENDIENTE DE CONFIGURAR]'}.
+
+Declaro que recibí y comprendí este aviso y autorizo expresamente el tratamiento de mis datos personales sensibles para las finalidades señaladas.`;
+
 // GET /api/consentimiento/plantillas
-router.get('/plantillas', auth, (req, res) => {
-  res.json(Object.keys(PLANTILLAS).map(tipo => ({ tipo, contenido: PLANTILLAS[tipo] })));
+router.get('/plantillas', auth, async (_req, res) => {
+  try {
+    const config = await cargarConfiguracion();
+    const plantillas = Object.keys(PLANTILLAS).map(tipo => ({ tipo, contenido: PLANTILLAS[tipo] }));
+    plantillas.unshift({ tipo: 'Aviso de privacidad y datos sensibles', contenido: construirAvisoPrivacidad(config) });
+    res.json(plantillas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // GET /api/consentimiento/paciente/:pacienteId
@@ -261,6 +288,17 @@ router.post('/', auth, registrarActividad('crear', 'consentimiento', {
     const doctor = await Usuario.findOne({ where: { id: doctorResponsableId, rol: 'doctor', activo: true } });
     if (!doctor) return res.status(400).json({ error: 'Selecciona un doctor activo responsable del consentimiento.' });
     if (!tipo?.trim()) return res.status(400).json({ error: 'El tipo de consentimiento es obligatorio.' });
+    if (tipo.trim() === 'Aviso de privacidad y datos sensibles') {
+      const config = await cargarConfiguracion();
+      const faltantes = [
+        ['privacidad_responsable', 'responsable del tratamiento'],
+        ['clinica_direccion', 'domicilio del responsable'],
+        ['privacidad_email_arco', 'correo para derechos ARCO'],
+        ['privacidad_domicilio_arco', 'domicilio para derechos ARCO'],
+        ['privacidad_version', 'versión del aviso']
+      ].filter(([clave]) => !config[clave]).map(([, etiqueta]) => etiqueta);
+      if (faltantes.length) return res.status(409).json({ error: `Completa en Configuración: ${faltantes.join(', ')}.` });
+    }
     const texto = contenido || PLANTILLAS[tipo] || PLANTILLAS['Procedimiento general'];
     if (!texto?.trim()) return res.status(400).json({ error: 'El contenido del consentimiento es obligatorio.' });
     const consentimiento = await Consentimiento.create({
