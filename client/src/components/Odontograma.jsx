@@ -257,11 +257,13 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   // Hidrata caras por diente desde registros del backend (cara !== 'completa')
   const carasPorDiente = useMemo(() => {
     const map = {};
-    registros.forEach(r => {
+    [...registros].sort((a, b) => b.id - a.id).forEach(r => {
       const cara = r.cara || 'completa';
       if (cara === 'completa') return;
       if (!map[r.pieza_dental]) map[r.pieza_dental] = {};
-      map[r.pieza_dental][cara] = r.estado;
+      // El API devuelve también versiones históricas. La primera por pieza/cara
+      // es la más reciente y no debe ser reemplazada por una versión anterior.
+      if (map[r.pieza_dental][cara] === undefined) map[r.pieza_dental][cara] = r.estado;
     });
     return map;
   }, [registros]);
