@@ -47,6 +47,13 @@ const firmarRegistro = data => crypto
   .update(contenidoFirma(data))
   .digest('hex');
 
+const firmarInterpretacion = data => crypto
+  .createHmac('sha256', process.env.EXPEDIENTE_SIGNING_SECRET || process.env.JWT_SECRET)
+  .update(JSON.stringify({ archivo_id: Number(data.id), historia_id: Number(data.historia_id), public_id: data.public_id,
+    interpretacion: data.interpretacion || '', interpretado_por_id: Number(data.interpretado_por_id),
+    fecha_interpretacion: new Date(data.fecha_interpretacion).toISOString() }))
+  .digest('hex');
+
 const validarNotaClinica = body => {
   if (!['inicial', 'subsecuente'].includes(body.tipo_nota)) return 'Selecciona si es primera consulta o consulta subsecuente.';
   if (!body.motivo_consulta?.trim()) return 'El motivo de consulta es obligatorio.';
@@ -180,6 +187,7 @@ router.get('/:pacienteId', auth, registrarActividad('consultar', 'expediente_cli
       data.integridad_valida = data.firma_hash ? firmarRegistro(data) === data.firma_hash : null;
       data.archivos = (data.archivos || []).map(archivo => ({
         ...archivo,
+        interpretacion_integridad_valida: archivo.interpretacion_hash ? firmarInterpretacion(archivo) === archivo.interpretacion_hash : null,
         url: urlTemporal(archivo),
         public_id: undefined
       }));
@@ -230,6 +238,29 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
     ));
     res.status(400).json({ error: error.message || 'No fue posible subir los archivos.' });
   }
+});
+
+// POST /api/historia/archivos/:archivoId/interpretacion
+router.post('/archivos/:archivoId/interpretacion', auth, esDoctor, registrarActividad('interpretar_archivo', 'archivo_historia', {
+  entidadId: req => req.params.archivoId
+}), async (req, res) => {
+  try {
+    const texto = req.body.interpretacion?.trim();
+    if (!texto || texto.length < 5) return res.status(400).json({ error: 'Escribe una interpretación clínica válida.' });
+    if (texto.length > 5000) return res.status(400).json({ error: 'La interpretación no puede superar 5000 caracteres.' });
+    const archivo = await ArchivoHistoria.findByPk(req.params.archivoId);
+    if (!archivo) return res.status(404).json({ error: 'Archivo no encontrado.' });
+    if (archivo.interpretacion) return res.status(409).json({ error: 'La interpretación original es inmutable. Registra una adenda para hacer aclaraciones.' });
+    const fecha = new Date(); fecha.setMilliseconds(0);
+    const datos = {
+      interpretacion: texto, interpretado_por_id: req.usuario.id,
+      interpretado_por_nombre: `${req.usuario.nombre} ${req.usuario.apellido}`.trim(),
+      interpretado_por_cedula: req.usuario.cedula || null, fecha_interpretacion: fecha
+    };
+    datos.interpretacion_hash = firmarInterpretacion({ ...archivo.toJSON(), ...datos });
+    await archivo.update(datos);
+    res.json({ mensaje: 'Interpretación clínica guardada.', id: archivo.id });
+  } catch (error) { res.status(400).json({ error: error.message }); }
 });
 
 // DELETE /api/historia/archivos/:archivoId
