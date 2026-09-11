@@ -17,6 +17,21 @@ const notaClinicaVacia = () => ({
   diagnostico: '', pronostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', indicaciones: '', notas: ''
 });
 
+const cuestionarioVacio = () => ({
+  heredofamiliares: [], patologicos: [], no_patologicos: [], odontologicos: [], habitos: [], sistemas: [],
+  detalle_heredofamiliares: '', detalle_patologicos: '', detalle_no_patologicos: '',
+  detalle_odontologicos: '', detalle_habitos: '', detalle_sistemas: ''
+});
+
+const opcionesAntecedentes = {
+  heredofamiliares: ['Diabetes', 'Hipertensión', 'Cardiopatías', 'Cáncer', 'Enfermedad renal'],
+  patologicos: ['Diabetes', 'Hipertensión', 'Cardiopatía', 'Anticoagulantes', 'Alergias', 'Cirugías', 'Hospitalizaciones', 'Embarazo'],
+  no_patologicos: ['Tabaquismo', 'Alcohol', 'Drogas', 'Dieta alta en azúcar'],
+  odontologicos: ['Tratamiento previo', 'Mala experiencia dental', 'Anestesia adversa', 'Sangrado prolongado'],
+  habitos: ['Bruxismo', 'Respiración bucal', 'Onicofagia', 'Morder objetos', 'Higiene deficiente'],
+  sistemas: ['Cardiovascular', 'Respiratorio', 'Digestivo', 'Neurológico', 'Endocrino', 'Hematológico']
+};
+
 export default function PacienteDetalle() {
   const { usuario } = useAuth();
   const puedeModificarClinico = ['administrador', 'doctor'].includes(usuario?.rol);
@@ -34,6 +49,7 @@ export default function PacienteDetalle() {
   const [modalCita, setModalCita] = useState(false);
   const [doctores, setDoctores] = useState([]);
   const [formHistoria, setFormHistoria] = useState(notaClinicaVacia);
+  const [cuestionario, setCuestionario] = useState(cuestionarioVacio);
   const [formAdenda, setFormAdenda] = useState({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
   const [archivosHistoria, setArchivosHistoria] = useState([]);
   const [subiendoArchivos, setSubiendoArchivos] = useState(null);
@@ -196,12 +212,26 @@ useEffect(() => {
   const guardarHistoria = async (e) => {
     e.preventDefault();
     try {
-      const { data: nuevaHistoria } = await api.post('/historia', { ...formHistoria, paciente_id: parseInt(id), fecha: new Date().toISOString().split('T')[0] });
+      const respuesta = (grupo, detalle) => {
+        const seleccion = cuestionario[grupo];
+        const texto = seleccion.length ? seleccion.join(', ') : 'Ninguno referido';
+        return cuestionario[detalle]?.trim() ? `${texto}. Detalles: ${cuestionario[detalle].trim()}` : texto;
+      };
+      const antecedentes = formHistoria.tipo_nota === 'inicial' ? {
+        antecedentes_heredofamiliares: respuesta('heredofamiliares', 'detalle_heredofamiliares'),
+        antecedentes_patologicos: respuesta('patologicos', 'detalle_patologicos'),
+        antecedentes_no_patologicos: respuesta('no_patologicos', 'detalle_no_patologicos'),
+        antecedentes_odontologicos: respuesta('odontologicos', 'detalle_odontologicos'),
+        habitos_orales: respuesta('habitos', 'detalle_habitos'),
+        interrogatorio_sistemas: respuesta('sistemas', 'detalle_sistemas')
+      } : {};
+      const { data: nuevaHistoria } = await api.post('/historia', { ...formHistoria, ...antecedentes, paciente_id: parseInt(id), fecha: new Date().toISOString().split('T')[0] });
       if (archivosHistoria.length) await subirAdjuntos(nuevaHistoria.id, archivosHistoria, false);
       toast.success(archivosHistoria.length ? 'Registro y archivos añadidos' : 'Registro añadido');
       setModalHistoria(false);
       setPasoHistoria(1);
       setFormHistoria(notaClinicaVacia());
+      setCuestionario(cuestionarioVacio());
       setArchivosHistoria([]);
       const { data } = await api.get(`/historia/${id}`);
       setHistorias(data);
@@ -214,6 +244,13 @@ useEffect(() => {
     if (pasoHistoria === 1 && formHistoria.tipo_nota === 'inicial' && !formHistoria.interrogatorio.trim()) return toast.error('Captura el padecimiento actual');
     if (pasoHistoria === 2 && formHistoria.tipo_nota === 'inicial' && !formHistoria.exploracion_intraoral.trim()) return toast.error('Captura la exploración intraoral');
     setPasoHistoria(paso => paso + 1);
+  };
+
+  const alternarAntecedente = (grupo, opcion) => {
+    setCuestionario(actual => ({
+      ...actual,
+      [grupo]: actual[grupo].includes(opcion) ? actual[grupo].filter(item => item !== opcion) : [...actual[grupo], opcion]
+    }));
   };
 
   const guardarAdenda = async (e) => {
@@ -1214,7 +1251,7 @@ window.onload = () => window.print();
       {tab === 'historia' && (
         <div className="space-y-4">
           <div className="flex gap-2">
-            {puedeModificarClinico && <button onClick={() => { setFormHistoria({ ...notaClinicaVacia(), tipo_nota: historias.length === 0 ? 'inicial' : 'subsecuente' }); setPasoHistoria(1); setModalHistoria(true); }} className="btn-primary flex items-center gap-2">
+            {puedeModificarClinico && <button onClick={() => { setFormHistoria({ ...notaClinicaVacia(), tipo_nota: historias.length === 0 ? 'inicial' : 'subsecuente' }); setCuestionario(cuestionarioVacio()); setPasoHistoria(1); setModalHistoria(true); }} className="btn-primary flex items-center gap-2">
               <FiPlus size={16} /> Nuevo Registro
             </button>}
             {historias.length > 0 && (
@@ -1323,13 +1360,23 @@ window.onload = () => window.print();
               {formHistoria.tipo_nota === 'inicial' && pasoHistoria === 2 && <>
               <fieldset className="border border-surface-200 rounded-xl p-4 space-y-3">
                 <legend className="px-2 text-sm font-semibold text-primary-700">Antecedentes de primera consulta</legend>
-                <button type="button" onClick={() => setFormHistoria({ ...formHistoria, antecedentes_heredofamiliares: 'Negados por el paciente.', antecedentes_patologicos: 'Negados por el paciente.', antecedentes_no_patologicos: 'Sin antecedentes relevantes referidos.', antecedentes_odontologicos: 'Sin antecedentes odontológicos relevantes referidos.', habitos_orales: 'Sin hábitos orales de riesgo referidos.', interrogatorio_sistemas: 'Sin datos positivos referidos.' })} className="text-xs font-medium text-primary-600">Marcar antecedentes sin datos relevantes</button>
-                <textarea value={formHistoria.antecedentes_heredofamiliares} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_heredofamiliares: e.target.value })} className="input-field" rows={2} placeholder="Heredofamiliares: diabetes, hipertensión, cáncer u otros" />
-                <textarea value={formHistoria.antecedentes_patologicos} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_patologicos: e.target.value })} className="input-field" rows={2} placeholder="Patológicos: enfermedades, cirugías, hospitalizaciones y transfusiones" />
-                <textarea value={formHistoria.antecedentes_no_patologicos} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_no_patologicos: e.target.value })} className="input-field" rows={2} placeholder="No patológicos: tabaco, alcohol, alimentación e higiene" />
-                <textarea value={formHistoria.antecedentes_odontologicos} onChange={e => setFormHistoria({ ...formHistoria, antecedentes_odontologicos: e.target.value })} className="input-field" rows={2} placeholder="Odontológicos: última consulta, tratamientos y experiencias previas" />
-                <textarea value={formHistoria.habitos_orales} onChange={e => setFormHistoria({ ...formHistoria, habitos_orales: e.target.value })} className="input-field" rows={2} placeholder="Hábitos: cepillado, hilo dental, bruxismo, respiración bucal u otros" />
-                <textarea value={formHistoria.interrogatorio_sistemas} onChange={e => setFormHistoria({ ...formHistoria, interrogatorio_sistemas: e.target.value })} className="input-field" rows={2} placeholder="Interrogatorio por aparatos y sistemas" />
+                {[
+                  ['heredofamiliares', 'Heredofamiliares', 'detalle_heredofamiliares'],
+                  ['patologicos', 'Personales patológicos', 'detalle_patologicos'],
+                  ['no_patologicos', 'Personales no patológicos', 'detalle_no_patologicos'],
+                  ['odontologicos', 'Antecedentes odontológicos', 'detalle_odontologicos'],
+                  ['habitos', 'Hábitos orales', 'detalle_habitos'],
+                  ['sistemas', 'Datos positivos por aparatos y sistemas', 'detalle_sistemas']
+                ].map(([grupo, titulo, detalle]) => <div key={grupo} className="rounded-xl bg-surface-50 p-3">
+                  <p className="text-sm font-medium text-primary-900 mb-2">{titulo}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {opcionesAntecedentes[grupo].map(opcion => <label key={opcion} className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-xs ${cuestionario[grupo].includes(opcion) ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200 bg-white text-surface-600'}`}>
+                      <input type="checkbox" checked={cuestionario[grupo].includes(opcion)} onChange={() => alternarAntecedente(grupo, opcion)} /> {opcion}
+                    </label>)}
+                  </div>
+                  {(cuestionario[grupo].length > 0 || cuestionario[detalle]) && <textarea value={cuestionario[detalle]} onChange={e => setCuestionario({ ...cuestionario, [detalle]: e.target.value })} className="input-field mt-3" rows={2} placeholder="Detalles, fechas, tratamiento o información adicional" />}
+                </div>)}
+                <p className="text-xs text-surface-500">Las categorías sin seleccionar se guardarán como “Ninguno referido”.</p>
               </fieldset>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
