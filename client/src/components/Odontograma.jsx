@@ -19,6 +19,11 @@ const LABELS = {
   protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura'
 };
 
+const ESTADOS_POR_MODO = {
+  diente: ['sano', 'corona', 'extraccion', 'endodoncia', 'implante', 'protesis', 'ausente'],
+  cara: ['sano', 'caries', 'obturacion', 'fractura']
+};
+
 const DIENTES_SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const DIENTES_INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 
@@ -249,7 +254,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
 }
 
 export default function Odontograma({ registros = [], onPiezaClick, readOnly = false }) {
-  const [estadoSeleccionado, setEstadoSeleccionado] = useState('caries');
+  const [estadoSeleccionado, setEstadoSeleccionado] = useState('corona');
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
   const [observacion, setObservacion] = useState('');
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
@@ -291,6 +296,11 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     onPiezaClick?.(numero, { estado: nuevoEstado, cara, observacion: observacion.trim() || null });
   };
 
+  const cambiarModo = modo => {
+    setModoAplicacion(modo);
+    setEstadoSeleccionado(modo === 'diente' ? 'corona' : 'caries');
+  };
+
   return (
     <div className="space-y-5">
       {!readOnly && (
@@ -300,13 +310,13 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
             <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Modo:</span>
             <div className="flex bg-surface-100 rounded-xl p-0.5">
               <button
-                onClick={() => setModoAplicacion('diente')}
+                onClick={() => cambiarModo('diente')}
                 className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${modoAplicacion === 'diente' ? 'bg-white text-primary-700 shadow-sm' : 'text-surface-500'}`}
               >
                 Diente completo
               </button>
               <button
-                onClick={() => setModoAplicacion('cara')}
+                onClick={() => cambiarModo('cara')}
                 className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${modoAplicacion === 'cara' ? 'bg-white text-primary-700 shadow-sm' : 'text-surface-500'}`}
               >
                 Por cara
@@ -316,7 +326,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
 
           {/* Estado selector */}
           <div className="flex flex-wrap gap-1.5">
-            {Object.entries(LABELS).map(([key, label]) => (
+            {ESTADOS_POR_MODO[modoAplicacion].map(key => (
               <button
                 key={key}
                 onClick={() => setEstadoSeleccionado(key)}
@@ -332,7 +342,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
                 } : {}}
               >
                 <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: COLORES[key].stroke }} />
-                {label}
+                {LABELS[key]}
               </button>
             ))}
           </div>
