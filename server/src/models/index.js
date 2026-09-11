@@ -10,6 +10,7 @@ const Odontograma = require('./Odontograma');
 const Pago = require('./Pago');
 const HistoriaClinica = require('./HistoriaClinica');
 const ArchivoHistoria = require('./ArchivoHistoria');
+const ArchivoInterpretacion = require('./ArchivoInterpretacion');
 const Configuracion = require('./Configuracion');
 const Consentimiento = require('./Consentimiento');
 const LogActividad = require('./LogActividad');
@@ -67,6 +68,10 @@ HistoriaClinica.hasMany(ArchivoHistoria, { foreignKey: 'historia_id', as: 'archi
 ArchivoHistoria.belongsTo(HistoriaClinica, { foreignKey: 'historia_id', as: 'historia' });
 Usuario.hasMany(ArchivoHistoria, { foreignKey: 'usuario_id', as: 'archivosHistoria' });
 ArchivoHistoria.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+ArchivoHistoria.hasMany(ArchivoInterpretacion, { foreignKey: 'archivo_id', as: 'interpretaciones', onDelete: 'CASCADE' });
+ArchivoInterpretacion.belongsTo(ArchivoHistoria, { foreignKey: 'archivo_id', as: 'archivo' });
+Usuario.hasMany(ArchivoInterpretacion, { foreignKey: 'usuario_id', as: 'interpretacionesArchivos' });
+ArchivoInterpretacion.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 
 Paciente.hasMany(Periodontograma, { foreignKey: 'paciente_id', as: 'periodontogramas' });
 Periodontograma.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
@@ -115,6 +120,7 @@ module.exports = {
   Pago,
   HistoriaClinica,
   ArchivoHistoria,
+  ArchivoInterpretacion,
   Configuracion,
   Consentimiento,
   LogActividad,
