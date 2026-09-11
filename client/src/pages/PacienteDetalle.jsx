@@ -437,12 +437,13 @@ win.onload = () => {
   if (!win) return toast.error('Permite las ventanas emergentes para imprimir');
   const nombresEstado = { sano: 'Sano', caries: 'Caries', obturacion: 'Obturación', corona: 'Corona', extraccion: 'Extracción', endodoncia: 'Endodoncia', implante: 'Implante', protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura' };
   const nombresTipoOdontograma = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
-  const nombreCara = registro => registro.cara === 'completa' ? 'Diente completo' : registro.cara === 'lingual' ? (Number(registro.pieza_dental) < 30 ? 'Palatina' : 'Lingual') : `${registro.cara.charAt(0).toUpperCase()}${registro.cara.slice(1)}`;
+  const nombreCara = registro => registro.cara === 'completa' ? 'Diente completo' : registro.cara === 'lingual' ? ([1, 2, 5, 6].includes(Math.floor(Number(registro.pieza_dental) / 10)) ? 'Palatina' : 'Lingual') : `${registro.cara.charAt(0).toUpperCase()}${registro.cara.slice(1)}`;
   const actuales = [...odontograma]
     .sort((a, b) => b.id - a.id)
     .filter((registro, indice, lista) => indice === lista.findIndex(item => item.pieza_dental === registro.pieza_dental && (item.cara || 'completa') === (registro.cara || 'completa') && (item.tipo_registro || 'hallazgo') === (registro.tipo_registro || 'hallazgo')));
   const filas = actuales.map(registro => `<tr>
     <td>${registro.pieza_dental}</td>
+    <td>${Number(registro.pieza_dental) >= 51 ? 'Temporal' : 'Permanente'}</td>
     <td>${nombreCara(registro)}</td>
     <td>${nombresTipoOdontograma[registro.tipo_registro || 'hallazgo']}</td>
     <td>${nombresEstado[registro.estado] || registro.estado}</td>
@@ -456,7 +457,7 @@ win.onload = () => {
     <div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><p>Odontograma clínico</p></div>
     <div class="paciente"><span><b>Paciente:</b> ${paciente.nombre} ${paciente.apellido}</span><span><b>Número:</b> ${paciente.dni || '—'}</span><span><b>Edad:</b> ${edad !== null ? `${edad} años` : '—'}</span></div>
     <p class="resumen"><b>Estado actual:</b> ${actuales.length} hallazgos registrados. El historial electrónico conserva ${odontograma.length} movimientos.</p>
-    <table><thead><tr><th>Pieza</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha y hora</th></tr></thead><tbody>${filas || '<tr><td colspan="7" style="text-align:center">Sin registros odontológicos</td></tr>'}</tbody></table>
+    <table><thead><tr><th>Pieza</th><th>Dentición</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha y hora</th></tr></thead><tbody>${filas || '<tr><td colspan="8" style="text-align:center">Sin registros odontológicos</td></tr>'}</tbody></table>
     <div class="firma"><div>Nombre, firma y cédula del odontólogo</div></div>
     <div class="footer">Documento generado desde el expediente clínico · ${new Date().toLocaleString('es-MX')}</div>
   </body></html>`);
@@ -491,7 +492,7 @@ win.onload = () => {
   const nombresEstado = { sano: 'Sano', caries: 'Caries', obturacion: 'Obturación', corona: 'Corona', extraccion: 'Extracción', endodoncia: 'Endodoncia', implante: 'Implante', protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura' };
   const nombresTipo = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
   const odontogramaActual = [...odontograma].sort((a, b) => b.id - a.id).filter((r, i, lista) => i === lista.findIndex(x => x.pieza_dental === r.pieza_dental && (x.cara || 'completa') === (r.cara || 'completa') && (x.tipo_registro || 'hallazgo') === (r.tipo_registro || 'hallazgo')));
-  const odontogramaHtml = odontogramaActual.map(r => `<tr><td>${r.pieza_dental}</td><td>${esc(r.cara === 'completa' ? 'Diente completo' : r.cara)}</td><td>${esc(nombresTipo[r.tipo_registro || 'hallazgo'])}</td><td>${esc(nombresEstado[r.estado] || r.estado)}</td><td>${esc(r.observacion || '—')}</td><td>${esc(r.doctor_nombre || [r.doctor?.nombre, r.doctor?.apellido].filter(Boolean).join(' ') || '—')}</td><td>${fecha(r.fecha_hora || r.createdAt || r.fecha)}</td></tr>`).join('');
+  const odontogramaHtml = odontogramaActual.map(r => `<tr><td>${r.pieza_dental}</td><td>${Number(r.pieza_dental) >= 51 ? 'Temporal' : 'Permanente'}</td><td>${esc(r.cara === 'completa' ? 'Diente completo' : r.cara)}</td><td>${esc(nombresTipo[r.tipo_registro || 'hallazgo'])}</td><td>${esc(nombresEstado[r.estado] || r.estado)}</td><td>${esc(r.observacion || '—')}</td><td>${esc(r.doctor_nombre || [r.doctor?.nombre, r.doctor?.apellido].filter(Boolean).join(' ') || '—')}</td><td>${fecha(r.fecha_hora || r.createdAt || r.fecha)}</td></tr>`).join('');
 
   const historiaHtml = historias.map(h => `<article class="registro"><h3>${fecha(h.fecha_hora || h.fecha)} · Dr. ${esc(h.doctor_nombre || [h.doctor?.nombre, h.doctor?.apellido].filter(Boolean).join(' '))}${h.es_adenda ? ' · ADENDA' : ''}</h3>
     ${[['Motivo',h.motivo_consulta],['Interrogatorio',h.interrogatorio],['Antecedentes heredofamiliares',h.antecedentes_heredofamiliares],['Antecedentes patológicos',h.antecedentes_patologicos],['Antecedentes no patológicos',h.antecedentes_no_patologicos],['Antecedentes odontológicos',h.antecedentes_odontologicos],['Hábitos',h.habitos_orales],['Exploración extraoral',h.exploracion_extraoral],['Exploración intraoral',h.exploracion_intraoral],['Diagnóstico',h.diagnostico],['Pronóstico',h.pronostico],['Tratamiento realizado',h.tratamiento_realizado],['Piezas',h.piezas_tratadas],['Plan',h.receta],['Indicaciones',h.indicaciones],['Notas',h.notas],['Motivo de adenda',h.motivo_adenda]].filter(([,v]) => v).map(([k,v]) => `<p><b>${k}:</b> ${esc(v)}</p>`).join('')}
@@ -508,7 +509,7 @@ win.onload = () => {
   <div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><div>Expediente clínico integral</div><small><b>Folio:</b> ${esc(folioExportacion)} · Generado por ${esc(responsable)} (${esc(usuario?.rol || 'usuario')}) · ${fecha(fechaGeneracion)}</small></div>
   <div class="paciente"><div><b>Paciente:</b> ${esc(paciente.nombre)} ${esc(paciente.apellido)}</div><div><b>Número:</b> ${esc(paciente.dni)}</div><div><b>Edad:</b> ${edad !== null ? edad+' años' : '—'}</div><div><b>Teléfono:</b> ${esc(paciente.telefono || '—')}</div><div><b>Alergias:</b> ${esc(paciente.alergias || 'No referidas')}</div><div><b>Antecedentes:</b> ${esc(paciente.antecedentes_medicos || 'No referidos')}</div></div>
   <section class="seccion"><h2>Historia clínica</h2>${historiaHtml || '<p>Sin notas clínicas.</p>'}</section>
-  <section class="seccion"><h2>Odontograma actual</h2><table><thead><tr><th>Pieza</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha</th></tr></thead><tbody>${odontogramaHtml || '<tr><td colspan="7">Sin registros.</td></tr>'}</tbody></table></section>
+  <section class="seccion"><h2>Odontograma actual</h2><table><thead><tr><th>Pieza</th><th>Dentición</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha</th></tr></thead><tbody>${odontogramaHtml || '<tr><td colspan="8">Sin registros.</td></tr>'}</tbody></table></section>
   <section class="seccion"><h2>Último periodontograma</h2>${periodontalHtml}</section>
   <section class="seccion"><h2>Consentimientos informados</h2>${consentimientosHtml || '<p>Sin consentimientos.</p>'}</section>
   <section class="seccion"><h2>Recetas</h2>${recetasHtml || '<p>Sin recetas.</p>'}</section>
@@ -1381,7 +1382,7 @@ window.onload = () => window.print();
               <FiPrinter size={16} /> Imprimir odontograma
             </button>
           </div>
-          <Odontograma registros={odontograma} onPiezaClick={handleOdontograma} />
+          <Odontograma registros={odontograma} onPiezaClick={handleOdontograma} edad={edad} />
         </div>
       )}
 
