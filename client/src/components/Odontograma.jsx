@@ -31,9 +31,11 @@ const TIPOS_REGISTRO = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indic
 
 const DIENTES_SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const DIENTES_INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const DIENTES_TEMPORALES_SUPERIOR = [55,54,53,52,51,61,62,63,64,65];
+const DIENTES_TEMPORALES_INFERIOR = [85,84,83,82,81,71,72,73,74,75];
 const nombreCara = (cara, pieza) => {
   if (cara === 'completa') return 'Diente completo';
-  if (cara === 'lingual') return Number(pieza) < 30 ? 'Palatina' : 'Lingual';
+  if (cara === 'lingual') return [1, 2, 5, 6].includes(Math.floor(Number(pieza) / 10)) ? 'Palatina' : 'Lingual';
   return cara.charAt(0).toUpperCase() + cara.slice(1);
 };
 
@@ -49,7 +51,11 @@ const TIPO_DIENTE = {
   13:'canino',23:'canino',43:'canino',33:'canino',
   // Incisors
   12:'incisivo',11:'incisivo',21:'incisivo',22:'incisivo',
-  42:'incisivo',41:'incisivo',31:'incisivo',32:'incisivo'
+  42:'incisivo',41:'incisivo',31:'incisivo',32:'incisivo',
+  // Dentición temporal
+  55:'molar',54:'molar',65:'molar',64:'molar',85:'molar',84:'molar',75:'molar',74:'molar',
+  53:'canino',63:'canino',83:'canino',73:'canino',
+  52:'incisivo',51:'incisivo',61:'incisivo',62:'incisivo',82:'incisivo',81:'incisivo',71:'incisivo',72:'incisivo'
 };
 
 // SVG tooth with 5 clickable surfaces
@@ -248,7 +254,8 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
   );
 }
 
-export default function Odontograma({ registros = [], onPiezaClick, readOnly = false }) {
+export default function Odontograma({ registros = [], onPiezaClick, readOnly = false, edad = null }) {
+  const [denticion, setDenticion] = useState(edad !== null && edad <= 5 ? 'temporal' : edad !== null && edad <= 12 ? 'mixta' : 'permanente');
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('corona');
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
   const [tipoRegistro, setTipoRegistro] = useState('hallazgo');
@@ -256,6 +263,11 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [cambioPendiente, setCambioPendiente] = useState(null);
   const [filtroPieza, setFiltroPieza] = useState('todas');
+  const tieneRegistrosTemporales = registros.some(registro => Number(registro.pieza_dental) >= 51);
+
+  useEffect(() => {
+    if (tieneRegistrosTemporales) setDenticion('mixta');
+  }, [tieneRegistrosTemporales]);
 
   // Hidrata caras por diente desde registros del backend (cara !== 'completa')
   const carasPorDiente = useMemo(() => {
@@ -330,9 +342,24 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     setCambioPendiente(null);
   };
   const cambioSinVariacion = cambioPendiente && cambioPendiente.estadoAnterior === cambioPendiente.estado && !cambioPendiente.observacion;
+  const gruposDenticion = denticion === 'permanente'
+    ? [{ key: 'permanente', label: 'Dentición permanente', superior: DIENTES_SUPERIOR, inferior: DIENTES_INFERIOR }]
+    : denticion === 'temporal'
+      ? [{ key: 'temporal', label: 'Dentición temporal', superior: DIENTES_TEMPORALES_SUPERIOR, inferior: DIENTES_TEMPORALES_INFERIOR }]
+      : [
+          { key: 'permanente', label: 'Dentición permanente', superior: DIENTES_SUPERIOR, inferior: DIENTES_INFERIOR },
+          { key: 'temporal', label: 'Dentición temporal', superior: DIENTES_TEMPORALES_SUPERIOR, inferior: DIENTES_TEMPORALES_INFERIOR }
+        ];
 
   return (
     <div className="space-y-5">
+      <div>
+        <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Dentición:</span>
+        <div className="mt-2 grid grid-cols-3 gap-2 rounded-xl bg-surface-100 p-1">
+          {[['permanente', 'Permanente'], ['temporal', 'Temporal'], ['mixta', 'Mixta']].map(([key, label]) => <button key={key} type="button" onClick={() => { setDenticion(key); setCambioPendiente(null); }} className={`rounded-lg px-2 py-2 text-xs font-semibold transition-all ${denticion === key ? 'bg-white text-primary-700 shadow-sm' : 'text-surface-500'}`}>{label}</button>)}
+        </div>
+        {edad !== null && edad <= 12 && <p className="mt-1 text-xs text-surface-500">Vista sugerida según la edad del paciente: {edad <= 5 ? 'temporal' : 'mixta'}.</p>}
+      </div>
       {!readOnly && (
         <div className="space-y-3">
           <div>
@@ -396,71 +423,51 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
       )}
 
       {/* Dental chart */}
-      <div className="bg-gradient-to-b from-surface-50 to-white rounded-2xl p-5 border border-surface-200">
-        {/* Superior arch */}
-        <div className="mb-1">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="h-px flex-1 bg-surface-200" />
-            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Superior</span>
-            <div className="h-px flex-1 bg-surface-200" />
-          </div>
-          <div className="overflow-x-auto pb-2">
-            <div className="flex w-max min-w-full justify-start gap-0 sm:justify-center">
-            {DIENTES_SUPERIOR.map((num, i) => (
-              <div key={num} className="flex items-end">
-                <DienteGrafico
-                  numero={num}
-                  estado={getEstadoPieza(num)}
-                  caras={carasPorDiente[num]}
-                  estadoSeleccionado={estadoSeleccionado}
-                  onCaraClick={handleCaraClick}
-                  onDienteClick={handleDienteClick}
-                  readOnly={readOnly}
-                  esInferior={false}
-                />
-                {i === 7 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
+      <div className="space-y-4">
+        {gruposDenticion.map(grupo => <div key={grupo.key} className="bg-gradient-to-b from-surface-50 to-white rounded-2xl p-3 sm:p-5 border border-surface-200">
+          {denticion === 'mixta' && <p className="mb-3 text-center text-xs font-bold uppercase tracking-wider text-primary-700">{grupo.label}</p>}
+          <div className="mb-1">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="h-px flex-1 bg-surface-200" />
+              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Superior</span>
+              <div className="h-px flex-1 bg-surface-200" />
+            </div>
+            <div className="overflow-x-auto pb-2">
+              <div className="flex w-max min-w-full justify-start gap-0 sm:justify-center">
+              {grupo.superior.map((num, i) => (
+                <div key={num} className="flex items-end">
+                  <DienteGrafico numero={num} estado={getEstadoPieza(num)} caras={carasPorDiente[num]} estadoSeleccionado={estadoSeleccionado} onCaraClick={handleCaraClick} onDienteClick={handleDienteClick} readOnly={readOnly} esInferior={false} />
+                  {i === Math.floor(grupo.superior.length / 2) - 1 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
+                </div>
+              ))}
               </div>
-            ))}
             </div>
           </div>
-        </div>
 
-        {/* Divider - midline */}
-        <div className="flex items-center my-3">
-          <div className="flex-1 border-t-2 border-surface-300 border-dashed" />
-          <div className="mx-3 w-8 h-8 rounded-full bg-primary-50 border-2 border-primary-200 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-primary-400">L.M</span>
+          <div className="flex items-center my-3">
+            <div className="flex-1 border-t-2 border-surface-300 border-dashed" />
+            <div className="mx-3 w-8 h-8 rounded-full bg-primary-50 border-2 border-primary-200 flex items-center justify-center"><span className="text-[10px] font-bold text-primary-400">L.M</span></div>
+            <div className="flex-1 border-t-2 border-surface-300 border-dashed" />
           </div>
-          <div className="flex-1 border-t-2 border-surface-300 border-dashed" />
-        </div>
 
-        {/* Inferior arch */}
-        <div className="mt-1">
-          <div className="overflow-x-auto pt-2">
-            <div className="flex w-max min-w-full justify-start gap-0 sm:justify-center">
-            {DIENTES_INFERIOR.map((num, i) => (
-              <div key={num} className="flex items-start">
-                <DienteGrafico
-                  numero={num}
-                  estado={getEstadoPieza(num)}
-                  caras={carasPorDiente[num]}
-                  estadoSeleccionado={estadoSeleccionado}
-                  onCaraClick={handleCaraClick}
-                  onDienteClick={handleDienteClick}
-                  readOnly={readOnly}
-                  esInferior={true}
-                />
-                {i === 7 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
+          <div className="mt-1">
+            <div className="overflow-x-auto pt-2">
+              <div className="flex w-max min-w-full justify-start gap-0 sm:justify-center">
+              {grupo.inferior.map((num, i) => (
+                <div key={num} className="flex items-start">
+                  <DienteGrafico numero={num} estado={getEstadoPieza(num)} caras={carasPorDiente[num]} estadoSeleccionado={estadoSeleccionado} onCaraClick={handleCaraClick} onDienteClick={handleDienteClick} readOnly={readOnly} esInferior={true} />
+                  {i === Math.floor(grupo.inferior.length / 2) - 1 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
+                </div>
+              ))}
               </div>
-            ))}
+            </div>
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <div className="h-px flex-1 bg-surface-200" />
+              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Inferior</span>
+              <div className="h-px flex-1 bg-surface-200" />
             </div>
           </div>
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <div className="h-px flex-1 bg-surface-200" />
-            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Inferior</span>
-            <div className="h-px flex-1 bg-surface-200" />
-          </div>
-        </div>
+        </div>)}
       </div>
 
       {cambioPendiente && !readOnly && (
