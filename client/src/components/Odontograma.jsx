@@ -251,6 +251,8 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
 export default function Odontograma({ registros = [], onPiezaClick, readOnly = false }) {
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('caries');
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
+  const [observacion, setObservacion] = useState('');
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
 
   // Hidrata caras por diente desde registros del backend (cara !== 'completa')
   const carasPorDiente = useMemo(() => {
@@ -275,7 +277,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const handleDienteClick = (numero) => {
     if (readOnly) return;
     if (modoAplicacion === 'diente') {
-      onPiezaClick?.(numero, { estado: estadoSeleccionado, cara: 'completa' });
+      onPiezaClick?.(numero, { estado: estadoSeleccionado, cara: 'completa', observacion: observacion.trim() || null });
     }
   };
 
@@ -284,7 +286,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     const actual = carasPorDiente[numero]?.[cara];
     const nuevoEstado = actual === estado ? 'sano' : estado;
     // Envía un registro por (pieza + cara) — coincide con el modelo Sequelize
-    onPiezaClick?.(numero, { estado: nuevoEstado, cara });
+    onPiezaClick?.(numero, { estado: nuevoEstado, cara, observacion: observacion.trim() || null });
   };
 
   return (
@@ -332,6 +334,16 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
               </button>
             ))}
           </div>
+          <label className="block text-xs font-medium text-surface-600">
+            Observación clínica del cambio (opcional)
+            <input
+              value={observacion}
+              onChange={e => setObservacion(e.target.value)}
+              className="input-field mt-1"
+              placeholder="Ej. caries activa, restauración filtrada, pieza indicada para extracción"
+              maxLength={1000}
+            />
+          </label>
         </div>
       )}
 
@@ -421,6 +433,30 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
           </div>
         ))}
       </div>
+
+      {registros.length > 0 && (
+        <div className="border-t border-surface-200 pt-4">
+          <button type="button" onClick={() => setMostrarHistorial(actual => !actual)} className="text-sm font-semibold text-primary-700">
+            {mostrarHistorial ? 'Ocultar historial' : `Ver historial clínico (${registros.length})`}
+          </button>
+          {mostrarHistorial && (
+            <div className="mt-3 max-h-80 overflow-auto rounded-xl border border-surface-200 divide-y divide-surface-100">
+              {registros.map(registro => (
+                <div key={registro.id} className="p-3 text-xs">
+                  <div className="flex flex-wrap justify-between gap-2">
+                    <span className="font-semibold text-primary-900">
+                      Pieza {registro.pieza_dental} · {registro.cara === 'completa' ? 'Diente completo' : registro.cara} · {LABELS[registro.estado] || registro.estado}
+                    </span>
+                    <span className="text-surface-500">{new Date(registro.createdAt || registro.fecha).toLocaleString('es-MX')}</span>
+                  </div>
+                  <p className="mt-1 text-surface-600">Dr. {[registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}</p>
+                  {registro.observacion && <p className="mt-1 text-surface-700">Observación: {registro.observacion}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
