@@ -54,6 +54,8 @@ export default function PacienteDetalle() {
   const [formAdenda, setFormAdenda] = useState({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
   const [archivosHistoria, setArchivosHistoria] = useState([]);
   const [subiendoArchivos, setSubiendoArchivos] = useState(null);
+  const [archivoInterpretacion, setArchivoInterpretacion] = useState(null);
+  const [interpretacionClinica, setInterpretacionClinica] = useState('');
   const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '',  notas: ''});
   const [formCita, setFormCita] = useState({ doctor_id: '', fecha: new Date().toISOString().split('T')[0], hora_inicio: '', hora_fin: '', motivo: '' });
   const [consentimientos, setConsentimientos] = useState([]);
@@ -210,6 +212,19 @@ useEffect(() => {
     } finally {
       setSubiendoArchivos(null);
     }
+  };
+
+  const guardarInterpretacion = async e => {
+    e.preventDefault();
+    if (!archivoInterpretacion) return;
+    try {
+      await api.post(`/historia/archivos/${archivoInterpretacion.id}/interpretacion`, { interpretacion: interpretacionClinica });
+      const { data } = await api.get(`/historia/${id}`);
+      setHistorias(data);
+      setArchivoInterpretacion(null);
+      setInterpretacionClinica('');
+      toast.success('Interpretación clínica guardada');
+    } catch (error) { toast.error(error.response?.data?.error || 'No se pudo guardar la interpretación'); }
   };
 
   const guardarHistoria = async (e) => {
@@ -463,7 +478,7 @@ win.onload = () => {
           ${imagenes.map(archivo => `
             <figure>
               <img src="${archivo.url}" alt="${archivo.nombre_original || 'Fotografía clínica'}" />
-              <figcaption>${archivo.nombre_original || 'Fotografía clínica'}</figcaption>
+              <figcaption>${archivo.nombre_original || 'Fotografía clínica'}${archivo.interpretacion ? `<br><strong>Interpretación:</strong> ${archivo.interpretacion}<br>${archivo.interpretado_por_nombre || ''}${archivo.fecha_interpretacion ? ` · ${new Date(archivo.fecha_interpretacion).toLocaleString('es-MX')}` : ''}` : ''}</figcaption>
             </figure>
           `).join('')}
         </div>
@@ -471,7 +486,7 @@ win.onload = () => {
 
       ${pdfs.length ? `
         <div class="pdfs-impresion">
-          <strong>Estudios PDF anexos:</strong> ${pdfs.map(archivo => archivo.nombre_original).join(', ')}
+          <strong>Estudios PDF anexos:</strong>${pdfs.map(archivo => `<div><b>${archivo.nombre_original}</b>${archivo.interpretacion ? `<br>Interpretación: ${archivo.interpretacion}<br>${archivo.interpretado_por_nombre || ''}${archivo.fecha_interpretacion ? ` · ${new Date(archivo.fecha_interpretacion).toLocaleString('es-MX')}` : ''}` : ' · Sin interpretación registrada'}</div>`).join('')}
         </div>
       ` : ''}
     </div>
@@ -1362,6 +1377,12 @@ window.onload = () => window.print();
                         <span className="text-xs text-surface-600 truncate flex-1" title={archivo.nombre_original}>{archivo.nombre_original}</span>
                         <a href={archivo.url} target="_blank" rel="noreferrer" className="text-primary-600" title="Abrir archivo"><FiExternalLink size={14} /></a>
                       </div>
+                      {archivo.interpretacion ? <div className="border-t border-surface-100 p-2 text-xs">
+                        <p className="font-semibold text-primary-900">Interpretación clínica</p>
+                        <p className="mt-1 whitespace-pre-wrap text-surface-700">{archivo.interpretacion}</p>
+                        <p className="mt-1 text-[10px] text-surface-500">{archivo.interpretado_por_nombre || 'Odontólogo'}{archivo.interpretado_por_cedula ? ` · Cédula ${archivo.interpretado_por_cedula}` : ''}{archivo.fecha_interpretacion ? ` · ${new Date(archivo.fecha_interpretacion).toLocaleString('es-MX')}` : ''}</p>
+                        <p className={`mt-1 text-[10px] ${archivo.interpretacion_integridad_valida ? 'text-green-700' : 'text-red-700'}`}>{archivo.interpretacion_integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</p>
+                      </div> : puedeModificarClinico && <button type="button" onClick={() => { setArchivoInterpretacion(archivo); setInterpretacionClinica(''); }} className="w-full border-t border-surface-100 p-2 text-left text-xs font-medium text-primary-600 hover:bg-primary-50">Agregar interpretación</button>}
                     </div>
                   ))}
                 </div>
@@ -1375,6 +1396,23 @@ window.onload = () => window.print();
               </button>}
             </div>
           ))}
+
+          <Modal isOpen={Boolean(archivoInterpretacion)} onClose={() => { setArchivoInterpretacion(null); setInterpretacionClinica(''); }} title="Interpretación clínica del estudio" size="lg">
+            <form onSubmit={guardarInterpretacion} className="space-y-4">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                La interpretación quedará vinculada a <strong>{archivoInterpretacion?.nombre_original}</strong>, con tu identidad profesional, fecha, hora y sello de integridad. Después no podrá sobrescribirse; cualquier corrección deberá registrarse mediante adenda.
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-surface-600">Hallazgos e interpretación *</label>
+                <textarea required minLength={5} maxLength={5000} rows={7} value={interpretacionClinica} onChange={e => setInterpretacionClinica(e.target.value)} className="input-field" placeholder="Describe la calidad del estudio, estructuras observadas, hallazgos relevantes, impresión diagnóstica y correlación clínica recomendada." />
+                <p className="mt-1 text-right text-xs text-surface-400">{interpretacionClinica.length}/5000</p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => { setArchivoInterpretacion(null); setInterpretacionClinica(''); }} className="btn-secondary">Cancelar</button>
+                <button type="submit" className="btn-primary">Guardar interpretación</button>
+              </div>
+            </form>
+          </Modal>
 
           <Modal isOpen={modalHistoria} onClose={() => setModalHistoria(false)} title="Nueva Entrada - Historia Clínica" size="lg">
             <form onSubmit={guardarHistoria} className="space-y-4">
