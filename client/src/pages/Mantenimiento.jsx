@@ -22,6 +22,9 @@ export default function Mantenimiento() {
   const [loadingRestore, setLoadingRestore] = useState(false);
   const [progRestore, setProgRestore] = useState(false);
   const fileRef = useRef();
+  const [showReset, setShowReset] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
+  const [resetForm, setResetForm] = useState({ confirmacion: '', password: '', respaldo_confirmado: false });
 
   /* ── cargar estadísticas ── */
   const cargarStats = async () => {
@@ -78,6 +81,21 @@ export default function Mantenimiento() {
     } finally {
       setLoadingRestore(false);
       setProgRestore(false);
+    }
+  };
+
+  const handleReset = async () => {
+    setLoadingReset(true);
+    try {
+      await api.post('/mantenimiento/reset', resetForm);
+      toast.success('Sistema reseteado correctamente');
+      setShowReset(false);
+      setResetForm({ confirmacion: '', password: '', respaldo_confirmado: false });
+      cargarStats();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al resetear el sistema');
+    } finally {
+      setLoadingReset(false);
     }
   };
 
@@ -265,9 +283,38 @@ export default function Mantenimiento() {
         </ActionCard>
       </div>
 
-      <InfoBox icon={<FiShield size={14} />} color="yellow">
-        Los expedientes clínicos no pueden eliminarse mediante un reseteo general. Conserva los respaldos cifrados, restringe su acceso y verifica periódicamente su restauración.
-      </InfoBox>
+      <div className="bg-white rounded-2xl shadow-card border border-red-100 overflow-hidden">
+        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="font-bold text-gray-800">Reset administrativo del sistema</h2>
+            <p className="text-sm text-surface-500 mt-1">Disponible exclusivamente para administradores. Elimina datos clínicos y operativos de forma irreversible.</p>
+          </div>
+          {!showReset && <button onClick={() => setShowReset(true)} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl text-sm">Iniciar reset</button>}
+        </div>
+        {showReset && <div className="border-t border-red-100 p-6 bg-red-50 space-y-4">
+          <InfoBox icon={<FiAlertTriangle size={14} />} color="red">
+            No utilices esta función para eliminar expedientes que todavía deban conservarse legalmente. Genera y resguarda primero un respaldo verificable.
+          </InfoBox>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña actual del administrador</label>
+            <input type="password" value={resetForm.password} onChange={e => setResetForm({ ...resetForm, password: e.target.value })} className="input-field" autoComplete="current-password" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Escribe exactamente: RESET SISTEMA</label>
+            <input value={resetForm.confirmacion} onChange={e => setResetForm({ ...resetForm, confirmacion: e.target.value })} className="input-field" />
+          </div>
+          <label className="flex items-start gap-3 text-sm text-red-800">
+            <input type="checkbox" checked={resetForm.respaldo_confirmado} onChange={e => setResetForm({ ...resetForm, respaldo_confirmado: e.target.checked })} className="mt-1" />
+            <span>Confirmo que generé, descargué y resguardé una copia de seguridad antes de continuar.</span>
+          </label>
+          <div className="flex gap-3">
+            <button onClick={() => { setShowReset(false); setResetForm({ confirmacion: '', password: '', respaldo_confirmado: false }); }} className="btn-secondary flex-1">Cancelar</button>
+            <button onClick={handleReset} disabled={loadingReset || !resetForm.password || resetForm.confirmacion !== 'RESET SISTEMA' || !resetForm.respaldo_confirmado} className="flex-1 px-5 py-2.5 bg-red-600 disabled:bg-red-200 text-white font-semibold rounded-xl text-sm">
+              {loadingReset ? 'Procesando…' : 'Confirmar eliminación irreversible'}
+            </button>
+          </div>
+        </div>}
+      </div>
     </div>
   );
 }

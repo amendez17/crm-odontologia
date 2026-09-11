@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { sequelize } = require('../models');
+const { sequelize, Usuario } = require('../models');
 const { auth, esAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 const { registrarActividad } = require('../middleware/logger');
+const { limitarSolicitudes } = require('../middleware/rateLimit');
 
 // Multer para recibir el archivo .sql de restauración
 const upload = multer({
@@ -19,6 +20,8 @@ const upload = multer({
     }
   }
 });
+
+const TABLAS_CONSERVAR = new Set(['usuarios', 'configuracion', 'categorias_tratamiento', 'log_actividad']);
 
 // ─── BACKUP ───────────────────────────────────────────────────────────────────
 router.get('/backup', auth, esAdmin, registrarActividad('generar_backup', 'seguridad'), async (req, res) => {
@@ -195,8 +198,35 @@ router.post('/restaurar', auth, esAdmin, registrarActividad('restaurar_backup', 
 });
 
 // ─── RESET (Nueva empresa) ────────────────────────────────────────────────────
-router.post('/reset', auth, esAdmin, async (req, res) => {
-  res.status(409).json({ error: 'El borrado masivo está deshabilitado para proteger la conservación legal de los expedientes clínicos.' });
+router.post('/reset', auth, esAdmin, limitarSolicitudes({ maximo: 3 }), registrarActividad('reset_sistema', 'seguridad'), async (req, res) => {
+  const { confirmacion, password, respaldo_confirmado } = req.body;
+  if (confirmacion !== 'RESET SISTEMA') return res.status(400).json({ error: 'La frase de confirmación no coincide.' });
+  if (respaldo_confirmado !== true) return res.status(400).json({ error: 'Debes confirmar que generaste y resguardaste una copia de seguridad.' });
+
+  const administrador = await Usuario.findByPk(req.usuario.id);
+  if (!password || !(await administrador.validarPassword(password))) {
+    return res.status(403).json({ error: 'La contraseña del administrador es incorrecta.' });
+  }
+
+  try {
+    const [[{ db }]] = await sequelize.query('SELECT DATABASE() AS db');
+    const [tablas] = await sequelize.query(
+      'SELECT table_name AS tabla FROM information_schema.tables WHERE table_schema = :db AND table_type = \'BASE TABLE\' ORDER BY table_name',
+      { replacements: { db } }
+    );
+    const tablasBorrar = tablas.map(fila => fila.tabla || fila.TABLE_NAME).filter(tabla => !TABLAS_CONSERVAR.has(tabla));
+
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+    for (const tabla of tablasBorrar) {
+      await sequelize.query(`DELETE FROM \`${tabla.replace(/`/g, '')}\``);
+      try { await sequelize.query(`ALTER TABLE \`${tabla.replace(/`/g, '')}\` AUTO_INCREMENT = 1`); } catch (_) {}
+    }
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+    res.json({ ok: true, mensaje: 'Los datos operativos y clínicos fueron eliminados.', tablas_borradas: tablasBorrar.length });
+  } catch (error) {
+    try { await sequelize.query('SET FOREIGN_KEY_CHECKS = 1'); } catch (_) {}
+    res.status(500).json({ error: 'No fue posible completar el reseteo.', detalle: error.message });
+  }
 });
 
 // ─── ESTADÍSTICAS de la BD ────────────────────────────────────────────────────
