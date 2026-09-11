@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
-const { sequelize, HistoriaClinica, ArchivoHistoria, Usuario, Cita, Paciente } = require('../models');
+const { sequelize, HistoriaClinica, ArchivoHistoria, ArchivoInterpretacion, Usuario, Cita, Paciente } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
@@ -52,6 +52,15 @@ const firmarInterpretacion = data => crypto
   .update(JSON.stringify({ archivo_id: Number(data.id), historia_id: Number(data.historia_id), public_id: data.public_id,
     interpretacion: data.interpretacion || '', interpretado_por_id: Number(data.interpretado_por_id),
     fecha_interpretacion: new Date(data.fecha_interpretacion).toISOString() }))
+  .digest('hex');
+
+const firmarInterpretacionMultiple = data => crypto
+  .createHmac('sha256', process.env.EXPEDIENTE_SIGNING_SECRET || process.env.JWT_SECRET)
+  .update(JSON.stringify({
+    archivo_id: Number(data.archivo_id), texto: data.texto || '', usuario_id: Number(data.usuario_id),
+    usuario_nombre: data.usuario_nombre || '', usuario_cedula: data.usuario_cedula || '',
+    fecha: new Date(data.fecha).toISOString()
+  }))
   .digest('hex');
 
 const validarNotaClinica = body => {
@@ -178,19 +187,32 @@ router.get('/:pacienteId', auth, registrarActividad('consultar', 'expediente_cli
       include: [
         { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido', 'cedula'] },
         { model: Cita, as: 'cita' },
-        { model: ArchivoHistoria, as: 'archivos', include: [{ model: Usuario, as: 'usuario', attributes: ['id', 'nombre', 'apellido'] }] }
+        { model: ArchivoHistoria, as: 'archivos', include: [
+          { model: Usuario, as: 'usuario', attributes: ['id', 'nombre', 'apellido'] },
+          { model: ArchivoInterpretacion, as: 'interpretaciones' }
+        ] }
       ],
       order: [['fecha', 'DESC']]
     });
     const respuesta = historias.map(historia => {
       const data = historia.toJSON();
       data.integridad_valida = data.firma_hash ? firmarRegistro(data) === data.firma_hash : null;
-      data.archivos = (data.archivos || []).map(archivo => ({
-        ...archivo,
-        interpretacion_integridad_valida: archivo.interpretacion_hash ? firmarInterpretacion(archivo) === archivo.interpretacion_hash : null,
-        url: urlTemporal(archivo),
-        public_id: undefined
-      }));
+      data.archivos = (data.archivos || []).map(archivo => {
+        const interpretaciones = (archivo.interpretaciones || []).map(item => ({
+          ...item,
+          integridad_valida: firmarInterpretacionMultiple(item) === item.firma_hash
+        }));
+        if (archivo.interpretacion) interpretaciones.unshift({
+          id: `legado-${archivo.id}`,
+          texto: archivo.interpretacion,
+          usuario_nombre: archivo.interpretado_por_nombre,
+          usuario_cedula: archivo.interpretado_por_cedula,
+          fecha: archivo.fecha_interpretacion,
+          integridad_valida: archivo.interpretacion_hash ? firmarInterpretacion(archivo) === archivo.interpretacion_hash : null,
+          legado: true
+        });
+        return { ...archivo, interpretaciones, url: urlTemporal(archivo), public_id: undefined };
+      });
       return data;
     });
     res.json(respuesta);
@@ -239,12 +261,12 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
     if (!req.files?.length) return res.status(400).json({ error: 'Selecciona al menos un archivo.' });
     let interpretaciones;
     try { interpretaciones = JSON.parse(req.body.interpretaciones || '[]'); } catch { return res.status(400).json({ error: 'Las interpretaciones enviadas no son válidas.' }); }
-    if (!Array.isArray(interpretaciones) || interpretaciones.length !== req.files.length) {
-      return res.status(400).json({ error: 'Registra una interpretación para cada archivo.' });
-    }
+    if (!Array.isArray(interpretaciones)) return res.status(400).json({ error: 'Las interpretaciones enviadas no son válidas.' });
+    if (!interpretaciones.length) interpretaciones = Array(req.files.length).fill('');
+    if (interpretaciones.length !== req.files.length) return res.status(400).json({ error: 'La cantidad de interpretaciones no coincide con los archivos.' });
     interpretaciones = interpretaciones.map(texto => typeof texto === 'string' ? texto.trim() : '');
-    if (interpretaciones.some(texto => texto.length < 5 || texto.length > 5000)) {
-      return res.status(400).json({ error: 'Cada interpretación debe contener entre 5 y 5000 caracteres.' });
+    if (interpretaciones.some(texto => texto && (texto.length < 5 || texto.length > 5000))) {
+      return res.status(400).json({ error: 'Las interpretaciones escritas deben contener entre 5 y 5000 caracteres.' });
     }
 
     for (const file of req.files) {
@@ -268,15 +290,20 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
         public_id: resultado.public_id,
         resource_type: resultado.resource_type,
         formato: resultado.format || (file.mimetype === 'application/pdf' ? 'pdf' : null),
-        delivery_type: resultado.type || 'authenticated',
-        interpretacion: interpretaciones[indice],
-        interpretado_por_id: req.usuario.id,
-        interpretado_por_nombre: `${req.usuario.nombre} ${req.usuario.apellido}`.trim(),
-        interpretado_por_cedula: req.usuario.cedula || null,
-        fecha_interpretacion: fechaInterpretacion
+        delivery_type: resultado.type || 'authenticated'
       }, { transaction });
-      archivo.interpretacion_hash = firmarInterpretacion(archivo.toJSON());
-      await archivo.save({ transaction, fields: ['interpretacion_hash'] });
+      if (interpretaciones[indice]) {
+        const datosInterpretacion = {
+          archivo_id: archivo.id,
+          texto: interpretaciones[indice],
+          usuario_id: req.usuario.id,
+          usuario_nombre: `${req.usuario.nombre} ${req.usuario.apellido}`.trim(),
+          usuario_cedula: req.usuario.cedula || null,
+          fecha: fechaInterpretacion
+        };
+        datosInterpretacion.firma_hash = firmarInterpretacionMultiple(datosInterpretacion);
+        await ArchivoInterpretacion.create(datosInterpretacion, { transaction });
+      }
       archivos.push(archivo);
     }
     await transaction.commit(); transaction = null;
@@ -300,16 +327,15 @@ router.post('/archivos/:archivoId/interpretacion', auth, esDoctor, registrarActi
     if (texto.length > 5000) return res.status(400).json({ error: 'La interpretación no puede superar 5000 caracteres.' });
     const archivo = await ArchivoHistoria.findByPk(req.params.archivoId);
     if (!archivo) return res.status(404).json({ error: 'Archivo no encontrado.' });
-    if (archivo.interpretacion) return res.status(409).json({ error: 'La interpretación original es inmutable. Registra una adenda para hacer aclaraciones.' });
     const fecha = new Date(); fecha.setMilliseconds(0);
     const datos = {
-      interpretacion: texto, interpretado_por_id: req.usuario.id,
-      interpretado_por_nombre: `${req.usuario.nombre} ${req.usuario.apellido}`.trim(),
-      interpretado_por_cedula: req.usuario.cedula || null, fecha_interpretacion: fecha
+      archivo_id: archivo.id, texto, usuario_id: req.usuario.id,
+      usuario_nombre: `${req.usuario.nombre} ${req.usuario.apellido}`.trim(),
+      usuario_cedula: req.usuario.cedula || null, fecha
     };
-    datos.interpretacion_hash = firmarInterpretacion({ ...archivo.toJSON(), ...datos });
-    await archivo.update(datos);
-    res.json({ mensaje: 'Interpretación clínica guardada.', id: archivo.id });
+    datos.firma_hash = firmarInterpretacionMultiple(datos);
+    const interpretacion = await ArchivoInterpretacion.create(datos);
+    res.status(201).json({ mensaje: 'Interpretación clínica guardada.', id: interpretacion.id });
   } catch (error) { res.status(400).json({ error: error.message }); }
 });
 
