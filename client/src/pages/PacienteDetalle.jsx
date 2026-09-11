@@ -390,12 +390,13 @@ win.onload = () => {
   const win = window.open('', '_blank', 'width=850,height=900');
   if (!win) return toast.error('Permite las ventanas emergentes para imprimir');
   const nombresEstado = { sano: 'Sano', caries: 'Caries', obturacion: 'Obturación', corona: 'Corona', extraccion: 'Extracción', endodoncia: 'Endodoncia', implante: 'Implante', protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura' };
+  const nombreCara = registro => registro.cara === 'completa' ? 'Diente completo' : registro.cara === 'lingual' ? (Number(registro.pieza_dental) < 30 ? 'Palatina' : 'Lingual') : `${registro.cara.charAt(0).toUpperCase()}${registro.cara.slice(1)}`;
   const actuales = [...odontograma]
     .sort((a, b) => b.id - a.id)
     .filter((registro, indice, lista) => indice === lista.findIndex(item => item.pieza_dental === registro.pieza_dental && (item.cara || 'completa') === (registro.cara || 'completa')));
   const filas = actuales.map(registro => `<tr>
     <td>${registro.pieza_dental}</td>
-    <td>${registro.cara === 'completa' ? 'Diente completo' : registro.cara}</td>
+    <td>${nombreCara(registro)}</td>
     <td>${nombresEstado[registro.estado] || registro.estado}</td>
     <td>${registro.observacion || '—'}</td>
     <td>${[registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}</td>
