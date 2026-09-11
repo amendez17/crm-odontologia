@@ -1284,7 +1284,7 @@ window.onload = () => window.print();
       )}
 
       {tab === 'periodontograma' && (
-        <div className="card"><Periodontograma pacienteId={id} /></div>
+        <div className="card"><Periodontograma pacienteId={id} paciente={paciente} /></div>
       )}
 
       {/* Tab Historia */}
