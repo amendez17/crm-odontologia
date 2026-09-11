@@ -55,11 +55,13 @@ async function ensureComplianceSchema(sequelize) {
 
   const odontogramaTable = await queryInterface.describeTable('odontograma');
   const odontogramaColumns = {
+    tipo_registro: { type: DataTypes.ENUM('hallazgo', 'plan', 'realizado'), allowNull: false, defaultValue: 'hallazgo' },
     fecha_hora: { type: DataTypes.DATE, allowNull: true },
     doctor_nombre: { type: DataTypes.STRING(220), allowNull: true },
     doctor_cedula: { type: DataTypes.STRING(80), allowNull: true },
     firma_hash: { type: DataTypes.STRING(64), allowNull: true },
-    registro_previo_hash: { type: DataTypes.STRING(64), allowNull: true }
+    registro_previo_hash: { type: DataTypes.STRING(64), allowNull: true },
+    firma_version: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 1 }
   };
   for (const [name, definition] of Object.entries(odontogramaColumns)) {
     if (!odontogramaTable[name]) await queryInterface.addColumn('odontograma', name, definition);
