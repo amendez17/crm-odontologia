@@ -54,6 +54,7 @@ export default function PacienteDetalle() {
   const [formAdenda, setFormAdenda] = useState({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
   const [archivosHistoria, setArchivosHistoria] = useState([]);
   const [subiendoArchivos, setSubiendoArchivos] = useState(null);
+  const [cargaAdjuntos, setCargaAdjuntos] = useState(null);
   const [archivoInterpretacion, setArchivoInterpretacion] = useState(null);
   const [interpretacionClinica, setInterpretacionClinica] = useState('');
   const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '',  notas: ''});
@@ -201,11 +202,22 @@ useEffect(() => {
     return true;
   };
 
-  const subirAdjuntos = async (historiaId, files, mostrarMensaje = true) => {
+  const prepararAdjuntos = files => {
     const seleccionados = Array.from(files || []);
+    if (!seleccionados.length || !validarArchivos(seleccionados)) return [];
+    return seleccionados.map(file => ({ file, interpretacion: '' }));
+  };
+
+  const subirAdjuntos = async (historiaId, adjuntos, mostrarMensaje = true) => {
+    const seleccionados = (adjuntos || []).map(adjunto => adjunto.file);
     if (!seleccionados.length || !validarArchivos(seleccionados)) return false;
+    if (adjuntos.some(adjunto => adjunto.interpretacion.trim().length < 5 || adjunto.interpretacion.trim().length > 5000)) {
+      toast.error('Cada interpretación debe contener entre 5 y 5000 caracteres');
+      return false;
+    }
     const data = new FormData();
     seleccionados.forEach(file => data.append('archivos', file));
+    data.append('interpretaciones', JSON.stringify(adjuntos.map(adjunto => adjunto.interpretacion.trim())));
     setSubiendoArchivos(historiaId);
     try {
       await api.post(`/historia/${historiaId}/archivos`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -219,6 +231,13 @@ useEffect(() => {
     } finally {
       setSubiendoArchivos(null);
     }
+  };
+
+  const confirmarCargaAdjuntos = async e => {
+    e.preventDefault();
+    if (!cargaAdjuntos) return;
+    const guardados = await subirAdjuntos(cargaAdjuntos.historiaId, cargaAdjuntos.adjuntos);
+    if (guardados) setCargaAdjuntos(null);
   };
 
   const guardarInterpretacion = async e => {
@@ -236,6 +255,9 @@ useEffect(() => {
 
   const guardarHistoria = async (e) => {
     e.preventDefault();
+    if (archivosHistoria.some(adjunto => adjunto.interpretacion.trim().length < 5 || adjunto.interpretacion.trim().length > 5000)) {
+      return toast.error('Cada interpretación debe contener entre 5 y 5000 caracteres');
+    }
     try {
       const respuesta = (grupo, detalle) => {
         const seleccion = cuestionario[grupo];
@@ -1452,7 +1474,11 @@ window.onload = () => window.print();
               )}
               {puedeModificarClinico && <label className={`mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary-600 cursor-pointer ${subiendoArchivos === h.id ? 'opacity-50 pointer-events-none' : ''}`}>
                 <FiUploadCloud size={16} /> {subiendoArchivos === h.id ? 'Subiendo...' : 'Agregar imágenes o PDF'}
-                <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => { subirAdjuntos(h.id, e.target.files); e.target.value = ''; }} />
+                <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => {
+                  const adjuntos = prepararAdjuntos(e.target.files);
+                  if (adjuntos.length) setCargaAdjuntos({ historiaId: h.id, adjuntos });
+                  e.target.value = '';
+                }} />
               </label>}
               {puedeModificarClinico && <button type="button" onClick={() => { setHistoriaOrigen(h); setFormAdenda({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' }); setModalAdenda(true); }} className="mt-3 ml-4 text-sm font-medium text-amber-700 hover:text-amber-800">
                 Agregar adenda
@@ -1473,6 +1499,27 @@ window.onload = () => window.print();
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => { setArchivoInterpretacion(null); setInterpretacionClinica(''); }} className="btn-secondary">Cancelar</button>
                 <button type="submit" className="btn-primary">Guardar interpretación</button>
+              </div>
+            </form>
+          </Modal>
+
+          <Modal isOpen={Boolean(cargaAdjuntos)} onClose={() => subiendoArchivos === null && setCargaAdjuntos(null)} title="Interpretar imágenes y estudios" size="lg">
+            <form onSubmit={confirmarCargaAdjuntos} className="space-y-4">
+              <div className="rounded-lg border border-primary-200 bg-primary-50 p-3 text-sm text-primary-800">
+                Registra los hallazgos de cada archivo antes de cargarlo. La interpretación quedará vinculada al estudio con tu identidad, fecha, hora y sello de integridad.
+              </div>
+              <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+                {(cargaAdjuntos?.adjuntos || []).map((adjunto, indice) => <div key={`${adjunto.file.name}-${adjunto.file.lastModified}-${indice}`} className="rounded-xl border border-surface-200 p-3">
+                  <p className="truncate text-sm font-semibold text-primary-900" title={adjunto.file.name}>{adjunto.file.name}</p>
+                  <p className="mb-2 text-xs text-surface-500">{adjunto.file.type === 'application/pdf' ? 'Estudio PDF' : 'Imagen clínica'} · {(adjunto.file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                  <label className="mb-1 block text-sm font-medium text-surface-600">Interpretación clínica *</label>
+                  <textarea required minLength={5} maxLength={5000} rows={4} value={adjunto.interpretacion} onChange={e => setCargaAdjuntos(actual => ({ ...actual, adjuntos: actual.adjuntos.map((item, posicion) => posicion === indice ? { ...item, interpretacion: e.target.value } : item) }))} className="input-field" placeholder="Calidad del estudio, estructuras observadas, hallazgos e impresión diagnóstica." />
+                  <p className="mt-1 text-right text-xs text-surface-400">{adjunto.interpretacion.length}/5000</p>
+                </div>)}
+              </div>
+              <div className="flex justify-end gap-2">
+                <button type="button" disabled={subiendoArchivos !== null} onClick={() => setCargaAdjuntos(null)} className="btn-secondary disabled:opacity-50">Cancelar</button>
+                <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Cargando...' : 'Guardar archivos e interpretaciones'}</button>
               </div>
             </form>
           </Modal>
@@ -1580,14 +1627,19 @@ window.onload = () => window.print();
                   <div className="flex items-center gap-2 text-primary-600 font-medium"><FiUploadCloud size={20} /> Seleccionar archivos</div>
                   <span className="text-xs text-surface-500 mt-1">JPG, PNG, WEBP o PDF · máximo 10 MB por archivo</span>
                   <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => {
-                    const files = Array.from(e.target.files || []);
-                    if (validarArchivos(files)) setArchivosHistoria(files);
+                    const adjuntos = prepararAdjuntos(e.target.files);
+                    if (adjuntos.length) setArchivosHistoria(adjuntos);
+                    e.target.value = '';
                   }} />
                 </label>
                 {archivosHistoria.length > 0 && (
-                  <div className="mt-2 text-sm text-surface-600 flex items-center gap-2">
-                    <FiImage /> {archivosHistoria.length} archivo{archivosHistoria.length !== 1 ? 's' : ''} seleccionado{archivosHistoria.length !== 1 ? 's' : ''}
-                    <button type="button" onClick={() => setArchivosHistoria([])} className="text-red-500 ml-auto">Quitar</button>
+                  <div className="mt-3 space-y-3">
+                    {archivosHistoria.map((adjunto, indice) => <div key={`${adjunto.file.name}-${adjunto.file.lastModified}-${indice}`} className="rounded-xl border border-surface-200 p-3">
+                      <div className="mb-2 flex items-center gap-2 text-sm text-surface-600"><FiImage /><span className="min-w-0 flex-1 truncate" title={adjunto.file.name}>{adjunto.file.name}</span><button type="button" onClick={() => setArchivosHistoria(actual => actual.filter((_, posicion) => posicion !== indice))} className="text-xs font-medium text-red-500">Quitar</button></div>
+                      <label className="mb-1 block text-sm font-medium text-surface-600">Interpretación clínica *</label>
+                      <textarea required minLength={5} maxLength={5000} rows={3} value={adjunto.interpretacion} onChange={e => setArchivosHistoria(actual => actual.map((item, posicion) => posicion === indice ? { ...item, interpretacion: e.target.value } : item))} className="input-field" placeholder="Calidad del estudio, estructuras observadas, hallazgos e impresión diagnóstica." />
+                      <p className="mt-1 text-right text-xs text-surface-400">{adjunto.interpretacion.length}/5000</p>
+                    </div>)}
                   </div>
                 )}
               </div>
