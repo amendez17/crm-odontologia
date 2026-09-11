@@ -9,11 +9,18 @@ const DIENTES_VALIDOS = new Set([18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28
 const CARAS_VALIDAS = new Set(['vestibular', 'lingual', 'mesial', 'distal', 'oclusal', 'completa']);
 const ESTADOS_COMPLETOS = new Set(['sano', 'corona', 'extraccion', 'endodoncia', 'implante', 'protesis', 'ausente']);
 const ESTADOS_POR_CARA = new Set(['sano', 'caries', 'obturacion', 'fractura']);
+const TIPOS_REGISTRO = new Set(['hallazgo', 'plan', 'realizado']);
+const TRATAMIENTOS_COMPLETOS = new Set(['corona', 'extraccion', 'endodoncia', 'implante', 'protesis']);
+const TRATAMIENTOS_POR_CARA = new Set(['obturacion']);
 
-const validarRegistro = ({ pieza_dental, cara = 'completa', estado = 'sano' }) => {
+const validarRegistro = ({ pieza_dental, cara = 'completa', estado = 'sano', tipo_registro = 'hallazgo' }) => {
   if (!DIENTES_VALIDOS.has(Number(pieza_dental))) return 'La pieza dental no es válida.';
   if (!CARAS_VALIDAS.has(cara)) return 'La cara dental no es válida.';
-  const estadosPermitidos = cara === 'completa' ? ESTADOS_COMPLETOS : ESTADOS_POR_CARA;
+  if (!TIPOS_REGISTRO.has(tipo_registro)) return 'El tipo de registro odontológico no es válido.';
+  const esTratamiento = tipo_registro === 'plan' || tipo_registro === 'realizado';
+  const estadosPermitidos = esTratamiento
+    ? (cara === 'completa' ? TRATAMIENTOS_COMPLETOS : TRATAMIENTOS_POR_CARA)
+    : (cara === 'completa' ? ESTADOS_COMPLETOS : ESTADOS_POR_CARA);
   if (!estadosPermitidos.has(estado)) return `El estado ${estado} no corresponde al modo ${cara === 'completa' ? 'diente completo' : 'por cara'}.`;
   return null;
 };
@@ -22,19 +29,20 @@ const contenidoFirma = data => JSON.stringify({
   paciente_id: Number(data.paciente_id), pieza_dental: Number(data.pieza_dental),
   cara: data.cara || 'completa', estado: data.estado || 'sano', observacion: data.observacion || '',
   doctor_id: Number(data.doctor_id), fecha_hora: new Date(data.fecha_hora).toISOString(),
-  registro_previo_hash: data.registro_previo_hash || ''
+  registro_previo_hash: data.registro_previo_hash || '',
+  ...(Number(data.firma_version || 1) >= 2 ? { tipo_registro: data.tipo_registro || 'hallazgo', firma_version: 2 } : {})
 });
 const firmarRegistro = data => crypto.createHmac('sha256', process.env.EXPEDIENTE_SIGNING_SECRET || process.env.JWT_SECRET)
   .update(contenidoFirma(data)).digest('hex');
 
-const crearVersion = async ({ paciente_id, pieza_dental, cara, estado, observacion, usuario }) => {
+const crearVersion = async ({ paciente_id, pieza_dental, cara, estado, tipo_registro = 'hallazgo', observacion, usuario }) => {
   const fechaHora = new Date(); fechaHora.setMilliseconds(0);
   const previo = await Odontograma.findOne({ where: { paciente_id }, order: [['id', 'DESC']] });
   const data = {
-    paciente_id: Number(paciente_id), pieza_dental: Number(pieza_dental), cara: cara || 'completa', estado: estado || 'sano',
+    paciente_id: Number(paciente_id), pieza_dental: Number(pieza_dental), cara: cara || 'completa', estado: estado || 'sano', tipo_registro,
     observacion: observacion?.trim() || null, doctor_id: usuario.id, fecha_hora: fechaHora,
     doctor_nombre: `${usuario.nombre} ${usuario.apellido}`.trim(), doctor_cedula: usuario.cedula || null,
-    registro_previo_hash: previo?.firma_hash || null, fecha: fechaHora
+    registro_previo_hash: previo?.firma_hash || null, firma_version: 2, fecha: fechaHora
   };
   data.firma_hash = firmarRegistro(data);
   return Odontograma.create(data);
@@ -86,7 +94,8 @@ router.put('/:id', auth, esDoctor, registrarActividad('actualizar', 'odontograma
     const datosNuevos = {
       pieza_dental: registro.pieza_dental,
       cara: req.body.cara || registro.cara,
-      estado: req.body.estado || registro.estado
+      estado: req.body.estado || registro.estado,
+      tipo_registro: req.body.tipo_registro || registro.tipo_registro || 'hallazgo'
     };
     const errorValidacion = validarRegistro(datosNuevos);
     if (errorValidacion) return res.status(400).json({ error: errorValidacion });
@@ -95,6 +104,7 @@ router.put('/:id', auth, esDoctor, registrarActividad('actualizar', 'odontograma
       pieza_dental: registro.pieza_dental,
       cara: datosNuevos.cara,
       estado: datosNuevos.estado,
+      tipo_registro: datosNuevos.tipo_registro,
       observacion: req.body.observacion ?? registro.observacion,
       usuario: req.usuario
     });
