@@ -5,7 +5,11 @@ const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
 
-const DIENTES_VALIDOS = new Set([18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38]);
+const DIENTES_VALIDOS = new Set([
+  18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,
+  48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38,
+  55,54,53,52,51,61,62,63,64,65,85,84,83,82,81,71,72,73,74,75
+]);
 const CARAS_VALIDAS = new Set(['vestibular', 'lingual', 'mesial', 'distal', 'oclusal', 'completa']);
 const ESTADOS_COMPLETOS = new Set(['sano', 'corona', 'extraccion', 'endodoncia', 'implante', 'protesis', 'ausente']);
 const ESTADOS_POR_CARA = new Set(['sano', 'caries', 'obturacion', 'fractura']);
