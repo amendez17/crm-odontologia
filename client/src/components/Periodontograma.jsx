@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/axios';
+import { FiPrinter } from 'react-icons/fi';
 
 const DIENTES = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 const SITIOS = ['MV', 'V', 'DV', 'ML', 'L', 'DL'];
 const sitioVacio = sitio => ({ sitio, profundidad: '', recesion: '0', sangrado: false, placa: false, supuracion: false });
 
-export default function Periodontograma({ pacienteId }) {
+export default function Periodontograma({ pacienteId, paciente }) {
   const [pieza, setPieza] = useState(18);
   const [mediciones, setMediciones] = useState({});
   const [observaciones, setObservaciones] = useState('');
@@ -40,6 +41,27 @@ export default function Periodontograma({ pacienteId }) {
       setMediciones({}); setObservaciones(''); cargar();
     } catch (error) { toast.error(error.response?.data?.error || 'No se pudo guardar'); }
     finally { setGuardando(false); }
+  };
+
+  const imprimirEvaluacion = evaluacion => {
+    const win = window.open('', '_blank', 'width=900,height=900');
+    if (!win) return toast.error('Permite las ventanas emergentes para imprimir');
+    const seguro = valor => String(valor ?? '').replace(/[&<>'"]/g, caracter => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[caracter]));
+    const piezas = (evaluacion.mediciones || []).map(medicion => `
+      <section class="pieza"><h3>Pieza ${seguro(medicion.pieza)} <small>Movilidad: ${seguro(medicion.movilidad ?? 0)} · Furca: ${seguro(medicion.furca ?? 0)}</small></h3>
+      <table><thead><tr><th>Sitio</th><th>Profundidad</th><th>Recesión</th><th>NIC</th><th>Sangrado</th><th>Placa</th><th>Supuración</th></tr></thead><tbody>
+      ${(medicion.sitios || []).map(sitio => `<tr><td>${seguro(sitio.sitio)}</td><td>${seguro(sitio.profundidad)} mm</td><td>${seguro(sitio.recesion)} mm</td><td>${Number(sitio.profundidad || 0) + Number(sitio.recesion || 0)} mm</td><td>${sitio.sangrado ? 'Sí' : 'No'}</td><td>${sitio.placa ? 'Sí' : 'No'}</td><td>${sitio.supuracion ? 'Sí' : 'No'}</td></tr>`).join('')}
+      </tbody></table></section>`).join('');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Periodontograma - ${seguro(paciente?.nombre || pacienteId)}</title><style>
+      @page{size:Letter;margin:10mm}body{font-family:Arial,sans-serif;color:#263248;font-size:10px;margin:0}.header{text-align:center;border-bottom:2px solid #c8a24a;padding-bottom:8px}.logo{width:58px}.header h1{font-size:17px;color:#b58b23;margin:2px}.header p{margin:2px}.paciente{display:flex;justify-content:space-between;gap:12px;margin:12px 0;padding:9px;background:#fffaf0;border-left:4px solid #c8a24a}.pieza{page-break-inside:avoid;margin:10px 0}.pieza h3{font-size:11px;background:#f8f4e8;padding:6px;margin:0;border:1px solid #e5d8b0}.pieza small{float:right;font-weight:normal}table{width:100%;border-collapse:collapse}th,td{border:1px solid #e5e7eb;padding:5px;text-align:center}th{color:#72591d}.observaciones{margin:10px 0;padding:8px;border:1px solid #e5e7eb}.sello{font:7px monospace;overflow-wrap:anywhere;color:#64748b}.firma{margin:38px 0 0 auto;width:260px;text-align:center;border-top:1px solid #64748b;padding-top:5px}.footer{text-align:center;border-top:1px solid #ddd;margin-top:15px;padding-top:6px;color:#64748b;font-size:8px}
+    </style></head><body><div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><p>Evaluación periodontal</p></div>
+      <div class="paciente"><span><b>Paciente:</b> ${seguro([paciente?.nombre, paciente?.apellido].filter(Boolean).join(' ') || pacienteId)}</span><span><b>Fecha:</b> ${seguro(new Date(evaluacion.fecha_hora).toLocaleString('es-MX'))}</span><span><b>Odontólogo:</b> ${seguro(evaluacion.doctor_nombre)}</span></div>
+      ${evaluacion.observaciones ? `<div class="observaciones"><b>Observaciones:</b> ${seguro(evaluacion.observaciones)}</div>` : ''}${piezas}
+      ${evaluacion.doctor_cedula ? `<p><b>Cédula profesional:</b> ${seguro(evaluacion.doctor_cedula)}</p>` : ''}<p class="sello"><b>Sello de integridad:</b> ${seguro(evaluacion.firma_hash)}</p>
+      <div class="firma">Nombre, firma y cédula del odontólogo</div><div class="footer">${evaluacion.integridad_valida ? 'Integridad electrónica verificada' : 'Registro pendiente de revisión de integridad'} · Impreso ${new Date().toLocaleString('es-MX')}</div>
+    </body></html>`);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
   };
 
   return <div className="space-y-5">
@@ -91,6 +113,7 @@ export default function Periodontograma({ pacienteId }) {
           </div>)}
           {e.doctor_cedula && <p className="text-xs text-surface-500">Cédula profesional: {e.doctor_cedula}</p>}
           <p className="text-[10px] text-surface-400 break-all">Sello: {e.firma_hash}</p>
+          <button type="button" onClick={() => imprimirEvaluacion(e)} className="btn-secondary inline-flex items-center gap-2 text-sm"><FiPrinter size={15} /> Imprimir evaluación</button>
         </div>}
       </div>)}
     </div>}
