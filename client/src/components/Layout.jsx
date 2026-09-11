@@ -89,8 +89,8 @@ export default function Layout() {
       toast.error('Las contraseñas no coinciden');
       return;
     }
-    if (passwordForm.nueva.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres');
+    if (passwordForm.nueva.length < 12 || !/[a-z]/.test(passwordForm.nueva) || !/[A-Z]/.test(passwordForm.nueva) || !/\d/.test(passwordForm.nueva) || !/[^A-Za-z0-9]/.test(passwordForm.nueva)) {
+      toast.error('Usa al menos 12 caracteres con mayúscula, minúscula, número y símbolo');
       return;
     }
     try {
@@ -369,7 +369,7 @@ export default function Layout() {
               onChange={e => setPasswordForm({ ...passwordForm, nueva: e.target.value })}
               className="input-field"
               required
-              minLength={6}
+              minLength={12}
             />
           </div>
           <div>
@@ -380,7 +380,7 @@ export default function Layout() {
               onChange={e => setPasswordForm({ ...passwordForm, confirmar: e.target.value })}
               className="input-field"
               required
-              minLength={6}
+              minLength={12}
             />
           </div>
           <div className="flex justify-end gap-3">

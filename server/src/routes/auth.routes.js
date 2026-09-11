@@ -1,26 +1,31 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { Usuario } = require('../models');
+const { Usuario, LogActividad } = require('../models');
 const { auth } = require('../middleware/auth');
 const { enviarCorreoRecuperacion } = require('../services/email');
+const { validarPasswordSegura } = require('../utils/passwordPolicy');
+const { limitarSolicitudes } = require('../middleware/rateLimit');
 const router = express.Router();
 
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', limitarSolicitudes({ maximo: 5 }), async (req, res) => {
   try {
     const { email, password } = req.body;
     const usuario = await Usuario.findOne({ where: { email, activo: true } });
 
     if (!usuario || !(await usuario.validarPassword(password))) {
+      await LogActividad.create({ accion: 'login_fallido', entidad: 'sesion', detalle: JSON.stringify({ email: String(email || '').slice(0, 150) }), ip: req.ip }).catch(() => {});
       return res.status(401).json({ error: 'Email o contraseña incorrectos.' });
     }
 
     const token = jwt.sign(
-      { id: usuario.id, rol: usuario.rol },
+      { id: usuario.id, rol: usuario.rol, v: usuario.token_version },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
     );
+
+    await LogActividad.create({ usuario_id: usuario.id, accion: 'login', entidad: 'sesion', detalle: JSON.stringify({ resultado: 'exitoso' }), ip: req.ip }).catch(() => {});
 
     res.json({
       token,
@@ -38,7 +43,7 @@ router.post('/login', async (req, res) => {
   }
 });
 //reset password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', limitarSolicitudes({ maximo: 3 }), async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -46,11 +51,7 @@ router.post('/forgot-password', async (req, res) => {
       where: { email }
     });
 
-    if (!usuario) {
-      return res.status(404).json({
-        error: 'Usuario no encontrado'
-      });
-    }
+    if (!usuario) return res.json({ message: 'Si la cuenta existe, se enviará un correo de recuperación.' });
 
     const token = jwt.sign(
       { id: usuario.id },
@@ -59,7 +60,7 @@ router.post('/forgot-password', async (req, res) => {
     );
 
     const link =
-      `https://clinicadental-almar.vercel.app/reset-password/${token}`;
+      `${process.env.CLIENT_URL || 'https://clinicadental-almar.vercel.app'}/reset-password/${token}`;
 
     await enviarCorreoRecuperacion(
       usuario.email,
@@ -67,7 +68,7 @@ router.post('/forgot-password', async (req, res) => {
     );
 
     res.json({
-      message: 'Correo enviado'
+      message: 'Si la cuenta existe, se enviará un correo de recuperación.'
     });
 
   } catch (error) {
@@ -83,6 +84,8 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, password } = req.body;
+    const errorPassword = validarPasswordSegura(password);
+    if (errorPassword) return res.status(400).json({ error: errorPassword });
 
     const decoded = jwt.verify(
       token,
@@ -98,6 +101,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     usuario.password = password;
+    usuario.token_version += 1;
 
     await usuario.save();
 
@@ -135,11 +139,11 @@ router.post('/cambiar-password', auth, async (req, res) => {
       return res.status(400).json({ error: 'La contraseña actual es incorrecta.' });
     }
 
-    if (!passwordNueva || passwordNueva.length < 6) {
-      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
-    }
+    const errorPassword = validarPasswordSegura(passwordNueva);
+    if (errorPassword) return res.status(400).json({ error: errorPassword });
 
     usuario.password = passwordNueva;
+    usuario.token_version += 1;
     await usuario.save();
 
     res.json({ message: 'Contraseña actualizada correctamente.' });
@@ -148,25 +152,4 @@ router.post('/cambiar-password', auth, async (req, res) => {
   }
 });
 
-router.get('/test-email', async (req, res) => {
-  try {
-
-    await enviarCorreoRecuperacion(
-      'alanmendez530@gmail.com',
-      'https://google.com'
-    );
-
-    res.json({
-      ok: true
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      error: error.message
-    });
-  }
-});
 module.exports = router;

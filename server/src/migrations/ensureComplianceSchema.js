@@ -33,6 +33,11 @@ async function ensureComplianceSchema(sequelize) {
   for (const [name, definition] of Object.entries(consentColumns)) {
     if (!consentTable[name]) await queryInterface.addColumn('consentimientos', name, definition);
   }
+
+  const userTable = await queryInterface.describeTable('usuarios');
+  if (!userTable.token_version) {
+    await queryInterface.addColumn('usuarios', 'token_version', { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 });
+  }
 }
 
 module.exports = ensureComplianceSchema;

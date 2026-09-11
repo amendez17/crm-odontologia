@@ -4,6 +4,8 @@ const { sequelize } = require('../models');
 const { auth, esAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const crypto = require('crypto');
+const { registrarActividad } = require('../middleware/logger');
 
 // Multer para recibir el archivo .sql de restauración
 const upload = multer({
@@ -18,15 +20,8 @@ const upload = multer({
   }
 });
 
-// ─── Tablas que conservamos (NO se borran en reset) ───────────────────────────
-const TABLAS_CONSERVAR = new Set([
-  'usuarios',
-  'configuracion',
-  'categorias_tratamiento',
-]);
-
 // ─── BACKUP ───────────────────────────────────────────────────────────────────
-router.get('/backup', auth, esAdmin, async (req, res) => {
+router.get('/backup', auth, esAdmin, registrarActividad('generar_backup', 'seguridad'), async (req, res) => {
   try {
     const [databases] = await sequelize.query('SELECT DATABASE() AS db');
     const dbName = databases[0]?.db;
@@ -82,6 +77,8 @@ router.get('/backup', auth, esAdmin, async (req, res) => {
 
     res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('X-Backup-SHA256', crypto.createHash('sha256').update(sql).digest('hex'));
+    res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Length', Buffer.byteLength(sql, 'utf8'));
     return res.end(sql, 'utf8');
   } catch (err) {
@@ -91,7 +88,7 @@ router.get('/backup', auth, esAdmin, async (req, res) => {
 });
 
 // ─── RESTAURAR ────────────────────────────────────────────────────────────────
-router.post('/restaurar', auth, esAdmin, upload.single('archivo'), async (req, res) => {
+router.post('/restaurar', auth, esAdmin, registrarActividad('restaurar_backup', 'seguridad'), upload.single('archivo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No se recibió ningún archivo .sql' });
 
   const sqlContent = req.file.buffer.toString('utf8');
@@ -199,49 +196,7 @@ router.post('/restaurar', auth, esAdmin, upload.single('archivo'), async (req, r
 
 // ─── RESET (Nueva empresa) ────────────────────────────────────────────────────
 router.post('/reset', auth, esAdmin, async (req, res) => {
-  const { confirmacion } = req.body;
-  if (confirmacion !== 'RESET SISTEMA') {
-    return res.status(400).json({ error: 'Confirmación incorrecta. Escribe exactamente: RESET SISTEMA' });
-  }
-
-  try {
-    // 1) Obtener base de datos activa
-    const [[{ db }]] = await sequelize.query('SELECT DATABASE() AS db');
-
-    // 2) Obtener todas las tablas reales de la BD
-    const [todasTablas] = await sequelize.query(
-      `SELECT table_name AS tabla FROM information_schema.tables
-       WHERE table_schema = '${db}' AND table_type = 'BASE TABLE'
-       ORDER BY table_name`
-    );
-
-    // 3) Filtrar las que SÍ se van a borrar
-    const tablasBorrar = todasTablas
-      .map(r => r.tabla || r.TABLE_NAME)
-      .filter(t => !TABLAS_CONSERVAR.has(t));
-
-    // 4) Deshabilitar FK, borrar con DELETE (más tolerante que TRUNCATE con FK), rehabilitar
-    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
-    for (const tabla of tablasBorrar) {
-      await sequelize.query(`DELETE FROM \`${tabla}\``);
-      // Reset auto_increment
-      try {
-        await sequelize.query(`ALTER TABLE \`${tabla}\` AUTO_INCREMENT = 1`);
-      } catch (_) { /* tabla sin PK autoincrement, ignorar */ }
-    }
-    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
-
-    res.json({
-      ok: true,
-      mensaje: 'Sistema reseteado correctamente. Listo para nueva empresa.',
-      tablasBorradas: tablasBorrar
-    });
-  } catch (err) {
-    console.error('Error en reset:', err);
-    // Asegurarnos de re-habilitar FK
-    try { await sequelize.query('SET FOREIGN_KEY_CHECKS = 1'); } catch (_) {}
-    res.status(500).json({ error: 'Error al resetear el sistema', detalle: err.message });
-  }
+  res.status(409).json({ error: 'El borrado masivo está deshabilitado para proteger la conservación legal de los expedientes clínicos.' });
 });
 
 // ─── ESTADÍSTICAS de la BD ────────────────────────────────────────────────────

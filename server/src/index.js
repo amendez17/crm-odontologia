@@ -8,8 +8,10 @@ require('dotenv').config();
 
 const { sequelize, Usuario } = require('./models');
 const ensureComplianceSchema = require('./migrations/ensureComplianceSchema');
+const { validarPasswordSegura } = require('./utils/passwordPolicy');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 const origenesPermitidos = [
@@ -24,6 +26,7 @@ const corsOptions = {
     return callback(new Error('Origen no permitido por CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  exposedHeaders: ['Content-Disposition', 'X-Backup-SHA256'],
   credentials: true
 };
 
@@ -46,7 +49,16 @@ io.on('connection', (socket) => {
 app.set('io', io);
 // Middleware
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cache-Control', req.path.startsWith('/api/') ? 'no-store' : 'no-cache');
+  if (req.secure) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
 
 app.use((req, res, next) => {
   req.io = io;
@@ -78,6 +90,9 @@ const PORT = process.env.PORT || 4000;
 
 async function iniciar() {
   try {
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+      throw new Error('JWT_SECRET debe estar configurado con al menos 32 caracteres.');
+    }
     await sequelize.authenticate();
     console.log('Conexión a MySQL establecida.');
 
@@ -85,17 +100,21 @@ async function iniciar() {
     await ensureComplianceSchema(sequelize);
     console.log('Tablas sincronizadas.');
 
-    // Crear usuario admin por defecto si no existe
-    const adminExiste = await Usuario.findOne({ where: { email: 'admin@clinica.com' } });
-    if (!adminExiste) {
+    // Alta inicial opcional, únicamente mediante variables seguras y sin credenciales conocidas.
+    const adminEmail = process.env.ADMIN_INITIAL_EMAIL;
+    const adminPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    if (adminEmail && adminPassword && !validarPasswordSegura(adminPassword)) {
+      const adminExiste = await Usuario.findOne({ where: { email: adminEmail } });
+      if (!adminExiste) {
       await Usuario.create({
-        nombre: 'Admin',
-        apellido: 'Sistema',
-        email: 'admin@clinica.com',
-        password: 'admin123',
+        nombre: process.env.ADMIN_INITIAL_NAME || 'Administrador',
+        apellido: process.env.ADMIN_INITIAL_LASTNAME || 'Sistema',
+        email: adminEmail,
+        password: adminPassword,
         rol: 'administrador'
       });
-      console.log('Usuario admin creado: admin@clinica.com / admin123');
+        console.log('Usuario administrador inicial creado.');
+      }
     }
 
     server.listen(PORT, () => {
