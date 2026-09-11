@@ -35,6 +35,20 @@ const Pago = sequelize.define('Pago', {
   notas: {
     type: DataTypes.TEXT,
     allowNull: true
+  },
+  requiere_factura: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  factura_emitida: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  fecha_factura: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'pagos',
