@@ -1,9 +1,61 @@
 const express = require('express');
+const crypto = require('crypto');
 const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { HistoriaClinica, ArchivoHistoria, Usuario, Cita } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const router = express.Router();
+
+const contenidoFirma = data => JSON.stringify({
+  paciente_id: Number(data.paciente_id),
+  doctor_id: Number(data.doctor_id),
+  fecha_hora: new Date(data.fecha_hora).toISOString(),
+  diagnostico: data.diagnostico || '',
+  tratamiento_realizado: data.tratamiento_realizado || '',
+  piezas_tratadas: data.piezas_tratadas || '',
+  receta: data.receta || '',
+  proxima_visita: data.proxima_visita || '',
+  notas: data.notas || '',
+  es_adenda: Boolean(data.es_adenda),
+  historia_origen_id: data.historia_origen_id ? Number(data.historia_origen_id) : null,
+  motivo_adenda: data.motivo_adenda || '',
+  registro_previo_hash: data.registro_previo_hash || ''
+});
+
+const firmarRegistro = data => crypto
+  .createHmac('sha256', process.env.EXPEDIENTE_SIGNING_SECRET || process.env.JWT_SECRET)
+  .update(contenidoFirma(data))
+  .digest('hex');
+
+const crearRegistroInmutable = async ({ body, usuario, origen = null }) => {
+  const fechaHora = new Date();
+  fechaHora.setMilliseconds(0);
+  const previo = await HistoriaClinica.findOne({
+    where: { paciente_id: origen?.paciente_id || body.paciente_id },
+    order: [['id', 'DESC']]
+  });
+  const data = {
+    diagnostico: body.diagnostico || null,
+    tratamiento_realizado: body.tratamiento_realizado || null,
+    piezas_tratadas: body.piezas_tratadas || null,
+    receta: body.receta || null,
+    proxima_visita: body.proxima_visita || null,
+    notas: body.notas || null,
+    paciente_id: origen?.paciente_id || Number(body.paciente_id),
+    cita_id: origen?.cita_id || body.cita_id || null,
+    doctor_id: usuario.id,
+    doctor_nombre: `${usuario.nombre} ${usuario.apellido}`.trim(),
+    doctor_cedula: usuario.cedula || null,
+    fecha: fechaHora.toISOString().slice(0, 10),
+    fecha_hora: fechaHora,
+    es_adenda: Boolean(origen),
+    historia_origen_id: origen?.id || null,
+    motivo_adenda: origen ? body.motivo_adenda : null,
+    registro_previo_hash: previo?.firma_hash || null
+  };
+  data.firma_hash = firmarRegistro(data);
+  return HistoriaClinica.create(data);
+};
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -51,7 +103,7 @@ router.get('/:pacienteId', auth, async (req, res) => {
     const historias = await HistoriaClinica.findAll({
       where: { paciente_id: req.params.pacienteId },
       include: [
-        { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] },
+        { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido', 'cedula'] },
         { model: Cita, as: 'cita' },
         { model: ArchivoHistoria, as: 'archivos', include: [{ model: Usuario, as: 'usuario', attributes: ['id', 'nombre', 'apellido'] }] }
       ],
@@ -59,6 +111,7 @@ router.get('/:pacienteId', auth, async (req, res) => {
     });
     const respuesta = historias.map(historia => {
       const data = historia.toJSON();
+      data.integridad_valida = data.firma_hash ? firmarRegistro(data) === data.firma_hash : null;
       data.archivos = (data.archivos || []).map(archivo => ({
         ...archivo,
         url: urlTemporal(archivo),
@@ -133,10 +186,20 @@ router.use((error, _req, res, next) => {
 // POST /api/historia
 router.post('/', auth, esDoctor, async (req, res) => {
   try {
-    const historia = await HistoriaClinica.create({
-      ...req.body,
-      doctor_id: req.usuario.id
-    });
+    const historia = await crearRegistroInmutable({ body: req.body, usuario: req.usuario });
+    res.status(201).json(historia);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// POST /api/historia/:id/adendas - las correcciones se agregan, nunca sobrescriben
+router.post('/:id/adendas', auth, esDoctor, async (req, res) => {
+  try {
+    const origen = await HistoriaClinica.findByPk(req.params.id);
+    if (!origen) return res.status(404).json({ error: 'Registro original no encontrado.' });
+    if (!req.body.motivo_adenda?.trim()) return res.status(400).json({ error: 'El motivo de la adenda es obligatorio.' });
+    const historia = await crearRegistroInmutable({ body: req.body, usuario: req.usuario, origen });
     res.status(201).json(historia);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -145,14 +208,7 @@ router.post('/', auth, esDoctor, async (req, res) => {
 
 // PUT /api/historia/:id
 router.put('/:id', auth, esDoctor, async (req, res) => {
-  try {
-    const historia = await HistoriaClinica.findByPk(req.params.id);
-    if (!historia) return res.status(404).json({ error: 'Registro no encontrado.' });
-    await historia.update(req.body);
-    res.json(historia);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+  res.status(409).json({ error: 'Las notas clínicas son inmutables. Registra una adenda para corregir o ampliar información.' });
 });
 
 module.exports = router;

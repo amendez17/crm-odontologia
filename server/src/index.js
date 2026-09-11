@@ -7,6 +7,7 @@ require('dotenv').config();
 
 
 const { sequelize, Usuario } = require('./models');
+const ensureComplianceSchema = require('./migrations/ensureComplianceSchema');
 
 const app = express();
 const server = http.createServer(app);
@@ -81,6 +82,7 @@ async function iniciar() {
     console.log('Conexión a MySQL establecida.');
 
     await sequelize.sync();
+    await ensureComplianceSchema(sequelize);
     console.log('Tablas sincronizadas.');
 
     // Crear usuario admin por defecto si no existe

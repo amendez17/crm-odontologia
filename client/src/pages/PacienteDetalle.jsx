@@ -16,10 +16,13 @@ export default function PacienteDetalle() {
   const [balance, setBalance] = useState(null);
   const [tab, setTab] = useState('info');
   const [modalHistoria, setModalHistoria] = useState(false);
+  const [modalAdenda, setModalAdenda] = useState(false);
+  const [historiaOrigen, setHistoriaOrigen] = useState(null);
   const [modalPago, setModalPago] = useState(false);
   const [modalCita, setModalCita] = useState(false);
   const [doctores, setDoctores] = useState([]);
   const [formHistoria, setFormHistoria] = useState({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+  const [formAdenda, setFormAdenda] = useState({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
   const [archivosHistoria, setArchivosHistoria] = useState([]);
   const [subiendoArchivos, setSubiendoArchivos] = useState(null);
   const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '',  notas: ''});
@@ -195,6 +198,21 @@ useEffect(() => {
       toast.error('Error al guardar');
     }};
 
+  const guardarAdenda = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/historia/${historiaOrigen.id}/adendas`, formAdenda);
+      const { data } = await api.get(`/historia/${id}`);
+      setHistorias(data);
+      setModalAdenda(false);
+      setHistoriaOrigen(null);
+      setFormAdenda({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+      toast.success('Adenda registrada sin modificar la nota original');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error al guardar la adenda');
+    }
+  };
+
   const crearConsentimiento = async (e) => {e.preventDefault();
     try {
       await api.post('/consentimiento', { paciente_id: parseInt(id), tipo: formConsent.tipo, contenido: formConsent.contenido });
@@ -315,7 +333,9 @@ win.onload = () => {
     return `
     <div class="registro">
       <div class="registro-header">
-        ${h.fecha} - Dr. ${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}
+        ${h.fecha_hora ? new Date(h.fecha_hora).toLocaleString('es-MX') : h.fecha} - Dr. ${h.doctor_nombre || `${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}`}
+        ${h.doctor_cedula || h.doctor?.cedula ? ` · Cédula: ${h.doctor_cedula || h.doctor.cedula}` : ''}
+        ${h.es_adenda ? ' · ADENDA' : ''}
       </div>
 
       ${h.diagnostico ? `<p><strong>Diagnóstico:</strong> ${h.diagnostico}</p>` : ''}
@@ -323,6 +343,8 @@ win.onload = () => {
       ${h.piezas_tratadas ? `<p><strong>Piezas:</strong> ${h.piezas_tratadas}</p>` : ''}
       ${h.receta ? `<p><strong>Plan de tratamiento:</strong> ${h.receta}</p>` : ''}
       ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
+      ${h.es_adenda ? `<p><strong>Motivo de la adenda:</strong> ${h.motivo_adenda || ''}</p>` : ''}
+      ${h.firma_hash ? `<p class="sello-integridad"><strong>Sello de integridad:</strong> ${h.firma_hash}</p>` : ''}
 
       ${imagenes.length ? `
         <div class="anexos-titulo">Fotografías clínicas</div>
@@ -392,6 +414,8 @@ body{font-family: 'Segoe UI', Arial, sans-serif; padding:10px; max-width:700px; 
 .galeria-impresion figcaption{ margin-top:3px; font-size:8px; color:#6b7280; text-align:center; overflow-wrap:anywhere;}
 
 .pdfs-impresion{ margin-top:8px; padding:7px; background:#f8fafc; border-radius:5px; font-size:10px; color:#475569; page-break-inside:avoid;}
+
+.sello-integridad{ margin-top:8px !important; font-family:monospace; font-size:7px !important; color:#64748b; overflow-wrap:anywhere;}
 
 /* FOOTER */
 .footer{ text-align:center; margin-top:20px; font-size:10px; color:#9ca3af; border-top:1px solid #eee; padding-top:8px;}
@@ -1161,13 +1185,24 @@ window.onload = () => window.print();
           ) : historias.map(h => (
             <div key={h.id} className="card">
               <div className="flex justify-between items-start mb-2">
-                <p className="text-sm text-surface-500 font-medium">{h.fecha} - Dr. {h.doctor?.nombre} {h.doctor?.apellido}</p>
+                <div>
+                  <p className="text-sm text-surface-500 font-medium">
+                    {h.fecha_hora ? new Date(h.fecha_hora).toLocaleString('es-MX') : h.fecha} - Dr. {h.doctor_nombre || `${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}`}
+                  </p>
+                  {(h.doctor_cedula || h.doctor?.cedula) && <p className="text-xs text-surface-500">Cédula profesional: {h.doctor_cedula || h.doctor.cedula}</p>}
+                </div>
+                <div className="flex flex-wrap justify-end gap-2">
+                  {h.es_adenda && <span className="badge bg-amber-100 text-amber-700">Adenda</span>}
+                  {h.integridad_valida === true && <span className="badge bg-green-100 text-green-700">Integridad verificada</span>}
+                  {h.integridad_valida === false && <span className="badge bg-red-100 text-red-700">Revisar integridad</span>}
+                </div>
               </div>
               {h.diagnostico && <p className="text-sm"><span className="font-medium">Diagnóstico:</span> {h.diagnostico}</p>}
               {h.tratamiento_realizado && <p className="text-sm"><span className="font-medium">Tratamiento:</span> {h.tratamiento_realizado}</p>}
               {h.piezas_tratadas && <p className="text-sm"><span className="font-medium">Piezas:</span> {h.piezas_tratadas}</p>}
               {h.receta && <p className="text-sm"><span className="font-medium">Plan de Tratamiento:</span> {h.receta}</p>}
               {h.notas && <p className="text-sm text-surface-500 mt-1 italic">{h.notas}</p>}
+              {h.es_adenda && <p className="text-sm mt-2 text-amber-700"><span className="font-medium">Motivo de la adenda:</span> {h.motivo_adenda}</p>}
               {h.archivos?.length > 0 && (
                 <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {h.archivos.map(archivo => (
@@ -1195,6 +1230,9 @@ window.onload = () => window.print();
                 <FiUploadCloud size={16} /> {subiendoArchivos === h.id ? 'Subiendo...' : 'Agregar imágenes o PDF'}
                 <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => { subirAdjuntos(h.id, e.target.files); e.target.value = ''; }} />
               </label>
+              <button type="button" onClick={() => { setHistoriaOrigen(h); setFormAdenda({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' }); setModalAdenda(true); }} className="mt-3 ml-4 text-sm font-medium text-amber-700 hover:text-amber-800">
+                Agregar adenda
+              </button>
             </div>
           ))}
 
@@ -1240,6 +1278,42 @@ window.onload = () => window.print();
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => { setModalHistoria(false); setArchivosHistoria([]); }} className="btn-secondary">Cancelar</button>
                 <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Guardando...' : 'Guardar'}</button>
+              </div>
+            </form>
+          </Modal>
+
+          <Modal isOpen={modalAdenda} onClose={() => { setModalAdenda(false); setHistoriaOrigen(null); }} title="Agregar adenda a la nota clínica" size="lg">
+            <form onSubmit={guardarAdenda} className="space-y-4">
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                La nota original no se modificará. La adenda quedará fechada, firmada y vinculada al registro #{historiaOrigen?.id}.
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Motivo de la adenda *</label>
+                <textarea required value={formAdenda.motivo_adenda} onChange={e => setFormAdenda({ ...formAdenda, motivo_adenda: e.target.value })} className="input-field" rows={2} placeholder="Explique por qué se agrega esta información" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Diagnóstico complementario</label>
+                <textarea value={formAdenda.diagnostico} onChange={e => setFormAdenda({ ...formAdenda, diagnostico: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Tratamiento o aclaración</label>
+                <textarea value={formAdenda.tratamiento_realizado} onChange={e => setFormAdenda({ ...formAdenda, tratamiento_realizado: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Piezas relacionadas</label>
+                <input value={formAdenda.piezas_tratadas} onChange={e => setFormAdenda({ ...formAdenda, piezas_tratadas: e.target.value })} className="input-field" placeholder="Ej: 11, 21, 36" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Plan de tratamiento complementario</label>
+                <textarea value={formAdenda.receta} onChange={e => setFormAdenda({ ...formAdenda, receta: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>
+                <textarea value={formAdenda.notas} onChange={e => setFormAdenda({ ...formAdenda, notas: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => { setModalAdenda(false); setHistoriaOrigen(null); }} className="btn-secondary">Cancelar</button>
+                <button type="submit" className="btn-primary">Registrar adenda</button>
               </div>
             </form>
           </Modal>

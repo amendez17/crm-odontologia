@@ -24,6 +24,39 @@ const HistoriaClinica = sequelize.define('HistoriaClinica', {
     allowNull: false,
     defaultValue: DataTypes.NOW
   },
+  fecha_hora: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  doctor_nombre: {
+    type: DataTypes.STRING(220),
+    allowNull: true
+  },
+  doctor_cedula: {
+    type: DataTypes.STRING(80),
+    allowNull: true
+  },
+  firma_hash: {
+    type: DataTypes.STRING(64),
+    allowNull: true
+  },
+  registro_previo_hash: {
+    type: DataTypes.STRING(64),
+    allowNull: true
+  },
+  es_adenda: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  historia_origen_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  motivo_adenda: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   diagnostico: {
     type: DataTypes.TEXT,
     allowNull: true
