@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const { Odontograma, Paciente, Usuario } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
@@ -17,6 +18,28 @@ const validarRegistro = ({ pieza_dental, cara = 'completa', estado = 'sano' }) =
   return null;
 };
 
+const contenidoFirma = data => JSON.stringify({
+  paciente_id: Number(data.paciente_id), pieza_dental: Number(data.pieza_dental),
+  cara: data.cara || 'completa', estado: data.estado || 'sano', observacion: data.observacion || '',
+  doctor_id: Number(data.doctor_id), fecha_hora: new Date(data.fecha_hora).toISOString(),
+  registro_previo_hash: data.registro_previo_hash || ''
+});
+const firmarRegistro = data => crypto.createHmac('sha256', process.env.EXPEDIENTE_SIGNING_SECRET || process.env.JWT_SECRET)
+  .update(contenidoFirma(data)).digest('hex');
+
+const crearVersion = async ({ paciente_id, pieza_dental, cara, estado, observacion, usuario }) => {
+  const fechaHora = new Date(); fechaHora.setMilliseconds(0);
+  const previo = await Odontograma.findOne({ where: { paciente_id }, order: [['id', 'DESC']] });
+  const data = {
+    paciente_id: Number(paciente_id), pieza_dental: Number(pieza_dental), cara: cara || 'completa', estado: estado || 'sano',
+    observacion: observacion?.trim() || null, doctor_id: usuario.id, fecha_hora: fechaHora,
+    doctor_nombre: `${usuario.nombre} ${usuario.apellido}`.trim(), doctor_cedula: usuario.cedula || null,
+    registro_previo_hash: previo?.firma_hash || null, fecha: fechaHora
+  };
+  data.firma_hash = firmarRegistro(data);
+  return Odontograma.create(data);
+};
+
 // GET /api/odontograma/:pacienteId
 router.get('/:pacienteId', auth, esDoctor, registrarActividad('consultar', 'odontograma', {
   entidadId: req => req.params.pacienteId,
@@ -28,7 +51,14 @@ router.get('/:pacienteId', auth, esDoctor, registrarActividad('consultar', 'odon
       include: [{ model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] }],
       order: [['createdAt', 'DESC'], ['id', 'DESC']]
     });
-    res.json(registros);
+    const hashes = new Set(registros.map(item => item.firma_hash).filter(Boolean));
+    res.json(registros.map(item => {
+      const data = item.toJSON();
+      data.integridad_valida = data.firma_hash
+        ? firmarRegistro(data) === data.firma_hash && (!data.registro_previo_hash || hashes.has(data.registro_previo_hash))
+        : null;
+      return data;
+    }));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -39,14 +69,7 @@ router.post('/', auth, esDoctor, registrarActividad('crear', 'odontograma'), asy
   try {
     const errorValidacion = validarRegistro(req.body);
     if (errorValidacion) return res.status(400).json({ error: errorValidacion });
-    const registro = await Odontograma.create({
-      paciente_id: req.body.paciente_id,
-      pieza_dental: req.body.pieza_dental,
-      cara: req.body.cara || 'completa',
-      estado: req.body.estado || 'sano',
-      observacion: req.body.observacion || null,
-      doctor_id: req.usuario.id
-    });
+    const registro = await crearVersion({ ...req.body, usuario: req.usuario });
     res.status(201).json(registro);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -67,14 +90,13 @@ router.put('/:id', auth, esDoctor, registrarActividad('actualizar', 'odontograma
     };
     const errorValidacion = validarRegistro(datosNuevos);
     if (errorValidacion) return res.status(400).json({ error: errorValidacion });
-    const nuevaVersion = await Odontograma.create({
+    const nuevaVersion = await crearVersion({
       paciente_id: registro.paciente_id,
       pieza_dental: registro.pieza_dental,
       cara: datosNuevos.cara,
       estado: datosNuevos.estado,
       observacion: req.body.observacion ?? registro.observacion,
-      doctor_id: req.usuario.id,
-      fecha: new Date()
+      usuario: req.usuario
     });
     res.json(nuevaVersion);
   } catch (error) {
