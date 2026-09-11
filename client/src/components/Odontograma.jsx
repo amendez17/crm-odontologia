@@ -386,7 +386,8 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
             <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Superior</span>
             <div className="h-px flex-1 bg-surface-200" />
           </div>
-          <div className="flex justify-center gap-0 overflow-x-auto pb-2">
+          <div className="overflow-x-auto pb-2">
+            <div className="flex w-max min-w-full justify-start gap-0 sm:justify-center">
             {DIENTES_SUPERIOR.map((num, i) => (
               <div key={num} className="flex items-end">
                 <DienteGrafico
@@ -402,6 +403,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
                 {i === 7 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
               </div>
             ))}
+            </div>
           </div>
         </div>
 
@@ -416,7 +418,8 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
 
         {/* Inferior arch */}
         <div className="mt-1">
-          <div className="flex justify-center gap-0 overflow-x-auto pt-2">
+          <div className="overflow-x-auto pt-2">
+            <div className="flex w-max min-w-full justify-start gap-0 sm:justify-center">
             {DIENTES_INFERIOR.map((num, i) => (
               <div key={num} className="flex items-start">
                 <DienteGrafico
@@ -432,6 +435,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
                 {i === 7 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
               </div>
             ))}
+            </div>
           </div>
           <div className="flex items-center justify-center gap-2 mt-3">
             <div className="h-px flex-1 bg-surface-200" />
