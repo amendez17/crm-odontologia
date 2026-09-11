@@ -80,6 +80,16 @@ async function ensureComplianceSchema(sequelize) {
     if (!archivosTable[name]) await queryInterface.addColumn('archivos_historia', name, definition);
   }
 
+  const pagosTable = await queryInterface.describeTable('pagos');
+  const pagoColumns = {
+    requiere_factura: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    factura_emitida: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    fecha_factura: { type: DataTypes.DATE, allowNull: true }
+  };
+  for (const [name, definition] of Object.entries(pagoColumns)) {
+    if (!pagosTable[name]) await queryInterface.addColumn('pagos', name, definition);
+  }
+
   const userTable = await queryInterface.describeTable('usuarios');
   if (!userTable.token_version) {
     await queryInterface.addColumn('usuarios', 'token_version', { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 });
