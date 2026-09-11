@@ -167,7 +167,7 @@ useEffect(() => {
       // Normaliza: acepta tanto string ('caries') como objeto ({ estado, cara })
       const payload = typeof data === 'string'? { estado: data, cara: 'completa' }: { cara: 'completa', ...data };
      // Busca el registro más reciente (mayor id) para esa pieza + cara
-      const registro = odontograma.filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara).sort((a, b) => b.id - a.id)[0];
+      const registro = odontograma.filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara && (r.tipo_registro || 'hallazgo') === (payload.tipo_registro || 'hallazgo')).sort((a, b) => b.id - a.id)[0];
       if (!registro) {
         await api.post('/odontograma', { paciente_id: parseInt(id), pieza_dental: pieza, ...payload});
       } else {
@@ -414,13 +414,15 @@ win.onload = () => {
   const win = window.open('', '_blank', 'width=850,height=900');
   if (!win) return toast.error('Permite las ventanas emergentes para imprimir');
   const nombresEstado = { sano: 'Sano', caries: 'Caries', obturacion: 'Obturación', corona: 'Corona', extraccion: 'Extracción', endodoncia: 'Endodoncia', implante: 'Implante', protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura' };
+  const nombresTipoOdontograma = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
   const nombreCara = registro => registro.cara === 'completa' ? 'Diente completo' : registro.cara === 'lingual' ? (Number(registro.pieza_dental) < 30 ? 'Palatina' : 'Lingual') : `${registro.cara.charAt(0).toUpperCase()}${registro.cara.slice(1)}`;
   const actuales = [...odontograma]
     .sort((a, b) => b.id - a.id)
-    .filter((registro, indice, lista) => indice === lista.findIndex(item => item.pieza_dental === registro.pieza_dental && (item.cara || 'completa') === (registro.cara || 'completa')));
+    .filter((registro, indice, lista) => indice === lista.findIndex(item => item.pieza_dental === registro.pieza_dental && (item.cara || 'completa') === (registro.cara || 'completa') && (item.tipo_registro || 'hallazgo') === (registro.tipo_registro || 'hallazgo')));
   const filas = actuales.map(registro => `<tr>
     <td>${registro.pieza_dental}</td>
     <td>${nombreCara(registro)}</td>
+    <td>${nombresTipoOdontograma[registro.tipo_registro || 'hallazgo']}</td>
     <td>${nombresEstado[registro.estado] || registro.estado}</td>
     <td>${registro.observacion || '—'}</td>
     <td>${registro.doctor_nombre || [registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}${registro.doctor_cedula ? `<br>Cédula: ${registro.doctor_cedula}` : ''}</td>
@@ -432,7 +434,7 @@ win.onload = () => {
     <div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><p>Odontograma clínico</p></div>
     <div class="paciente"><span><b>Paciente:</b> ${paciente.nombre} ${paciente.apellido}</span><span><b>Número:</b> ${paciente.dni || '—'}</span><span><b>Edad:</b> ${edad !== null ? `${edad} años` : '—'}</span></div>
     <p class="resumen"><b>Estado actual:</b> ${actuales.length} hallazgos registrados. El historial electrónico conserva ${odontograma.length} movimientos.</p>
-    <table><thead><tr><th>Pieza</th><th>Cara</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha y hora</th></tr></thead><tbody>${filas || '<tr><td colspan="6" style="text-align:center">Sin hallazgos registrados</td></tr>'}</tbody></table>
+    <table><thead><tr><th>Pieza</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha y hora</th></tr></thead><tbody>${filas || '<tr><td colspan="7" style="text-align:center">Sin registros odontológicos</td></tr>'}</tbody></table>
     <div class="firma"><div>Nombre, firma y cédula del odontólogo</div></div>
     <div class="footer">Documento generado desde el expediente clínico · ${new Date().toLocaleString('es-MX')}</div>
   </body></html>`);
