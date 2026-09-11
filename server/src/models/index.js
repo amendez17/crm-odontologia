@@ -16,6 +16,7 @@ const Consentimiento = require('./Consentimiento');
 const LogActividad = require('./LogActividad');
 const Receta = require('./Receta')(sequelize, require('sequelize').DataTypes);
 const Periodontograma = require('./Periodontograma');
+const EntregaExpediente = require('./EntregaExpediente');
 
 // --- Asociaciones ---
 
@@ -73,6 +74,11 @@ ArchivoInterpretacion.belongsTo(ArchivoHistoria, { foreignKey: 'archivo_id', as:
 Usuario.hasMany(ArchivoInterpretacion, { foreignKey: 'usuario_id', as: 'interpretacionesArchivos' });
 ArchivoInterpretacion.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 
+Paciente.hasMany(EntregaExpediente, { foreignKey: 'paciente_id', as: 'entregasExpediente' });
+EntregaExpediente.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+Usuario.hasMany(EntregaExpediente, { foreignKey: 'responsable_id', as: 'entregasExpediente' });
+EntregaExpediente.belongsTo(Usuario, { foreignKey: 'responsable_id', as: 'responsable' });
+
 Paciente.hasMany(Periodontograma, { foreignKey: 'paciente_id', as: 'periodontogramas' });
 Periodontograma.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
 Usuario.hasMany(Periodontograma, { foreignKey: 'doctor_id', as: 'periodontogramas' });
@@ -125,5 +131,6 @@ module.exports = {
   Consentimiento,
   LogActividad,
   Receta,
-  Periodontograma
+  Periodontograma,
+  EntregaExpediente
 };
