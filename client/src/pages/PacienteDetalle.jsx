@@ -309,7 +309,10 @@ win.onload = () => {
   };
  const imprimirHistoria = () => {
   const win = window.open('', '_blank', 'width=700,height=900');
-  const registros = historias.map(h => `
+  const registros = historias.map(h => {
+    const imagenes = (h.archivos || []).filter(archivo => archivo.tipo === 'imagen');
+    const pdfs = (h.archivos || []).filter(archivo => archivo.tipo === 'pdf');
+    return `
     <div class="registro">
       <div class="registro-header">
         ${h.fecha} - Dr. ${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}
@@ -320,8 +323,26 @@ win.onload = () => {
       ${h.piezas_tratadas ? `<p><strong>Piezas:</strong> ${h.piezas_tratadas}</p>` : ''}
       ${h.receta ? `<p><strong>Plan de tratamiento:</strong> ${h.receta}</p>` : ''}
       ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
+
+      ${imagenes.length ? `
+        <div class="anexos-titulo">Fotografías clínicas</div>
+        <div class="galeria-impresion">
+          ${imagenes.map(archivo => `
+            <figure>
+              <img src="${archivo.url}" alt="${archivo.nombre_original || 'Fotografía clínica'}" />
+              <figcaption>${archivo.nombre_original || 'Fotografía clínica'}</figcaption>
+            </figure>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${pdfs.length ? `
+        <div class="pdfs-impresion">
+          <strong>Estudios PDF anexos:</strong> ${pdfs.map(archivo => archivo.nombre_original).join(', ')}
+        </div>
+      ` : ''}
     </div>
-  `).join('');
+  `}).join('');
   win.document.write(`
 <!DOCTYPE html>
 <html>
@@ -352,13 +373,25 @@ body{font-family: 'Segoe UI', Arial, sans-serif; padding:10px; max-width:700px; 
 .alerta.normal{ color:#333;}
 
 /* REGISTROS */
-.registro{ border:1px solid #f0e6c8; border-radius:10px; padding:14px; margin-bottom:10px; page-break-inside:avoid; background:#fff;}
+.registro{ border:1px solid #f0e6c8; border-radius:10px; padding:14px; margin-bottom:10px; background:#fff;}
 
 .registro-header{ font-weight:bold; color:#c8a24a; margin-bottom:6px; font-size:12px; border-bottom:1px solid #f5e6b3;  padding-bottom:4px;}
 
 .registro p{ margin:3px 0; font-size:12px;}
 
 .notas{ color:#6b7280; font-style:italic;}
+
+.anexos-titulo{ margin-top:10px; padding-top:8px; border-top:1px solid #f5e6b3; font-size:11px; font-weight:bold; color:#7a5c1b;}
+
+.galeria-impresion{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; margin-top:7px;}
+
+.galeria-impresion figure{ margin:0; border:1px solid #eee; border-radius:6px; padding:4px; page-break-inside:avoid;}
+
+.galeria-impresion img{ display:block; width:100%; height:190px; object-fit:contain; background:#fafafa; border-radius:4px;}
+
+.galeria-impresion figcaption{ margin-top:3px; font-size:8px; color:#6b7280; text-align:center; overflow-wrap:anywhere;}
+
+.pdfs-impresion{ margin-top:8px; padding:7px; background:#f8fafc; border-radius:5px; font-size:10px; color:#475569; page-break-inside:avoid;}
 
 /* FOOTER */
 .footer{ text-align:center; margin-top:20px; font-size:10px; color:#9ca3af; border-top:1px solid #eee; padding-top:8px;}
