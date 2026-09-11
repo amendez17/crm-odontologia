@@ -32,6 +32,11 @@ const Odontograma = sequelize.define('Odontograma', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
+  fecha_hora: { type: DataTypes.DATE, allowNull: true },
+  doctor_nombre: { type: DataTypes.STRING(220), allowNull: true },
+  doctor_cedula: { type: DataTypes.STRING(80), allowNull: true },
+  firma_hash: { type: DataTypes.STRING(64), allowNull: true },
+  registro_previo_hash: { type: DataTypes.STRING(64), allowNull: true },
   fecha: {
     type: DataTypes.DATEONLY,
     allowNull: false,
