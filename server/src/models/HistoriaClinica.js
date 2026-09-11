@@ -57,6 +57,18 @@ const HistoriaClinica = sequelize.define('HistoriaClinica', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  motivo_consulta: { type: DataTypes.TEXT, allowNull: true },
+  interrogatorio: { type: DataTypes.TEXT, allowNull: true },
+  exploracion_extraoral: { type: DataTypes.TEXT, allowNull: true },
+  exploracion_intraoral: { type: DataTypes.TEXT, allowNull: true },
+  presion_arterial: { type: DataTypes.STRING(20), allowNull: true },
+  frecuencia_cardiaca: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+  frecuencia_respiratoria: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+  temperatura: { type: DataTypes.DECIMAL(4, 1), allowNull: true },
+  peso: { type: DataTypes.DECIMAL(6, 2), allowNull: true },
+  talla: { type: DataTypes.DECIMAL(5, 2), allowNull: true },
+  pronostico: { type: DataTypes.TEXT, allowNull: true },
+  indicaciones: { type: DataTypes.TEXT, allowNull: true },
   diagnostico: {
     type: DataTypes.TEXT,
     allowNull: true

@@ -9,6 +9,12 @@ import { fechaHoy } from '../utils/fecha';
 import socket from '../socket';
 import { useAuth } from '../context/AuthContext';
 
+const notaClinicaVacia = () => ({
+  motivo_consulta: '', interrogatorio: '', exploracion_extraoral: '', exploracion_intraoral: '',
+  presion_arterial: '', frecuencia_cardiaca: '', frecuencia_respiratoria: '', temperatura: '', peso: '', talla: '',
+  diagnostico: '', pronostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', indicaciones: '', notas: ''
+});
+
 export default function PacienteDetalle() {
   const { usuario } = useAuth();
   const puedeModificarClinico = ['administrador', 'doctor'].includes(usuario?.rol);
@@ -24,7 +30,7 @@ export default function PacienteDetalle() {
   const [modalPago, setModalPago] = useState(false);
   const [modalCita, setModalCita] = useState(false);
   const [doctores, setDoctores] = useState([]);
-  const [formHistoria, setFormHistoria] = useState({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+  const [formHistoria, setFormHistoria] = useState(notaClinicaVacia);
   const [formAdenda, setFormAdenda] = useState({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
   const [archivosHistoria, setArchivosHistoria] = useState([]);
   const [subiendoArchivos, setSubiendoArchivos] = useState(null);
@@ -191,12 +197,12 @@ useEffect(() => {
       if (archivosHistoria.length) await subirAdjuntos(nuevaHistoria.id, archivosHistoria, false);
       toast.success(archivosHistoria.length ? 'Registro y archivos añadidos' : 'Registro añadido');
       setModalHistoria(false);
-      setFormHistoria({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+      setFormHistoria(notaClinicaVacia());
       setArchivosHistoria([]);
       const { data } = await api.get(`/historia/${id}`);
       setHistorias(data);
-    } catch {
-      toast.error('Error al guardar');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error al guardar');
     }};
 
   const guardarAdenda = async (e) => {
@@ -345,9 +351,20 @@ win.onload = () => {
       </div>
 
       ${h.diagnostico ? `<p><strong>Diagnóstico:</strong> ${h.diagnostico}</p>` : ''}
+      ${h.motivo_consulta ? `<p><strong>Motivo de consulta:</strong> ${h.motivo_consulta}</p>` : ''}
+      ${h.interrogatorio ? `<p><strong>Interrogatorio:</strong> ${h.interrogatorio}</p>` : ''}
+      ${h.exploracion_extraoral ? `<p><strong>Exploración extraoral:</strong> ${h.exploracion_extraoral}</p>` : ''}
+      ${h.exploracion_intraoral ? `<p><strong>Exploración intraoral:</strong> ${h.exploracion_intraoral}</p>` : ''}
+      ${(h.presion_arterial || h.frecuencia_cardiaca || h.frecuencia_respiratoria || h.temperatura || h.peso || h.talla) ? `<p><strong>Signos vitales:</strong> ${[
+        h.presion_arterial && `TA ${h.presion_arterial} mmHg`, h.frecuencia_cardiaca && `FC ${h.frecuencia_cardiaca} lpm`,
+        h.frecuencia_respiratoria && `FR ${h.frecuencia_respiratoria} rpm`, h.temperatura && `Temp. ${h.temperatura} °C`,
+        h.peso && `Peso ${h.peso} kg`, h.talla && `Talla ${h.talla} cm`
+      ].filter(Boolean).join(' · ')}</p>` : ''}
+      ${h.pronostico ? `<p><strong>Pronóstico:</strong> ${h.pronostico}</p>` : ''}
       ${h.tratamiento_realizado ? `<p><strong>Tratamiento:</strong> ${h.tratamiento_realizado}</p>` : ''}
       ${h.piezas_tratadas ? `<p><strong>Piezas:</strong> ${h.piezas_tratadas}</p>` : ''}
       ${h.receta ? `<p><strong>Plan de tratamiento:</strong> ${h.receta}</p>` : ''}
+      ${h.indicaciones ? `<p><strong>Indicaciones:</strong> ${h.indicaciones}</p>` : ''}
       ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
       ${h.es_adenda ? `<p><strong>Motivo de la adenda:</strong> ${h.motivo_adenda || ''}</p>` : ''}
       ${h.firma_hash ? `<p class="sello-integridad"><strong>Sello de integridad:</strong> ${h.firma_hash}</p>` : ''}
@@ -1206,9 +1223,19 @@ window.onload = () => window.print();
                 </div>
               </div>
               {h.diagnostico && <p className="text-sm"><span className="font-medium">Diagnóstico:</span> {h.diagnostico}</p>}
+              {h.motivo_consulta && <p className="text-sm"><span className="font-medium">Motivo de consulta:</span> {h.motivo_consulta}</p>}
+              {h.interrogatorio && <p className="text-sm"><span className="font-medium">Interrogatorio:</span> {h.interrogatorio}</p>}
+              {h.exploracion_extraoral && <p className="text-sm"><span className="font-medium">Exploración extraoral:</span> {h.exploracion_extraoral}</p>}
+              {h.exploracion_intraoral && <p className="text-sm"><span className="font-medium">Exploración intraoral:</span> {h.exploracion_intraoral}</p>}
+              {(h.presion_arterial || h.frecuencia_cardiaca || h.frecuencia_respiratoria || h.temperatura || h.peso || h.talla) && <p className="text-sm"><span className="font-medium">Signos vitales:</span> {[
+                h.presion_arterial && `TA ${h.presion_arterial}`, h.frecuencia_cardiaca && `FC ${h.frecuencia_cardiaca}`,
+                h.frecuencia_respiratoria && `FR ${h.frecuencia_respiratoria}`, h.temperatura && `${h.temperatura} °C`, h.peso && `${h.peso} kg`, h.talla && `${h.talla} cm`
+              ].filter(Boolean).join(' · ')}</p>}
+              {h.pronostico && <p className="text-sm"><span className="font-medium">Pronóstico:</span> {h.pronostico}</p>}
               {h.tratamiento_realizado && <p className="text-sm"><span className="font-medium">Tratamiento:</span> {h.tratamiento_realizado}</p>}
               {h.piezas_tratadas && <p className="text-sm"><span className="font-medium">Piezas:</span> {h.piezas_tratadas}</p>}
               {h.receta && <p className="text-sm"><span className="font-medium">Plan de Tratamiento:</span> {h.receta}</p>}
+              {h.indicaciones && <p className="text-sm"><span className="font-medium">Indicaciones:</span> {h.indicaciones}</p>}
               {h.notas && <p className="text-sm text-surface-500 mt-1 italic">{h.notas}</p>}
               {h.es_adenda && <p className="text-sm mt-2 text-amber-700"><span className="font-medium">Motivo de la adenda:</span> {h.motivo_adenda}</p>}
               {h.archivos?.length > 0 && (
@@ -1246,8 +1273,41 @@ window.onload = () => window.print();
           <Modal isOpen={modalHistoria} onClose={() => setModalHistoria(false)} title="Nueva Entrada - Historia Clínica" size="lg">
             <form onSubmit={guardarHistoria} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Diagnóstico</label>
-                <textarea value={formHistoria.diagnostico} onChange={e => setFormHistoria({ ...formHistoria, diagnostico: e.target.value })} className="input-field" rows={2} />
+                <label className="block text-sm font-medium text-surface-600 mb-1">Motivo de consulta *</label>
+                <textarea required value={formHistoria.motivo_consulta} onChange={e => setFormHistoria({ ...formHistoria, motivo_consulta: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Interrogatorio y evolución del padecimiento</label>
+                <textarea value={formHistoria.interrogatorio} onChange={e => setFormHistoria({ ...formHistoria, interrogatorio: e.target.value })} className="input-field" rows={3} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-600 mb-1">Exploración extraoral</label>
+                  <textarea value={formHistoria.exploracion_extraoral} onChange={e => setFormHistoria({ ...formHistoria, exploracion_extraoral: e.target.value })} className="input-field" rows={3} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-surface-600 mb-1">Exploración intraoral</label>
+                  <textarea value={formHistoria.exploracion_intraoral} onChange={e => setFormHistoria({ ...formHistoria, exploracion_intraoral: e.target.value })} className="input-field" rows={3} />
+                </div>
+              </div>
+              <fieldset className="border border-surface-200 rounded-xl p-4">
+                <legend className="px-2 text-sm font-medium text-surface-600">Signos vitales y somatometría</legend>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <input value={formHistoria.presion_arterial} onChange={e => setFormHistoria({ ...formHistoria, presion_arterial: e.target.value })} className="input-field" placeholder="TA 120/80" pattern="[0-9]{2,3}/[0-9]{2,3}" />
+                  <input type="number" min="20" max="250" value={formHistoria.frecuencia_cardiaca} onChange={e => setFormHistoria({ ...formHistoria, frecuencia_cardiaca: e.target.value })} className="input-field" placeholder="FC lpm" />
+                  <input type="number" min="5" max="80" value={formHistoria.frecuencia_respiratoria} onChange={e => setFormHistoria({ ...formHistoria, frecuencia_respiratoria: e.target.value })} className="input-field" placeholder="FR rpm" />
+                  <input type="number" min="30" max="45" step="0.1" value={formHistoria.temperatura} onChange={e => setFormHistoria({ ...formHistoria, temperatura: e.target.value })} className="input-field" placeholder="Temperatura °C" />
+                  <input type="number" min="1" max="500" step="0.01" value={formHistoria.peso} onChange={e => setFormHistoria({ ...formHistoria, peso: e.target.value })} className="input-field" placeholder="Peso kg" />
+                  <input type="number" min="30" max="250" step="0.1" value={formHistoria.talla} onChange={e => setFormHistoria({ ...formHistoria, talla: e.target.value })} className="input-field" placeholder="Talla cm" />
+                </div>
+              </fieldset>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Diagnóstico o problemas clínicos *</label>
+                <textarea required value={formHistoria.diagnostico} onChange={e => setFormHistoria({ ...formHistoria, diagnostico: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Pronóstico</label>
+                <textarea value={formHistoria.pronostico} onChange={e => setFormHistoria({ ...formHistoria, pronostico: e.target.value })} className="input-field" rows={2} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Tratamiento Realizado</label>
@@ -1258,8 +1318,12 @@ window.onload = () => window.print();
                 <input value={formHistoria.piezas_tratadas} onChange={e => setFormHistoria({ ...formHistoria, piezas_tratadas: e.target.value })} className="input-field" placeholder="Ej: 11, 21, 36" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Plan de tratamiento</label>
-                <textarea value={formHistoria.receta} onChange={e => setFormHistoria({ ...formHistoria, receta: e.target.value })} className="input-field" rows={2} />
+                <label className="block text-sm font-medium text-surface-600 mb-1">Plan de tratamiento *</label>
+                <textarea required value={formHistoria.receta} onChange={e => setFormHistoria({ ...formHistoria, receta: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Indicaciones al paciente</label>
+                <textarea value={formHistoria.indicaciones} onChange={e => setFormHistoria({ ...formHistoria, indicaciones: e.target.value })} className="input-field" rows={2} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>

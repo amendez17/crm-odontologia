@@ -11,12 +11,24 @@ const contenidoFirma = data => JSON.stringify({
   paciente_id: Number(data.paciente_id),
   doctor_id: Number(data.doctor_id),
   fecha_hora: new Date(data.fecha_hora).toISOString(),
+  motivo_consulta: data.motivo_consulta || '',
+  interrogatorio: data.interrogatorio || '',
+  exploracion_extraoral: data.exploracion_extraoral || '',
+  exploracion_intraoral: data.exploracion_intraoral || '',
+  presion_arterial: data.presion_arterial || '',
+  frecuencia_cardiaca: data.frecuencia_cardiaca ? Number(data.frecuencia_cardiaca) : null,
+  frecuencia_respiratoria: data.frecuencia_respiratoria ? Number(data.frecuencia_respiratoria) : null,
+  temperatura: data.temperatura ? Number(data.temperatura) : null,
+  peso: data.peso ? Number(data.peso) : null,
+  talla: data.talla ? Number(data.talla) : null,
   diagnostico: data.diagnostico || '',
   tratamiento_realizado: data.tratamiento_realizado || '',
   piezas_tratadas: data.piezas_tratadas || '',
   receta: data.receta || '',
   proxima_visita: data.proxima_visita || '',
   notas: data.notas || '',
+  pronostico: data.pronostico || '',
+  indicaciones: data.indicaciones || '',
   es_adenda: Boolean(data.es_adenda),
   historia_origen_id: data.historia_origen_id ? Number(data.historia_origen_id) : null,
   motivo_adenda: data.motivo_adenda || '',
@@ -28,6 +40,28 @@ const firmarRegistro = data => crypto
   .update(contenidoFirma(data))
   .digest('hex');
 
+const validarNotaClinica = (body, usuario) => {
+  if (!usuario.cedula?.trim()) return 'El profesional debe tener registrada su cédula antes de crear notas clínicas.';
+  if (!body.motivo_consulta?.trim()) return 'El motivo de consulta es obligatorio.';
+  if (!body.diagnostico?.trim()) return 'El diagnóstico o problema clínico es obligatorio.';
+  if (!body.receta?.trim()) return 'El plan de tratamiento es obligatorio.';
+  const limites = [
+    ['frecuencia_cardiaca', 20, 250, 'frecuencia cardiaca'],
+    ['frecuencia_respiratoria', 5, 80, 'frecuencia respiratoria'],
+    ['temperatura', 30, 45, 'temperatura'],
+    ['peso', 1, 500, 'peso'],
+    ['talla', 30, 250, 'talla']
+  ];
+  for (const [campo, minimo, maximo, etiqueta] of limites) {
+    if (body[campo] !== '' && body[campo] != null) {
+      const valor = Number(body[campo]);
+      if (!Number.isFinite(valor) || valor < minimo || valor > maximo) return `El valor de ${etiqueta} no es válido.`;
+    }
+  }
+  if (body.presion_arterial && !/^\d{2,3}\/\d{2,3}$/.test(body.presion_arterial.trim())) return 'Usa el formato 120/80 para la presión arterial.';
+  return null;
+};
+
 const crearRegistroInmutable = async ({ body, usuario, origen = null }) => {
   const fechaHora = new Date();
   fechaHora.setMilliseconds(0);
@@ -36,12 +70,24 @@ const crearRegistroInmutable = async ({ body, usuario, origen = null }) => {
     order: [['id', 'DESC']]
   });
   const data = {
+    motivo_consulta: body.motivo_consulta || null,
+    interrogatorio: body.interrogatorio || null,
+    exploracion_extraoral: body.exploracion_extraoral || null,
+    exploracion_intraoral: body.exploracion_intraoral || null,
+    presion_arterial: body.presion_arterial || null,
+    frecuencia_cardiaca: body.frecuencia_cardiaca ? Number(body.frecuencia_cardiaca) : null,
+    frecuencia_respiratoria: body.frecuencia_respiratoria ? Number(body.frecuencia_respiratoria) : null,
+    temperatura: body.temperatura ? Number(body.temperatura) : null,
+    peso: body.peso ? Number(body.peso) : null,
+    talla: body.talla ? Number(body.talla) : null,
     diagnostico: body.diagnostico || null,
     tratamiento_realizado: body.tratamiento_realizado || null,
     piezas_tratadas: body.piezas_tratadas || null,
     receta: body.receta || null,
     proxima_visita: body.proxima_visita || null,
     notas: body.notas || null,
+    pronostico: body.pronostico || null,
+    indicaciones: body.indicaciones || null,
     paciente_id: origen?.paciente_id || Number(body.paciente_id),
     cita_id: origen?.cita_id || body.cita_id || null,
     doctor_id: usuario.id,
@@ -187,6 +233,8 @@ router.post('/', auth, esDoctor, registrarActividad('crear', 'historia_clinica',
   contexto: (req, respuesta) => ({ paciente_id: Number(respuesta?.paciente_id || req.body.paciente_id) })
 }), async (req, res) => {
   try {
+    const errorValidacion = validarNotaClinica(req.body, req.usuario);
+    if (errorValidacion) return res.status(400).json({ error: errorValidacion });
     const historia = await crearRegistroInmutable({ body: req.body, usuario: req.usuario });
     res.status(201).json(historia);
   } catch (error) {
