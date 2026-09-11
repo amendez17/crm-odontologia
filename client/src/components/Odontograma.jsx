@@ -75,43 +75,37 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     const raizStroke = esAusente ? '#bdbdbd' : '#d4a574';
 
     if (tipo === 'molar') {
-      // 3 roots for molars (2 for lower)
-      if (esInferior) {
+      // Superiores: tres raíces hacia arriba. Inferiores: dos hacia abajo.
+      if (!esInferior) {
         return (
           <g>
-            <path d="M16,0 L19,16 Q20,18 18,18 L14,18 Q12,18 13,16 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
-            <path d="M28,0 L31,16 Q32,18 30,18 L26,18 Q24,18 25,16 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+            <path d="M8,24 L6,4 Q6,2 8,2 L12,2 Q14,2 13,4 L15,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+            <path d="M18,24 L19,2 Q19,0 21,0 L23,0 Q25,0 25,2 L26,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+            <path d="M30,24 L31,4 Q30,2 32,2 L36,2 Q38,2 38,4 L36,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
           </g>
         );
       }
       return (
         <g>
-          <path d="M10,42 L13,58 Q14,60 12,60 L8,60 Q6,60 7,58 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
-          <path d="M22,42 L24,60 Q25,62 23,62 L19,62 Q17,62 19,60 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
-          <path d="M34,42 L37,58 Q38,60 36,60 L32,60 Q30,60 31,58 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+          <path d="M12,40 L14,62 Q14,64 16,64 L19,64 Q21,64 20,62 L21,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+          <path d="M25,40 L26,62 Q25,64 27,64 L30,64 Q32,64 32,62 L34,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
         </g>
       );
     } else if (tipo === 'premolar') {
-      if (esInferior) {
-        return <path d="M20,0 L23,18 Q24,20 22,20 L18,20 Q16,20 17,18 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
-      }
-      return (
+      if (!esInferior) return (
         <g>
-          <path d="M14,38 L16,54 Q17,56 15,56 L11,56 Q9,56 10,54 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
-          <path d="M30,38 L32,54 Q33,56 31,56 L27,56 Q25,56 26,54 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+          <path d="M13,24 L12,4 Q12,2 14,2 L17,2 Q19,2 19,4 L20,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+          <path d="M24,24 L25,4 Q25,2 27,2 L30,2 Q32,2 31,4 L31,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
         </g>
       );
+      return <path d="M18,40 L18,62 Q18,64 20,64 L23,64 Q25,64 25,62 L26,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
     } else if (tipo === 'canino') {
-      if (esInferior) {
-        return <path d="M18,0 L21,22 Q22,24 20,24 L16,24 Q14,24 15,22 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
-      }
-      return <path d="M18,38 L21,62 Q22,64 20,64 L16,64 Q14,64 15,62 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
+      if (!esInferior) return <path d="M16,24 L17,2 Q17,0 19,0 L22,0 Q24,0 24,2 L25,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
+      return <path d="M16,40 L17,63 Q17,65 19,65 L22,65 Q24,65 24,63 L25,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
     } else {
       // Incisors
-      if (esInferior) {
-        return <path d="M17,0 L20,18 Q21,20 19,20 L15,20 Q13,20 14,18 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
-      }
-      return <path d="M17,38 L20,58 Q21,60 19,60 L15,60 Q13,60 14,58 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
+      if (!esInferior) return <path d="M16,24 L17,4 Q17,2 19,2 L21,2 Q23,2 23,4 L24,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
+      return <path d="M16,40 L17,61 Q17,63 19,63 L21,63 Q23,63 23,61 L24,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
     }
   };
 
@@ -119,7 +113,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
    const renderCorona = () => {
     const size = tipo === 'molar' ? 44 : tipo === 'premolar' ? 40 : 36;
     const cx = size / 2 + (44 - size) / 2;
-    const cy = esInferior ? 30 : 20;
+    const cy = esInferior ? 22 : 42;
     const r = size / 2 - 2;
     const ri = r * 0.45; // inner radius for oclusal
 
@@ -220,7 +214,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     );
   };
   
-  const svgHeight = esInferior ? 58 : (tipo === 'canino' ? 68 : tipo === 'molar' ? 66 : 62);
+  const svgHeight = 66;
   const svgWidth = 44;
 
   return (
@@ -237,19 +231,8 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
         className={`${!readOnly ? 'cursor-pointer' : ''} transition-transform group-hover:scale-105`}
         onClick={handleDienteClick}
       >
-        {esInferior ? (
-          <>
-            {renderRaiz()}
-            <g transform={`translate(0, ${tipo === 'molar' ? 14 : tipo === 'premolar' ? 16 : 18})`}>
-              {renderCorona()}
-            </g>
-          </>
-        ) : (
-          <>
-            {renderCorona()}
-            {renderRaiz()}
-          </>
-        )}
+        {renderRaiz()}
+        {renderCorona()}
       </svg>
       {!esInferior && (
         <span className={`text-[10px] font-bold mt-0.5 transition-colors ${
