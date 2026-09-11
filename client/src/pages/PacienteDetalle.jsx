@@ -211,8 +211,8 @@ useEffect(() => {
   const subirAdjuntos = async (historiaId, adjuntos, mostrarMensaje = true) => {
     const seleccionados = (adjuntos || []).map(adjunto => adjunto.file);
     if (!seleccionados.length || !validarArchivos(seleccionados)) return false;
-    if (adjuntos.some(adjunto => adjunto.interpretacion.trim().length < 5 || adjunto.interpretacion.trim().length > 5000)) {
-      toast.error('Cada interpretación debe contener entre 5 y 5000 caracteres');
+    if (adjuntos.some(adjunto => adjunto.interpretacion.trim() && (adjunto.interpretacion.trim().length < 5 || adjunto.interpretacion.trim().length > 5000))) {
+      toast.error('Las interpretaciones escritas deben contener entre 5 y 5000 caracteres');
       return false;
     }
     const data = new FormData();
@@ -255,8 +255,8 @@ useEffect(() => {
 
   const guardarHistoria = async (e) => {
     e.preventDefault();
-    if (archivosHistoria.some(adjunto => adjunto.interpretacion.trim().length < 5 || adjunto.interpretacion.trim().length > 5000)) {
-      return toast.error('Cada interpretación debe contener entre 5 y 5000 caracteres');
+    if (archivosHistoria.some(adjunto => adjunto.interpretacion.trim() && (adjunto.interpretacion.trim().length < 5 || adjunto.interpretacion.trim().length > 5000))) {
+      return toast.error('Las interpretaciones escritas deben contener entre 5 y 5000 caracteres');
     }
     try {
       const respuesta = (grupo, detalle) => {
@@ -495,7 +495,7 @@ win.onload = () => {
 
   const historiaHtml = historias.map(h => `<article class="registro"><h3>${fecha(h.fecha_hora || h.fecha)} · Dr. ${esc(h.doctor_nombre || [h.doctor?.nombre, h.doctor?.apellido].filter(Boolean).join(' '))}${h.es_adenda ? ' · ADENDA' : ''}</h3>
     ${[['Motivo',h.motivo_consulta],['Interrogatorio',h.interrogatorio],['Antecedentes heredofamiliares',h.antecedentes_heredofamiliares],['Antecedentes patológicos',h.antecedentes_patologicos],['Antecedentes no patológicos',h.antecedentes_no_patologicos],['Antecedentes odontológicos',h.antecedentes_odontologicos],['Hábitos',h.habitos_orales],['Exploración extraoral',h.exploracion_extraoral],['Exploración intraoral',h.exploracion_intraoral],['Diagnóstico',h.diagnostico],['Pronóstico',h.pronostico],['Tratamiento realizado',h.tratamiento_realizado],['Piezas',h.piezas_tratadas],['Plan',h.receta],['Indicaciones',h.indicaciones],['Notas',h.notas],['Motivo de adenda',h.motivo_adenda]].filter(([,v]) => v).map(([k,v]) => `<p><b>${k}:</b> ${esc(v)}</p>`).join('')}
-    ${(h.archivos || []).length ? `<div class="anexos">${h.archivos.map(a => `<div class="anexo">${a.tipo === 'imagen' ? `<img src="${esc(a.url)}" alt="${esc(a.nombre_original)}">` : '<div class="pdf">PDF</div>'}<b>${esc(a.nombre_original)}</b>${a.interpretacion ? `<p><b>Interpretación:</b> ${esc(a.interpretacion)}</p><small>${esc(a.interpretado_por_nombre || '')} · ${fecha(a.fecha_interpretacion)}</small>` : '<small>Sin interpretación registrada</small>'}</div>`).join('')}</div>` : ''}
+    ${(h.archivos || []).length ? `<div class="anexos">${h.archivos.map(a => `<div class="anexo">${a.tipo === 'imagen' ? `<img src="${esc(a.url)}" alt="${esc(a.nombre_original)}">` : '<div class="pdf">PDF</div>'}<b>${esc(a.nombre_original)}</b>${(a.interpretaciones || []).length ? a.interpretaciones.map((i, indice) => `<p><b>Interpretación ${indice + 1}:</b> ${esc(i.texto)}</p><small>${esc(i.usuario_nombre || '')} · ${fecha(i.fecha)}</small>`).join('') : '<small>Sin interpretación registrada</small>'}</div>`).join('')}</div>` : ''}
     <small>${h.integridad_valida === true ? 'Integridad verificada' : h.integridad_valida === false ? 'Revisar integridad' : 'Registro legado'}</small></article>`).join('');
 
   const periodontal = evaluacionesPeriodontales[0];
@@ -562,7 +562,7 @@ win.onload = () => {
           ${imagenes.map(archivo => `
             <figure>
               <img src="${archivo.url}" alt="${archivo.nombre_original || 'Fotografía clínica'}" />
-              <figcaption>${archivo.nombre_original || 'Fotografía clínica'}${archivo.interpretacion ? `<br><strong>Interpretación:</strong> ${archivo.interpretacion}<br>${archivo.interpretado_por_nombre || ''}${archivo.fecha_interpretacion ? ` · ${new Date(archivo.fecha_interpretacion).toLocaleString('es-MX')}` : ''}` : ''}</figcaption>
+              <figcaption>${archivo.nombre_original || 'Fotografía clínica'}${(archivo.interpretaciones || []).map((interpretacion, indice) => `<br><strong>Interpretación ${indice + 1}:</strong> ${interpretacion.texto}<br>${interpretacion.usuario_nombre || ''}${interpretacion.fecha ? ` · ${new Date(interpretacion.fecha).toLocaleString('es-MX')}` : ''}`).join('')}</figcaption>
             </figure>
           `).join('')}
         </div>
@@ -570,7 +570,7 @@ win.onload = () => {
 
       ${pdfs.length ? `
         <div class="pdfs-impresion">
-          <strong>Estudios PDF anexos:</strong>${pdfs.map(archivo => `<div><b>${archivo.nombre_original}</b>${archivo.interpretacion ? `<br>Interpretación: ${archivo.interpretacion}<br>${archivo.interpretado_por_nombre || ''}${archivo.fecha_interpretacion ? ` · ${new Date(archivo.fecha_interpretacion).toLocaleString('es-MX')}` : ''}` : ' · Sin interpretación registrada'}</div>`).join('')}
+          <strong>Estudios PDF anexos:</strong>${pdfs.map(archivo => `<div><b>${archivo.nombre_original}</b>${(archivo.interpretaciones || []).length ? archivo.interpretaciones.map((interpretacion, indice) => `<br>Interpretación ${indice + 1}: ${interpretacion.texto}<br>${interpretacion.usuario_nombre || ''}${interpretacion.fecha ? ` · ${new Date(interpretacion.fecha).toLocaleString('es-MX')}` : ''}`).join('') : ' · Sin interpretación registrada'}</div>`).join('')}
         </div>
       ` : ''}
     </div>
@@ -1462,12 +1462,13 @@ window.onload = () => window.print();
                         <span className="text-xs text-surface-600 truncate flex-1" title={archivo.nombre_original}>{archivo.nombre_original}</span>
                         <a href={archivo.url} target="_blank" rel="noreferrer" className="text-primary-600" title="Abrir archivo"><FiExternalLink size={14} /></a>
                       </div>
-                      {archivo.interpretacion ? <div className="border-t border-surface-100 p-2 text-xs">
-                        <p className="font-semibold text-primary-900">Interpretación clínica</p>
-                        <p className="mt-1 whitespace-pre-wrap text-surface-700">{archivo.interpretacion}</p>
-                        <p className="mt-1 text-[10px] text-surface-500">{archivo.interpretado_por_nombre || 'Odontólogo'}{archivo.interpretado_por_cedula ? ` · Cédula ${archivo.interpretado_por_cedula}` : ''}{archivo.fecha_interpretacion ? ` · ${new Date(archivo.fecha_interpretacion).toLocaleString('es-MX')}` : ''}</p>
-                        <p className={`mt-1 text-[10px] ${archivo.interpretacion_integridad_valida ? 'text-green-700' : 'text-red-700'}`}>{archivo.interpretacion_integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</p>
-                      </div> : puedeModificarClinico && <button type="button" onClick={() => { setArchivoInterpretacion(archivo); setInterpretacionClinica(''); }} className="w-full border-t border-surface-100 p-2 text-left text-xs font-medium text-primary-600 hover:bg-primary-50">Agregar interpretación</button>}
+                      {(archivo.interpretaciones || []).map((interpretacion, indice) => <div key={interpretacion.id || indice} className="border-t border-surface-100 p-2 text-xs">
+                        <p className="font-semibold text-primary-900">Interpretación clínica {indice + 1}</p>
+                        <p className="mt-1 whitespace-pre-wrap text-surface-700">{interpretacion.texto}</p>
+                        <p className="mt-1 text-[10px] text-surface-500">{interpretacion.usuario_nombre || 'Odontólogo'}{interpretacion.usuario_cedula ? ` · Cédula ${interpretacion.usuario_cedula}` : ''}{interpretacion.fecha ? ` · ${new Date(interpretacion.fecha).toLocaleString('es-MX')}` : ''}</p>
+                        <p className={`mt-1 text-[10px] ${interpretacion.integridad_valida === true ? 'text-green-700' : interpretacion.integridad_valida === false ? 'text-red-700' : 'text-surface-500'}`}>{interpretacion.integridad_valida === true ? 'Integridad verificada' : interpretacion.integridad_valida === false ? 'Revisar integridad' : 'Registro anterior sin sello'}</p>
+                      </div>)}
+                      {puedeModificarClinico && <button type="button" onClick={() => { setArchivoInterpretacion(archivo); setInterpretacionClinica(''); }} className="w-full border-t border-surface-100 p-2 text-left text-xs font-medium text-primary-600 hover:bg-primary-50">Agregar otra interpretación</button>}
                     </div>
                   ))}
                 </div>
@@ -1489,10 +1490,10 @@ window.onload = () => window.print();
           <Modal isOpen={Boolean(archivoInterpretacion)} onClose={() => { setArchivoInterpretacion(null); setInterpretacionClinica(''); }} title="Interpretación clínica del estudio" size="lg">
             <form onSubmit={guardarInterpretacion} className="space-y-4">
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                La interpretación quedará vinculada a <strong>{archivoInterpretacion?.nombre_original}</strong>, con tu identidad profesional, fecha, hora y sello de integridad. Después no podrá sobrescribirse; cualquier corrección deberá registrarse mediante adenda.
+                La nueva interpretación quedará vinculada a <strong>{archivoInterpretacion?.nombre_original}</strong>, con tu identidad profesional, fecha, hora y sello de integridad. Las interpretaciones anteriores permanecerán sin cambios.
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-surface-600">Hallazgos e interpretación *</label>
+                <label className="mb-1 block text-sm font-medium text-surface-600">Nueva interpretación *</label>
                 <textarea required minLength={5} maxLength={5000} rows={7} value={interpretacionClinica} onChange={e => setInterpretacionClinica(e.target.value)} className="input-field" placeholder="Describe la calidad del estudio, estructuras observadas, hallazgos relevantes, impresión diagnóstica y correlación clínica recomendada." />
                 <p className="mt-1 text-right text-xs text-surface-400">{interpretacionClinica.length}/5000</p>
               </div>
@@ -1506,20 +1507,20 @@ window.onload = () => window.print();
           <Modal isOpen={Boolean(cargaAdjuntos)} onClose={() => subiendoArchivos === null && setCargaAdjuntos(null)} title="Interpretar imágenes y estudios" size="lg">
             <form onSubmit={confirmarCargaAdjuntos} className="space-y-4">
               <div className="rounded-lg border border-primary-200 bg-primary-50 p-3 text-sm text-primary-800">
-                Registra los hallazgos de cada archivo antes de cargarlo. La interpretación quedará vinculada al estudio con tu identidad, fecha, hora y sello de integridad.
+                Puedes registrar una interpretación para cada archivo antes de cargarlo. También podrás agregar más interpretaciones posteriormente.
               </div>
               <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
                 {(cargaAdjuntos?.adjuntos || []).map((adjunto, indice) => <div key={`${adjunto.file.name}-${adjunto.file.lastModified}-${indice}`} className="rounded-xl border border-surface-200 p-3">
                   <p className="truncate text-sm font-semibold text-primary-900" title={adjunto.file.name}>{adjunto.file.name}</p>
                   <p className="mb-2 text-xs text-surface-500">{adjunto.file.type === 'application/pdf' ? 'Estudio PDF' : 'Imagen clínica'} · {(adjunto.file.size / (1024 * 1024)).toFixed(2)} MB</p>
-                  <label className="mb-1 block text-sm font-medium text-surface-600">Interpretación clínica *</label>
-                  <textarea required minLength={5} maxLength={5000} rows={4} value={adjunto.interpretacion} onChange={e => setCargaAdjuntos(actual => ({ ...actual, adjuntos: actual.adjuntos.map((item, posicion) => posicion === indice ? { ...item, interpretacion: e.target.value } : item) }))} className="input-field" placeholder="Calidad del estudio, estructuras observadas, hallazgos e impresión diagnóstica." />
+                  <label className="mb-1 block text-sm font-medium text-surface-600">Interpretación clínica <span className="font-normal text-surface-400">(opcional)</span></label>
+                  <textarea maxLength={5000} rows={4} value={adjunto.interpretacion} onChange={e => setCargaAdjuntos(actual => ({ ...actual, adjuntos: actual.adjuntos.map((item, posicion) => posicion === indice ? { ...item, interpretacion: e.target.value } : item) }))} className="input-field" placeholder="Calidad del estudio, estructuras observadas, hallazgos e impresión diagnóstica." />
                   <p className="mt-1 text-right text-xs text-surface-400">{adjunto.interpretacion.length}/5000</p>
                 </div>)}
               </div>
               <div className="flex justify-end gap-2">
                 <button type="button" disabled={subiendoArchivos !== null} onClick={() => setCargaAdjuntos(null)} className="btn-secondary disabled:opacity-50">Cancelar</button>
-                <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Cargando...' : 'Guardar archivos e interpretaciones'}</button>
+                <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Cargando...' : 'Guardar archivos'}</button>
               </div>
             </form>
           </Modal>
@@ -1636,8 +1637,8 @@ window.onload = () => window.print();
                   <div className="mt-3 space-y-3">
                     {archivosHistoria.map((adjunto, indice) => <div key={`${adjunto.file.name}-${adjunto.file.lastModified}-${indice}`} className="rounded-xl border border-surface-200 p-3">
                       <div className="mb-2 flex items-center gap-2 text-sm text-surface-600"><FiImage /><span className="min-w-0 flex-1 truncate" title={adjunto.file.name}>{adjunto.file.name}</span><button type="button" onClick={() => setArchivosHistoria(actual => actual.filter((_, posicion) => posicion !== indice))} className="text-xs font-medium text-red-500">Quitar</button></div>
-                      <label className="mb-1 block text-sm font-medium text-surface-600">Interpretación clínica *</label>
-                      <textarea required minLength={5} maxLength={5000} rows={3} value={adjunto.interpretacion} onChange={e => setArchivosHistoria(actual => actual.map((item, posicion) => posicion === indice ? { ...item, interpretacion: e.target.value } : item))} className="input-field" placeholder="Calidad del estudio, estructuras observadas, hallazgos e impresión diagnóstica." />
+                      <label className="mb-1 block text-sm font-medium text-surface-600">Interpretación clínica <span className="font-normal text-surface-400">(opcional)</span></label>
+                      <textarea maxLength={5000} rows={3} value={adjunto.interpretacion} onChange={e => setArchivosHistoria(actual => actual.map((item, posicion) => posicion === indice ? { ...item, interpretacion: e.target.value } : item))} className="input-field" placeholder="Calidad del estudio, estructuras observadas, hallazgos e impresión diagnóstica." />
                       <p className="mt-1 text-right text-xs text-surface-400">{adjunto.interpretacion.length}/5000</p>
                     </div>)}
                   </div>
