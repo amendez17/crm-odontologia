@@ -150,7 +150,7 @@ export default function Usuarios() {
       {/* Modal */}
       <Modal isOpen={modal} onClose={() => setModal(false)} title={editando ? 'Editar Usuario' : 'Nuevo Usuario'}>
         <form onSubmit={guardar} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Nombre *</label>
               <input name="nombre" value={form.nombre} onChange={handleChange} className="input-field" required />
@@ -169,7 +169,7 @@ export default function Usuarios() {
             <input name="password" type="password" value={form.password} onChange={handleChange} minLength={12} className="input-field" {...(!editando && { required: true })} />
             {!editando && <p className="text-xs text-surface-500 mt-1">Mínimo 12 caracteres con mayúscula, minúscula, número y símbolo.</p>}
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Rol *</label>
               <select name="rol" value={form.rol} onChange={handleChange} className="input-field" required>
