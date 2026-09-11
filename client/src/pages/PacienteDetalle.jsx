@@ -57,7 +57,7 @@ export default function PacienteDetalle() {
   const [cargaAdjuntos, setCargaAdjuntos] = useState(null);
   const [archivoInterpretacion, setArchivoInterpretacion] = useState(null);
   const [interpretacionClinica, setInterpretacionClinica] = useState('');
-  const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '',  notas: ''});
+  const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: '', requiere_factura: false });
   const [formCita, setFormCita] = useState({ doctor_id: '', fecha: new Date().toISOString().split('T')[0], hora_inicio: '', hora_fin: '', motivo: '' });
   const [consentimientos, setConsentimientos] = useState([]);
   const [plantillas, setPlantillas] = useState([]);
@@ -694,11 +694,12 @@ ${paciente.alergias ? `
         fecha: formPago.fecha,
         presupuesto_id: formPago.presupuesto_id || null,
         numero_recibo: formPago.numero_recibo || null,
-        notas: formPago.notas || null
+        notas: formPago.notas || null,
+        requiere_factura: formPago.requiere_factura
       });
       toast.success('Pago registrado');
       setModalPago(false);
-      setFormPago({ monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: ''});
+      setFormPago({ monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: '', requiere_factura: false });
     } catch (err) {
      toast.error(
     err.response?.data?.error ||
@@ -2359,6 +2360,10 @@ window.onload = () => window.print();
                 <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>
                 <textarea value={formPago.notas} onChange={e => setFormPago({ ...formPago, notas: e.target.value })} className="input-field" rows={2} />
               </div>
+              <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 ${formPago.requiere_factura ? 'border-primary-400 bg-primary-50' : 'border-surface-200'}`}>
+                <input type="checkbox" checked={formPago.requiere_factura} onChange={e => setFormPago({ ...formPago, requiere_factura: e.target.checked })} className="mt-1" />
+                <span><span className="block text-sm font-semibold text-primary-900">El paciente requiere factura</span><span className="block text-xs text-surface-500">Se creará una notificación hasta marcarla como emitida.</span></span>
+              </label>
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setModalPago(false)} className="btn-secondary">Cancelar</button>
                 <button type="submit" className="btn-primary">Registrar Pago</button>
