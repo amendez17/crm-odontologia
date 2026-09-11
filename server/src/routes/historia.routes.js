@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
-const { HistoriaClinica, ArchivoHistoria, Usuario, Cita, Paciente } = require('../models');
+const { sequelize, HistoriaClinica, ArchivoHistoria, Usuario, Cita, Paciente } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
@@ -229,6 +229,7 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
   contexto: (_req, respuesta) => ({ total_archivos: respuesta?.total || 0 })
 }), upload.array('archivos', 10), async (req, res) => {
   const subidos = [];
+  let transaction;
   try {
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
       return res.status(503).json({ error: 'El almacenamiento de archivos no está configurado.' });
@@ -236,27 +237,52 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
     const historia = await HistoriaClinica.findByPk(req.params.historiaId);
     if (!historia) return res.status(404).json({ error: 'Registro de historia clínica no encontrado.' });
     if (!req.files?.length) return res.status(400).json({ error: 'Selecciona al menos un archivo.' });
+    let interpretaciones;
+    try { interpretaciones = JSON.parse(req.body.interpretaciones || '[]'); } catch { return res.status(400).json({ error: 'Las interpretaciones enviadas no son válidas.' }); }
+    if (!Array.isArray(interpretaciones) || interpretaciones.length !== req.files.length) {
+      return res.status(400).json({ error: 'Registra una interpretación para cada archivo.' });
+    }
+    interpretaciones = interpretaciones.map(texto => typeof texto === 'string' ? texto.trim() : '');
+    if (interpretaciones.some(texto => texto.length < 5 || texto.length > 5000)) {
+      return res.status(400).json({ error: 'Cada interpretación debe contener entre 5 y 5000 caracteres.' });
+    }
 
     for (const file of req.files) {
       const resultado = await subirCloudinary(file, historia.paciente_id);
       subidos.push({ resultado, file });
     }
 
-    const archivos = await ArchivoHistoria.bulkCreate(subidos.map(({ resultado, file }) => ({
-      historia_id: historia.id,
-      usuario_id: req.usuario.id,
-      nombre_original: file.originalname,
-      tipo: file.mimetype === 'application/pdf' ? 'pdf' : 'imagen',
-      mime_type: file.mimetype,
-      tamano: file.size,
-      url: resultado.secure_url,
-      public_id: resultado.public_id,
-      resource_type: resultado.resource_type,
-      formato: resultado.format || (file.mimetype === 'application/pdf' ? 'pdf' : null),
-      delivery_type: resultado.type || 'authenticated'
-    })));
+    transaction = await sequelize.transaction();
+    const fechaInterpretacion = new Date(); fechaInterpretacion.setMilliseconds(0);
+    const archivos = [];
+    for (let indice = 0; indice < subidos.length; indice += 1) {
+      const { resultado, file } = subidos[indice];
+      const archivo = await ArchivoHistoria.create({
+        historia_id: historia.id,
+        usuario_id: req.usuario.id,
+        nombre_original: file.originalname,
+        tipo: file.mimetype === 'application/pdf' ? 'pdf' : 'imagen',
+        mime_type: file.mimetype,
+        tamano: file.size,
+        url: resultado.secure_url,
+        public_id: resultado.public_id,
+        resource_type: resultado.resource_type,
+        formato: resultado.format || (file.mimetype === 'application/pdf' ? 'pdf' : null),
+        delivery_type: resultado.type || 'authenticated',
+        interpretacion: interpretaciones[indice],
+        interpretado_por_id: req.usuario.id,
+        interpretado_por_nombre: `${req.usuario.nombre} ${req.usuario.apellido}`.trim(),
+        interpretado_por_cedula: req.usuario.cedula || null,
+        fecha_interpretacion: fechaInterpretacion
+      }, { transaction });
+      archivo.interpretacion_hash = firmarInterpretacion(archivo.toJSON());
+      await archivo.save({ transaction, fields: ['interpretacion_hash'] });
+      archivos.push(archivo);
+    }
+    await transaction.commit(); transaction = null;
     res.status(201).json({ mensaje: 'Archivos guardados correctamente.', total: archivos.length });
   } catch (error) {
+    if (transaction) await transaction.rollback();
     await Promise.allSettled(subidos.map(({ resultado }) =>
       cloudinary.uploader.destroy(resultado.public_id, { resource_type: resultado.resource_type, type: resultado.type || 'authenticated' })
     ));
