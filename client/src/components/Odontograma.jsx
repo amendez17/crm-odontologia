@@ -317,6 +317,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     setModoAplicacion(modo);
     setEstadoSeleccionado(modo === 'diente' ? 'corona' : 'caries');
   };
+  const cambioSinVariacion = cambioPendiente && cambioPendiente.estadoAnterior === cambioPendiente.estado && !cambioPendiente.observacion;
 
   return (
     <div className="space-y-5">
@@ -453,8 +454,9 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
           </div>
           {cambioPendiente.observacion && <p className="mt-1 text-xs text-amber-700">Observación: {cambioPendiente.observacion}</p>}
           <p className="mt-2 text-xs text-amber-700">Al confirmar se conservará como parte del historial del expediente.</p>
+          {cambioSinVariacion && <p className="mt-2 rounded-lg bg-red-50 px-2 py-1 text-xs font-medium text-red-700">No hay un cambio ni una observación nueva para registrar.</p>}
           <div className="mt-3 flex gap-2">
-            <button type="button" onClick={confirmarCambio} className="btn-primary text-sm">Confirmar y guardar</button>
+            <button type="button" onClick={confirmarCambio} disabled={cambioSinVariacion} className="btn-primary text-sm disabled:cursor-not-allowed disabled:opacity-50">Confirmar y guardar</button>
             <button type="button" onClick={() => setCambioPendiente(null)} className="btn-secondary text-sm">Cancelar</button>
           </div>
         </div>
