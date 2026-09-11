@@ -19,10 +19,15 @@ const LABELS = {
   protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura'
 };
 
-const ESTADOS_POR_MODO = {
-  diente: ['sano', 'corona', 'extraccion', 'endodoncia', 'implante', 'protesis', 'ausente'],
-  cara: ['sano', 'caries', 'obturacion', 'fractura']
+const ESTADOS_POR_TIPO = {
+  hallazgo: {
+    diente: ['sano', 'corona', 'extraccion', 'endodoncia', 'implante', 'protesis', 'ausente'],
+    cara: ['sano', 'caries', 'obturacion', 'fractura']
+  },
+  plan: { diente: ['corona', 'extraccion', 'endodoncia', 'implante', 'protesis'], cara: ['obturacion'] },
+  realizado: { diente: ['corona', 'extraccion', 'endodoncia', 'implante', 'protesis'], cara: ['obturacion'] }
 };
+const TIPOS_REGISTRO = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
 
 const DIENTES_SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const DIENTES_INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
@@ -246,6 +251,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
 export default function Odontograma({ registros = [], onPiezaClick, readOnly = false }) {
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('corona');
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
+  const [tipoRegistro, setTipoRegistro] = useState('hallazgo');
   const [observacion, setObservacion] = useState('');
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [cambioPendiente, setCambioPendiente] = useState(null);
@@ -254,7 +260,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   // Hidrata caras por diente desde registros del backend (cara !== 'completa')
   const carasPorDiente = useMemo(() => {
     const map = {};
-    [...registros].sort((a, b) => b.id - a.id).forEach(r => {
+    [...registros].filter(r => (r.tipo_registro || 'hallazgo') !== 'plan').sort((a, b) => b.id - a.id).forEach(r => {
       const cara = r.cara || 'completa';
       if (cara === 'completa') return;
       if (!map[r.pieza_dental]) map[r.pieza_dental] = {};
@@ -268,7 +274,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const getEstadoPieza = (pieza) => {
     // Si hay duplicados, usar el de mayor id (el más reciente)
     const reg = registros
-      .filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === 'completa')
+      .filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === 'completa' && (r.tipo_registro || 'hallazgo') !== 'plan')
       .sort((a, b) => b.id - a.id)[0];
     return reg ? reg.estado : 'sano';
   };
@@ -277,7 +283,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     const claves = new Set();
     const ids = new Set();
     [...registros].sort((a, b) => b.id - a.id).forEach(registro => {
-      const clave = `${registro.pieza_dental}-${registro.cara || 'completa'}`;
+      const clave = `${registro.pieza_dental}-${registro.cara || 'completa'}-${registro.tipo_registro || 'hallazgo'}`;
       if (!claves.has(clave)) { claves.add(clave); ids.add(registro.id); }
     });
     return ids;
@@ -288,16 +294,16 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const handleDienteClick = (numero) => {
     if (readOnly) return;
     if (modoAplicacion === 'diente') {
-      setCambioPendiente({ pieza: numero, estadoAnterior: getEstadoPieza(numero), estado: estadoSeleccionado, cara: 'completa', observacion: observacion.trim() || null });
+      setCambioPendiente({ pieza: numero, estadoAnterior: getEstadoPieza(numero), estado: estadoSeleccionado, cara: 'completa', tipo_registro: tipoRegistro, observacion: observacion.trim() || null });
     }
   };
 
   const handleCaraClick = (numero, cara, estado) => {
     if (readOnly || modoAplicacion !== 'cara') return;
     const actual = carasPorDiente[numero]?.[cara];
-    const nuevoEstado = actual === estado ? 'sano' : estado;
+    const nuevoEstado = tipoRegistro === 'hallazgo' && actual === estado ? 'sano' : estado;
     // Envía un registro por (pieza + cara) — coincide con el modelo Sequelize
-    setCambioPendiente({ pieza: numero, estadoAnterior: actual || 'sano', estado: nuevoEstado, cara, observacion: observacion.trim() || null });
+    setCambioPendiente({ pieza: numero, estadoAnterior: actual || 'sano', estado: nuevoEstado, cara, tipo_registro: tipoRegistro, observacion: observacion.trim() || null });
   };
 
   const confirmarCambio = async () => {
@@ -305,6 +311,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     const guardado = await onPiezaClick?.(cambioPendiente.pieza, {
       estado: cambioPendiente.estado,
       cara: cambioPendiente.cara,
+      tipo_registro: cambioPendiente.tipo_registro,
       observacion: cambioPendiente.observacion
     });
     if (guardado !== false) {
@@ -315,7 +322,12 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
 
   const cambiarModo = modo => {
     setModoAplicacion(modo);
-    setEstadoSeleccionado(modo === 'diente' ? 'corona' : 'caries');
+    setEstadoSeleccionado(ESTADOS_POR_TIPO[tipoRegistro][modo][0]);
+  };
+  const cambiarTipoRegistro = tipo => {
+    setTipoRegistro(tipo);
+    setEstadoSeleccionado(ESTADOS_POR_TIPO[tipo][modoAplicacion][0]);
+    setCambioPendiente(null);
   };
   const cambioSinVariacion = cambioPendiente && cambioPendiente.estadoAnterior === cambioPendiente.estado && !cambioPendiente.observacion;
 
@@ -323,6 +335,12 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     <div className="space-y-5">
       {!readOnly && (
         <div className="space-y-3">
+          <div>
+            <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Registrar como:</span>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {Object.entries(TIPOS_REGISTRO).map(([key, label]) => <button key={key} type="button" onClick={() => cambiarTipoRegistro(key)} className={`rounded-xl border px-3 py-2 text-xs font-semibold ${tipoRegistro === key ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200 bg-white text-surface-600'}`}>{label}</button>)}
+            </div>
+          </div>
           {/* Mode selector */}
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Modo:</span>
@@ -344,7 +362,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
 
           {/* Estado selector */}
           <div className="flex flex-wrap gap-1.5">
-            {ESTADOS_POR_MODO[modoAplicacion].map(key => (
+            {ESTADOS_POR_TIPO[tipoRegistro][modoAplicacion].map(key => (
               <button
                 key={key}
                 onClick={() => setEstadoSeleccionado(key)}
@@ -449,7 +467,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
         <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">Confirmar registro clínico</p>
           <p className="mt-1 text-sm text-amber-800">
-            Pieza {cambioPendiente.pieza} · {nombreCara(cambioPendiente.cara, cambioPendiente.pieza)}
+            Pieza {cambioPendiente.pieza} · {nombreCara(cambioPendiente.cara, cambioPendiente.pieza)} · {TIPOS_REGISTRO[cambioPendiente.tipo_registro]}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
             <span className="rounded-lg bg-white px-2 py-1 text-surface-600">Actual: {LABELS[cambioPendiente.estadoAnterior] || cambioPendiente.estadoAnterior}</span>
@@ -509,6 +527,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
                   <div className="flex flex-wrap justify-between gap-2">
                     <span className="font-semibold text-primary-900">
                       Pieza {registro.pieza_dental} · {nombreCara(registro.cara || 'completa', registro.pieza_dental)} · {LABELS[registro.estado] || registro.estado}
+                      <span className="ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700">{TIPOS_REGISTRO[registro.tipo_registro || 'hallazgo']}</span>
                       <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${idsVigentes.has(registro.id) ? 'bg-green-100 text-green-700' : 'bg-surface-100 text-surface-500'}`}>{idsVigentes.has(registro.id) ? 'Vigente' : 'Anterior'}</span>
                     </span>
                     <span className="text-surface-500">{new Date(registro.fecha_hora || registro.createdAt || registro.fecha).toLocaleString('es-MX')}</span>
