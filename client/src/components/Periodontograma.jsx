@@ -83,7 +83,7 @@ export default function Periodontograma({ pacienteId, paciente }) {
           {['sangrado','placa','supuracion'].map(campo => <td key={campo} className="text-center"><input type="checkbox" checked={sitio[campo]} onChange={e => actualizarSitio(indice, campo, e.target.checked)} /></td>)}
         </tr>)}</tbody>
       </table>
-      <div className="grid grid-cols-2 gap-3 p-3 border-t">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 border-t">
         <label className="text-xs">Movilidad (0–3)<input type="number" min="0" max="3" value={datosPieza.movilidad} onChange={e => actualizarPieza('movilidad', e.target.value)} className="input-field mt-1" /></label>
         <label className="text-xs">Furca (0–3)<input type="number" min="0" max="3" value={datosPieza.furca} onChange={e => actualizarPieza('furca', e.target.value)} className="input-field mt-1" /></label>
       </div>
