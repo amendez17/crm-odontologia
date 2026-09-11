@@ -288,7 +288,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const handleDienteClick = (numero) => {
     if (readOnly) return;
     if (modoAplicacion === 'diente') {
-      setCambioPendiente({ pieza: numero, estado: estadoSeleccionado, cara: 'completa', observacion: observacion.trim() || null });
+      setCambioPendiente({ pieza: numero, estadoAnterior: getEstadoPieza(numero), estado: estadoSeleccionado, cara: 'completa', observacion: observacion.trim() || null });
     }
   };
 
@@ -297,7 +297,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     const actual = carasPorDiente[numero]?.[cara];
     const nuevoEstado = actual === estado ? 'sano' : estado;
     // Envía un registro por (pieza + cara) — coincide con el modelo Sequelize
-    setCambioPendiente({ pieza: numero, estado: nuevoEstado, cara, observacion: observacion.trim() || null });
+    setCambioPendiente({ pieza: numero, estadoAnterior: actual || 'sano', estado: nuevoEstado, cara, observacion: observacion.trim() || null });
   };
 
   const confirmarCambio = async () => {
@@ -444,8 +444,13 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
         <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">Confirmar registro clínico</p>
           <p className="mt-1 text-sm text-amber-800">
-            Pieza {cambioPendiente.pieza} · {nombreCara(cambioPendiente.cara, cambioPendiente.pieza)} · {LABELS[cambioPendiente.estado]}
+            Pieza {cambioPendiente.pieza} · {nombreCara(cambioPendiente.cara, cambioPendiente.pieza)}
           </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <span className="rounded-lg bg-white px-2 py-1 text-surface-600">Actual: {LABELS[cambioPendiente.estadoAnterior] || cambioPendiente.estadoAnterior}</span>
+            <span className="font-bold text-amber-700">→</span>
+            <span className="rounded-lg bg-amber-200 px-2 py-1 font-semibold text-amber-900">Nuevo: {LABELS[cambioPendiente.estado] || cambioPendiente.estado}</span>
+          </div>
           {cambioPendiente.observacion && <p className="mt-1 text-xs text-amber-700">Observación: {cambioPendiente.observacion}</p>}
           <p className="mt-2 text-xs text-amber-700">Al confirmar se conservará como parte del historial del expediente.</p>
           <div className="mt-3 flex gap-2">
