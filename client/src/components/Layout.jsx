@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import socket from '../socket';
 import Modal from './Modal';
 import toast from 'react-hot-toast';
 import {
@@ -67,6 +68,28 @@ export default function Layout() {
     cargarNotificaciones();
     const interval = setInterval(cargarNotificaciones, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const actualizarPorCita = cita => {
+      if (cita?.estado === 'completada') {
+        setNotificaciones(actuales => actuales.filter(item =>
+          item.clave !== `cita-${cita.id}` && item.clave !== `limpieza-${cita.paciente_id}`
+        ));
+      }
+      cargarNotificaciones();
+    };
+    const actualizarSinDatos = () => cargarNotificaciones();
+    socket.on('cita-creada', actualizarPorCita);
+    socket.on('cita-editada', actualizarPorCita);
+    socket.on('cita-eliminada', actualizarSinDatos);
+    socket.on('reconnect', actualizarSinDatos);
+    return () => {
+      socket.off('cita-creada', actualizarPorCita);
+      socket.off('cita-editada', actualizarPorCita);
+      socket.off('cita-eliminada', actualizarSinDatos);
+      socket.off('reconnect', actualizarSinDatos);
+    };
   }, []);
 
   const marcarFacturaEmitida = async pagoId => {
@@ -300,7 +323,11 @@ export default function Layout() {
           {/* Notifications */}
           <div className="relative">
             <button
-              onClick={() => setShowNotif(!showNotif)}
+              onClick={() => {
+                const abrir = !showNotif;
+                setShowNotif(abrir);
+                if (abrir) cargarNotificaciones();
+              }}
               className="relative p-2.5 text-surface-500 hover:bg-primary-50 hover:text-primary-600 rounded-xl transition-all"
             >
               <FiBell size={20} />
