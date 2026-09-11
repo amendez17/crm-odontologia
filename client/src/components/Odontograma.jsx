@@ -248,6 +248,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
   const [observacion, setObservacion] = useState('');
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
+  const [cambioPendiente, setCambioPendiente] = useState(null);
 
   // Hidrata caras por diente desde registros del backend (cara !== 'completa')
   const carasPorDiente = useMemo(() => {
@@ -274,7 +275,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const handleDienteClick = (numero) => {
     if (readOnly) return;
     if (modoAplicacion === 'diente') {
-      onPiezaClick?.(numero, { estado: estadoSeleccionado, cara: 'completa', observacion: observacion.trim() || null });
+      setCambioPendiente({ pieza: numero, estado: estadoSeleccionado, cara: 'completa', observacion: observacion.trim() || null });
     }
   };
 
@@ -283,7 +284,20 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
     const actual = carasPorDiente[numero]?.[cara];
     const nuevoEstado = actual === estado ? 'sano' : estado;
     // Envía un registro por (pieza + cara) — coincide con el modelo Sequelize
-    onPiezaClick?.(numero, { estado: nuevoEstado, cara, observacion: observacion.trim() || null });
+    setCambioPendiente({ pieza: numero, estado: nuevoEstado, cara, observacion: observacion.trim() || null });
+  };
+
+  const confirmarCambio = async () => {
+    if (!cambioPendiente) return;
+    const guardado = await onPiezaClick?.(cambioPendiente.pieza, {
+      estado: cambioPendiente.estado,
+      cara: cambioPendiente.cara,
+      observacion: cambioPendiente.observacion
+    });
+    if (guardado !== false) {
+      setCambioPendiente(null);
+      setObservacion('');
+    }
   };
 
   const cambiarModo = modo => {
@@ -412,6 +426,21 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
           </div>
         </div>
       </div>
+
+      {cambioPendiente && !readOnly && (
+        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-900">Confirmar registro clínico</p>
+          <p className="mt-1 text-sm text-amber-800">
+            Pieza {cambioPendiente.pieza} · {nombreCara(cambioPendiente.cara, cambioPendiente.pieza)} · {LABELS[cambioPendiente.estado]}
+          </p>
+          {cambioPendiente.observacion && <p className="mt-1 text-xs text-amber-700">Observación: {cambioPendiente.observacion}</p>}
+          <p className="mt-2 text-xs text-amber-700">Al confirmar se conservará como parte del historial del expediente.</p>
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={confirmarCambio} className="btn-primary text-sm">Confirmar y guardar</button>
+            <button type="button" onClick={() => setCambioPendiente(null)} className="btn-secondary text-sm">Cancelar</button>
+          </div>
+        </div>
+      )}
 
       {/* Surface legend for cara mode */}
       {!readOnly && modoAplicacion === 'cara' && (
