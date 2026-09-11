@@ -401,8 +401,8 @@ win.onload = () => {
     <td>${nombreCara(registro)}</td>
     <td>${nombresEstado[registro.estado] || registro.estado}</td>
     <td>${registro.observacion || '—'}</td>
-    <td>${[registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}</td>
-    <td>${new Date(registro.createdAt || registro.fecha).toLocaleString('es-MX')}</td>
+    <td>${registro.doctor_nombre || [registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}${registro.doctor_cedula ? `<br>Cédula: ${registro.doctor_cedula}` : ''}</td>
+    <td>${new Date(registro.fecha_hora || registro.createdAt || registro.fecha).toLocaleString('es-MX')}<br>${registro.integridad_valida === true ? 'Integridad verificada' : registro.integridad_valida === false ? 'Revisar integridad' : 'Registro legado'}</td>
   </tr>`).join('');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Odontograma - ${paciente.nombre} ${paciente.apellido}</title><style>
     @page{size:Letter;margin:12mm} body{font-family:Arial,sans-serif;color:#263248;font-size:11px;margin:0}.header{text-align:center;border-bottom:2px solid #c8a24a;padding-bottom:10px}.logo{width:65px}.header h1{font-size:18px;color:#b58b23;margin:2px}.header p{margin:2px}.paciente{margin:14px 0;padding:10px;background:#fffaf0;border-left:4px solid #c8a24a;display:flex;justify-content:space-between;gap:10px}.resumen{margin:10px 0;color:#475569}table{width:100%;border-collapse:collapse}th,td{padding:7px;border:1px solid #e5e7eb;text-align:left;vertical-align:top}th{background:#f8f4e8;color:#72591d}.firma{margin-top:45px;display:flex;justify-content:flex-end}.firma div{width:260px;text-align:center;border-top:1px solid #64748b;padding-top:5px}.footer{margin-top:20px;border-top:1px solid #ddd;padding-top:7px;text-align:center;color:#64748b;font-size:9px}
