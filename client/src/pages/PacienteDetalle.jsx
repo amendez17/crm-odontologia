@@ -33,6 +33,12 @@ const opcionesAntecedentes = {
   sistemas: ['Cardiovascular', 'Respiratorio', 'Digestivo', 'Neurológico', 'Endocrino', 'Hematológico']
 };
 
+const documentosEntrega = {
+  historia_clinica: 'Historia clínica', odontograma: 'Odontograma', periodontograma: 'Periodontograma',
+  consentimientos: 'Consentimientos', recetas: 'Recetas', estudios_imagenes: 'Estudios e imágenes', otros: 'Otros documentos'
+};
+const entregaVacia = () => ({ solicitante_nombre: '', solicitante_caracter: 'paciente', documentos: [], documentos_detalle: '', motivo: '', medio_entrega: 'digital' });
+
 export default function PacienteDetalle() {
   const { usuario } = useAuth();
   const puedeModificarClinico = ['administrador', 'doctor'].includes(usuario?.rol);
@@ -57,6 +63,9 @@ export default function PacienteDetalle() {
   const [cargaAdjuntos, setCargaAdjuntos] = useState(null);
   const [archivoInterpretacion, setArchivoInterpretacion] = useState(null);
   const [interpretacionClinica, setInterpretacionClinica] = useState('');
+  const [entregasExpediente, setEntregasExpediente] = useState([]);
+  const [modalEntregaExpediente, setModalEntregaExpediente] = useState(false);
+  const [formEntregaExpediente, setFormEntregaExpediente] = useState(entregaVacia);
   const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: '', requiere_factura: false });
   const [formCita, setFormCita] = useState({ doctor_id: '', fecha: new Date().toISOString().split('T')[0], hora_inicio: '', hora_fin: '', motivo: '' });
   const [consentimientos, setConsentimientos] = useState([]);
@@ -131,11 +140,12 @@ useEffect(() => {
         puedeModificarClinico ? api.get(`/odontograma/${id}`) : Promise.resolve({ data: [] }),
         api.get(`/historia/${id}`),
         api.get(`/reportes/balance/${id}`),
-        api.get(`/consentimiento/paciente/${id}`)
+        api.get(`/consentimiento/paciente/${id}`),
+        api.get(`/entregas-expediente/paciente/${id}`)
       ];
-      const nombres = ['odontograma', 'historia clínica', 'cuenta corriente', 'consentimientos'];
+      const nombres = ['odontograma', 'historia clínica', 'cuenta corriente', 'consentimientos', 'entregas de copias'];
       const resultados = await Promise.allSettled(solicitudes);
-      const asignar = [respuesta => setOdontograma(respuesta.data), respuesta => setHistorias(respuesta.data), respuesta => setBalance(respuesta.data), respuesta => setConsentimientos(respuesta.data)];
+      const asignar = [respuesta => setOdontograma(respuesta.data), respuesta => setHistorias(respuesta.data), respuesta => setBalance(respuesta.data), respuesta => setConsentimientos(respuesta.data), respuesta => setEntregasExpediente(respuesta.data)];
       resultados.forEach((resultado, indice) => {
         if (resultado.status === 'fulfilled') asignar[indice](resultado.value);
         else console.error(`Error al cargar ${nombres[indice]}:`, resultado.reason?.response?.data || resultado.reason);
@@ -251,6 +261,28 @@ useEffect(() => {
       setInterpretacionClinica('');
       toast.success('Interpretación clínica guardada');
     } catch (error) { toast.error(error.response?.data?.error || 'No se pudo guardar la interpretación'); }
+  };
+
+  const alternarDocumentoEntrega = documento => setFormEntregaExpediente(actual => ({
+    ...actual,
+    documentos: actual.documentos.includes(documento)
+      ? actual.documentos.filter(item => item !== documento)
+      : [...actual.documentos, documento]
+  }));
+
+  const guardarEntregaExpediente = async e => {
+    e.preventDefault();
+    if (!formEntregaExpediente.documentos.length) return toast.error('Selecciona al menos un documento entregado');
+    try {
+      await api.post('/entregas-expediente', { ...formEntregaExpediente, paciente_id: Number(id) });
+      const { data } = await api.get(`/entregas-expediente/paciente/${id}`);
+      setEntregasExpediente(data);
+      setFormEntregaExpediente(entregaVacia());
+      setModalEntregaExpediente(false);
+      toast.success('Entrega de copias registrada');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'No se pudo registrar la entrega');
+    }
   };
 
   const guardarHistoria = async (e) => {
@@ -480,8 +512,8 @@ win.onload = () => {
   try {
     const { data } = await api.post(`/historia/${id}/exportar`, {
       formato: 'impresion_pdf',
-      secciones: ['historia_clinica', 'odontograma', 'periodontograma', 'consentimientos', 'recetas'],
-      totales: { historias: historias.length, odontograma: odontograma.length, consentimientos: consentimientos.length, recetas: recetas.length }
+      secciones: ['historia_clinica', 'odontograma', 'periodontograma', 'consentimientos', 'recetas', 'entregas_copias'],
+      totales: { historias: historias.length, odontograma: odontograma.length, consentimientos: consentimientos.length, recetas: recetas.length, entregas: entregasExpediente.length }
     });
     folioExportacion = data.folio || folioExportacion;
     if (data.fecha_servidor) fechaGeneracion = new Date(data.fecha_servidor);
@@ -503,6 +535,7 @@ win.onload = () => {
   const periodontalHtml = periodontal ? `<p><b>Evaluación:</b> ${fecha(periodontal.fecha_hora)} · Dr. ${esc(periodontal.doctor_nombre)} · ${periodontal.integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</p>${esc(periodontal.observaciones || '')}${(periodontal.mediciones || []).map(m => `<div class="pieza"><b>Pieza ${m.pieza} · Movilidad ${m.movilidad ?? 0} · Furca ${m.furca ?? 0}</b><table><thead><tr><th>Sitio</th><th>Prof.</th><th>Rec.</th><th>NIC</th><th>Sang.</th><th>Placa</th><th>Sup.</th></tr></thead><tbody>${(m.sitios || []).map(s => `<tr><td>${s.sitio}</td><td>${s.profundidad}</td><td>${s.recesion}</td><td>${Number(s.profundidad || 0)+Number(s.recesion || 0)}</td><td>${s.sangrado?'Sí':'No'}</td><td>${s.placa?'Sí':'No'}</td><td>${s.supuracion?'Sí':'No'}</td></tr>`).join('')}</tbody></table></div>`).join('')}` : '<p>Sin evaluaciones periodontales.</p>';
   const consentimientosHtml = consentimientos.map(c => `<article class="registro"><h3>${esc(c.tipo)} · ${fecha(c.createdAt)}</h3><p>${esc(c.contenido)}</p><p><b>Odontólogo:</b> ${esc(c.doctor_nombre || [c.doctor?.nombre,c.doctor?.apellido].filter(Boolean).join(' '))}</p><small>${c.firmado ? `Firmado por ${esc(c.firmante_nombre || 'paciente')} · ${fecha(c.fecha_firma)}` : 'Pendiente de firma'}${c.integridad_valida === true ? ' · Integridad verificada' : ''}</small></article>`).join('');
   const recetasHtml = recetas.map(r => `<article class="registro"><h3>Receta ${esc(r.folio || '')} · ${fecha(r.createdAt)}</h3><p><b>Odontólogo:</b> ${esc([r.doctor?.nombre,r.doctor?.apellido].filter(Boolean).join(' '))}</p><p><b>Diagnóstico:</b> ${esc(r.diagnostico)}</p><p><b>Medicamentos:</b> ${esc(r.medicamentos)}</p><p><b>Indicaciones:</b> ${esc(r.indicaciones)}</p></article>`).join('');
+  const entregasHtml = entregasExpediente.map(entrega => `<article class="registro"><h3>${fecha(entrega.fecha_entrega)} · Entrega de copias</h3><p><b>Solicitante:</b> ${esc(entrega.solicitante_nombre)} (${esc(entrega.solicitante_caracter)})</p><p><b>Documentos:</b> ${(entrega.documentos || []).map(item => esc(documentosEntrega[item] || item)).join(', ')}${entrega.documentos_detalle ? ` · ${esc(entrega.documentos_detalle)}` : ''}</p><p><b>Motivo:</b> ${esc(entrega.motivo)}</p><p><b>Medio:</b> ${esc(entrega.medio_entrega)}</p><p><b>Responsable:</b> ${esc(entrega.responsable_nombre)} (${esc(entrega.responsable_rol)})</p><small>${entrega.integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</small></article>`).join('');
 
   win.document.open();
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Expediente clínico - ${esc(paciente.nombre)} ${esc(paciente.apellido)}</title><style>@page{size:Letter;margin:11mm 11mm 16mm}body{font-family:Arial,sans-serif;color:#263248;font-size:10px;margin:0;padding-bottom:8mm}.header{text-align:center;border-bottom:2px solid #c8a24a;padding-bottom:8px}.logo{width:60px}.header h1{color:#b58b23;margin:2px;font-size:18px}.paciente{margin:12px 0;padding:10px;background:#fffaf0;border-left:4px solid #c8a24a;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.seccion{page-break-before:auto;margin-top:18px}.seccion>h2{font-size:14px;color:#8a6a20;border-bottom:1px solid #c8a24a;padding-bottom:4px}.registro,.pieza{page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:6px;padding:8px;margin:7px 0}.registro h3{font-size:11px;color:#8a6a20;margin:0 0 5px}.registro p{margin:3px 0;white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin-top:5px;page-break-inside:avoid}th,td{border:1px solid #e5e7eb;padding:4px;text-align:left}th{background:#f8f4e8}.anexos{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:7px}.anexo{border:1px solid #eee;padding:5px;page-break-inside:avoid}.anexo img{width:100%;height:150px;object-fit:contain}.anexo small{display:block;color:#64748b;margin-top:3px}.pdf{height:45px;display:flex;align-items:center;justify-content:center;background:#fee2e2;color:#b91c1c;font-weight:bold}.footer{position:fixed;left:0;right:0;bottom:-9mm;text-align:center;border-top:1px solid #ddd;padding-top:4px;color:#64748b;font-size:8px;background:white}</style></head><body>
@@ -513,7 +546,8 @@ win.onload = () => {
   <section class="seccion"><h2>Último periodontograma</h2>${periodontalHtml}</section>
   <section class="seccion"><h2>Consentimientos informados</h2>${consentimientosHtml || '<p>Sin consentimientos.</p>'}</section>
   <section class="seccion"><h2>Recetas</h2>${recetasHtml || '<p>Sin recetas.</p>'}</section>
-  <div class="footer">Folio ${esc(folioExportacion)} · Expediente generado por ${esc(responsable)} · ${fecha(fechaGeneracion)} · ${historias.length} notas · ${odontograma.length} movimientos odontológicos · ${consentimientos.length} consentimientos · ${recetas.length} recetas</div></body></html>`);
+  <section class="seccion"><h2>Entregas de copias al paciente</h2>${entregasHtml || '<p>Sin entregas registradas.</p>'}</section>
+  <div class="footer">Folio ${esc(folioExportacion)} · Expediente generado por ${esc(responsable)} · ${fecha(fechaGeneracion)} · ${historias.length} notas · ${odontograma.length} movimientos odontológicos · ${consentimientos.length} consentimientos · ${recetas.length} recetas · ${entregasExpediente.length} entregas</div></body></html>`);
   win.document.close();
   win.onload = () => setTimeout(() => { win.focus(); win.print(); }, 400);
  };
@@ -1394,7 +1428,7 @@ window.onload = () => window.print();
       {/* Tab Historia */}
       {tab === 'historia' && (
         <div className="space-y-4">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {puedeModificarClinico && <button onClick={() => { setFormHistoria({ ...notaClinicaVacia(), tipo_nota: historias.length === 0 ? 'inicial' : 'subsecuente' }); setCuestionario(cuestionarioVacio()); setPasoHistoria(1); setModalHistoria(true); }} className="btn-primary flex items-center gap-2">
               <FiPlus size={16} /> Nuevo Registro
             </button>}
@@ -1404,6 +1438,21 @@ window.onload = () => window.print();
               </button>
             )}
             {puedeModificarClinico && <button onClick={imprimirExpedienteCompleto} className="btn-primary flex items-center gap-2"><FiFileText size={16} /> Expediente completo</button>}
+            {puedeModificarClinico && <button onClick={() => { setFormEntregaExpediente(entregaVacia()); setModalEntregaExpediente(true); }} className="btn-secondary flex items-center gap-2"><FiFileText size={16} /> Registrar entrega de copia</button>}
+          </div>
+          <div className="card">
+            <h3 className="font-semibold text-primary-900">Entregas de copias del expediente</h3>
+            <p className="mt-1 text-xs text-surface-500">Registro de quién solicitó y recibió documentación clínica.</p>
+            {entregasExpediente.length === 0 ? <p className="mt-3 text-sm text-surface-400">No hay entregas registradas.</p> : <div className="mt-3 space-y-3">
+              {entregasExpediente.map(entrega => <div key={entrega.id} className="rounded-xl border border-surface-200 p-3 text-sm">
+                <div className="flex flex-wrap items-start justify-between gap-2"><p className="font-semibold text-primary-900">{entrega.solicitante_nombre}</p><span className="text-xs text-surface-500">{new Date(entrega.fecha_entrega).toLocaleString('es-MX')}</span></div>
+                <p className="mt-1 text-surface-600">Solicitó como: <span className="font-medium">{entrega.solicitante_caracter.replaceAll('_', ' ')}</span></p>
+                <p className="text-surface-600"><span className="font-medium">Documentos:</span> {(entrega.documentos || []).map(item => documentosEntrega[item] || item).join(', ')}{entrega.documentos_detalle ? ` · ${entrega.documentos_detalle}` : ''}</p>
+                <p className="text-surface-600"><span className="font-medium">Motivo:</span> {entrega.motivo}</p>
+                <p className="text-surface-600"><span className="font-medium">Entrega:</span> {entrega.medio_entrega} · Responsable: {entrega.responsable_nombre}</p>
+                <p className={`mt-1 text-xs ${entrega.integridad_valida ? 'text-green-700' : 'text-red-700'}`}>{entrega.integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</p>
+              </div>)}
+            </div>}
           </div>
           {historias.length === 0 ? (
             <div className="card text-center text-gray-500">Sin registros en historia clínica</div>
@@ -1488,6 +1537,21 @@ window.onload = () => window.print();
               </button>}
             </div>
           ))}
+
+          <Modal isOpen={modalEntregaExpediente} onClose={() => setModalEntregaExpediente(false)} title="Registrar entrega de copia" size="lg">
+            <form onSubmit={guardarEntregaExpediente} className="space-y-4">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Este registro quedará fechado, sellado y no podrá eliminarse. Responsable: <strong>{usuario?.nombre} {usuario?.apellido}</strong>.</div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div><label className="mb-1 block text-sm font-medium text-surface-600">Nombre completo del solicitante *</label><input required minLength={3} maxLength={220} value={formEntregaExpediente.solicitante_nombre} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, solicitante_nombre: e.target.value })} className="input-field" /></div>
+                <div><label className="mb-1 block text-sm font-medium text-surface-600">Solicitó en carácter de *</label><select required value={formEntregaExpediente.solicitante_caracter} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, solicitante_caracter: e.target.value })} className="input-field"><option value="paciente">Paciente</option><option value="madre_padre">Madre o padre</option><option value="tutor">Tutor</option><option value="representante_legal">Representante legal</option><option value="otro">Otro</option></select></div>
+              </div>
+              <fieldset className="rounded-xl border border-surface-200 p-3"><legend className="px-2 text-sm font-medium text-surface-600">Documentos entregados *</legend><div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{Object.entries(documentosEntrega).map(([key, label]) => <label key={key} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${formEntregaExpediente.documentos.includes(key) ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-surface-200'}`}><input type="checkbox" checked={formEntregaExpediente.documentos.includes(key)} onChange={() => alternarDocumentoEntrega(key)} />{label}</label>)}</div></fieldset>
+              {formEntregaExpediente.documentos.includes('otros') && <div><label className="mb-1 block text-sm font-medium text-surface-600">Describe los otros documentos *</label><textarea required maxLength={2000} rows={2} value={formEntregaExpediente.documentos_detalle} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, documentos_detalle: e.target.value })} className="input-field" /></div>}
+              <div><label className="mb-1 block text-sm font-medium text-surface-600">Motivo de la solicitud *</label><textarea required minLength={5} maxLength={2000} rows={3} value={formEntregaExpediente.motivo} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, motivo: e.target.value })} className="input-field" placeholder="Ej. Continuidad de atención con otro profesional, trámite personal o solicitud del titular." /></div>
+              <div><label className="mb-1 block text-sm font-medium text-surface-600">Medio de entrega *</label><select required value={formEntregaExpediente.medio_entrega} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, medio_entrega: e.target.value })} className="input-field"><option value="digital">Digital</option><option value="impresa">Impresa</option><option value="ambas">Impresa y digital</option></select></div>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setModalEntregaExpediente(false)} className="btn-secondary">Cancelar</button><button type="submit" className="btn-primary">Registrar entrega</button></div>
+            </form>
+          </Modal>
 
           <Modal isOpen={Boolean(archivoInterpretacion)} onClose={() => { setArchivoInterpretacion(null); setInterpretacionClinica(''); }} title="Interpretación clínica del estudio" size="lg">
             <form onSubmit={guardarInterpretacion} className="space-y-4">
