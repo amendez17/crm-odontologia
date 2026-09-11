@@ -123,20 +123,27 @@ useEffect(() => {
   cargarBalance();
 }, [id]);
   const cargar = async () => {
-    try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([
-      api.get(`/pacientes/${id}`),
-      puedeModificarClinico ? api.get(`/odontograma/${id}`) : Promise.resolve({ data: [] }),
-      api.get(`/historia/${id}`),
-      api.get(`/reportes/balance/${id}`),
-      api.get(`/consentimiento/paciente/${id}`)
-    ]);
+    try {
+      const pacRes = await api.get(`/pacientes/${id}`);
       setPaciente(pacRes.data);
-      setOdontograma(odonRes.data);
-      setHistorias(histRes.data);
-      setBalance(balRes.data);
-      setConsentimientos(consRes.data);
-    } catch {
-      toast.error('Error al cargar datos del paciente');
+      const solicitudes = [
+        puedeModificarClinico ? api.get(`/odontograma/${id}`) : Promise.resolve({ data: [] }),
+        api.get(`/historia/${id}`),
+        api.get(`/reportes/balance/${id}`),
+        api.get(`/consentimiento/paciente/${id}`)
+      ];
+      const nombres = ['odontograma', 'historia clínica', 'cuenta corriente', 'consentimientos'];
+      const resultados = await Promise.allSettled(solicitudes);
+      const asignar = [respuesta => setOdontograma(respuesta.data), respuesta => setHistorias(respuesta.data), respuesta => setBalance(respuesta.data), respuesta => setConsentimientos(respuesta.data)];
+      resultados.forEach((resultado, indice) => {
+        if (resultado.status === 'fulfilled') asignar[indice](resultado.value);
+        else console.error(`Error al cargar ${nombres[indice]}:`, resultado.reason?.response?.data || resultado.reason);
+      });
+      const fallidos = resultados.map((resultado, indice) => resultado.status === 'rejected' ? nombres[indice] : null).filter(Boolean);
+      if (fallidos.length) toast.error(`No se pudo cargar: ${fallidos.join(', ')}`);
+    } catch (error) {
+      console.error('Error al cargar paciente:', error.response?.data || error);
+      toast.error(error.response?.data?.error || 'Error al cargar los datos principales del paciente');
     } finally {
       setLoading(false);
     }};
