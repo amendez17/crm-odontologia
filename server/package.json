@@ -6,9 +6,11 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "seed": "node src/seed.js"
+    "seed": "node src/seed.js",
+    "backup:verify": "node scripts/backup-verificable.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.883.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
