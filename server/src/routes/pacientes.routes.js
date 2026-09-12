@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { sequelize, Paciente, Cita, Presupuesto, Pago, Odontograma, HistoriaClinica, Usuario, Receta } = require('../models');
-const { auth, esDoctor } = require('../middleware/auth');
+const { auth, esDoctor, esAdmin } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const { Op } = require('sequelize');
 
@@ -62,12 +62,16 @@ router.get('/', auth, async (req, res) => {
     }
 
     const offset = (page - 1) * limit;
-    const { count, rows } = await Paciente.findAndCountAll({
+    const opcionesConsulta = {
       where,
       order: [['apellido', 'ASC'], ['nombre', 'ASC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
-    });
+    };
+    if (req.usuario.rol === 'recepcionista') {
+      opcionesConsulta.attributes = ['id', 'nombre', 'apellido', 'dni', 'fecha_nacimiento', 'telefono', 'email', 'obra_social', 'numero_afiliado', 'activo'];
+    }
+    const { count, rows } = await Paciente.findAndCountAll(opcionesConsulta);
 
     res.json({
       pacientes: rows,
@@ -81,7 +85,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // GET /api/pacientes/exportar
-router.get('/exportar', auth, async (req, res) => {
+router.get('/exportar', auth, esAdmin, registrarActividad('exportar', 'paciente'), async (req, res) => {
   try {
     const pacientes = await Paciente.findAll({
       where: { activo: true },
@@ -119,7 +123,7 @@ router.get('/exportar', auth, async (req, res) => {
 });
 
 // GET /api/pacientes/:id
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', auth, registrarActividad('consultar', 'paciente'), async (req, res) => {
   try {
     const paciente = await Paciente.findByPk(req.params.id, {
       include: [
@@ -129,6 +133,14 @@ router.get('/:id', auth, async (req, res) => {
       ]
     });
     if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado.' });
+    if (req.usuario.rol === 'recepcionista') {
+      const data = paciente.toJSON();
+      delete data.antecedentes_medicos;
+      delete data.alergias;
+      delete data.medicamentos;
+      delete data.notas;
+      return res.json(data);
+    }
     res.json(paciente);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -189,7 +201,11 @@ router.put('/:id', auth, registrarActividad('actualizar', 'paciente'), async (re
   try {
     const paciente = await Paciente.findByPk(req.params.id);
     if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado.' });
-    await paciente.update(req.body);
+    const camposRecepcion = ['nombre', 'apellido', 'fecha_nacimiento', 'genero', 'telefono', 'email', 'direccion', 'obra_social', 'numero_afiliado'];
+    const cambios = req.usuario.rol === 'recepcionista'
+      ? Object.fromEntries(Object.entries(req.body).filter(([campo]) => camposRecepcion.includes(campo)))
+      : req.body;
+    await paciente.update(cambios);
     res.json(paciente);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -260,7 +276,10 @@ router.post( '/:id/recetas', auth,  esDoctor,
   }
 );
 // GET /api/pacientes/:id/recetas
-router.get('/:id/recetas', auth, async (req, res) => {
+router.get('/:id/recetas', auth, esDoctor, registrarActividad('consultar', 'receta', {
+  entidadId: req => req.params.id,
+  contexto: req => ({ paciente_id: Number(req.params.id) })
+}), async (req, res) => {
 
   try {
 

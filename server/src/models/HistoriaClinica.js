@@ -24,6 +24,58 @@ const HistoriaClinica = sequelize.define('HistoriaClinica', {
     allowNull: false,
     defaultValue: DataTypes.NOW
   },
+  fecha_hora: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  doctor_nombre: {
+    type: DataTypes.STRING(220),
+    allowNull: true
+  },
+  doctor_cedula: {
+    type: DataTypes.STRING(80),
+    allowNull: true
+  },
+  firma_hash: {
+    type: DataTypes.STRING(64),
+    allowNull: true
+  },
+  registro_previo_hash: {
+    type: DataTypes.STRING(64),
+    allowNull: true
+  },
+  es_adenda: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  historia_origen_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  motivo_adenda: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  tipo_nota: { type: DataTypes.ENUM('inicial', 'subsecuente', 'adenda'), allowNull: false, defaultValue: 'subsecuente' },
+  antecedentes_heredofamiliares: { type: DataTypes.TEXT, allowNull: true },
+  antecedentes_patologicos: { type: DataTypes.TEXT, allowNull: true },
+  antecedentes_no_patologicos: { type: DataTypes.TEXT, allowNull: true },
+  antecedentes_odontologicos: { type: DataTypes.TEXT, allowNull: true },
+  habitos_orales: { type: DataTypes.TEXT, allowNull: true },
+  interrogatorio_sistemas: { type: DataTypes.TEXT, allowNull: true },
+  motivo_consulta: { type: DataTypes.TEXT, allowNull: true },
+  interrogatorio: { type: DataTypes.TEXT, allowNull: true },
+  exploracion_extraoral: { type: DataTypes.TEXT, allowNull: true },
+  exploracion_intraoral: { type: DataTypes.TEXT, allowNull: true },
+  presion_arterial: { type: DataTypes.STRING(20), allowNull: true },
+  frecuencia_cardiaca: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+  frecuencia_respiratoria: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+  temperatura: { type: DataTypes.DECIMAL(4, 1), allowNull: true },
+  peso: { type: DataTypes.DECIMAL(6, 2), allowNull: true },
+  talla: { type: DataTypes.DECIMAL(5, 2), allowNull: true },
+  pronostico: { type: DataTypes.TEXT, allowNull: true },
+  indicaciones: { type: DataTypes.TEXT, allowNull: true },
   diagnostico: {
     type: DataTypes.TEXT,
     allowNull: true

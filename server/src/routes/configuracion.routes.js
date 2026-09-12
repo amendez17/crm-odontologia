@@ -1,6 +1,7 @@
 const express = require('express');
 const { Configuracion } = require('../models');
 const { auth, esAdmin } = require('../middleware/auth');
+const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
 
 const CLAVES_VALIDAS = [
@@ -13,6 +14,11 @@ const CLAVES_VALIDAS = [
   'clinica_dias_laborales',
   'clinica_cuit',
   'clinica_responsable',
+  'privacidad_responsable',
+  'privacidad_email_arco',
+  'privacidad_domicilio_arco',
+  'privacidad_transferencias',
+  'privacidad_version',
   'moneda_simbolo',
   'duracion_turno_default'
 ];
@@ -37,6 +43,11 @@ router.get('/', auth, async (req, res) => {
           clinica_dias_laborales: 'Lunes a Viernes',
           clinica_cuit: '',
           clinica_responsable: '',
+          privacidad_responsable: '',
+          privacidad_email_arco: '',
+          privacidad_domicilio_arco: '',
+          privacidad_transferencias: 'Autoridades sanitarias y terceros indispensables para la atención, en los casos permitidos por la ley.',
+          privacidad_version: new Date().toISOString().slice(0, 10),
           moneda_simbolo: '$',
           duracion_turno_default: '30'
         };
@@ -51,7 +62,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // PUT /api/configuracion
-router.put('/', auth, esAdmin, async (req, res) => {
+router.put('/', auth, esAdmin, registrarActividad('actualizar', 'configuracion'), async (req, res) => {
   try {
     const datos = req.body;
     for (const [clave, valor] of Object.entries(datos)) {

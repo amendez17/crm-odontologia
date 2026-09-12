@@ -9,10 +9,14 @@ const DetallePresupuesto = require('./DetallePresupuesto');
 const Odontograma = require('./Odontograma');
 const Pago = require('./Pago');
 const HistoriaClinica = require('./HistoriaClinica');
+const ArchivoHistoria = require('./ArchivoHistoria');
+const ArchivoInterpretacion = require('./ArchivoInterpretacion');
 const Configuracion = require('./Configuracion');
 const Consentimiento = require('./Consentimiento');
 const LogActividad = require('./LogActividad');
 const Receta = require('./Receta')(sequelize, require('sequelize').DataTypes);
+const Periodontograma = require('./Periodontograma');
+const EntregaExpediente = require('./EntregaExpediente');
 
 // --- Asociaciones ---
 
@@ -61,6 +65,24 @@ Usuario.hasMany(HistoriaClinica, { foreignKey: 'doctor_id', as: 'historias' });
 HistoriaClinica.belongsTo(Usuario, { foreignKey: 'doctor_id', as: 'doctor' });
 Cita.hasOne(HistoriaClinica, { foreignKey: 'cita_id', as: 'historia' });
 HistoriaClinica.belongsTo(Cita, { foreignKey: 'cita_id', as: 'cita' });
+HistoriaClinica.hasMany(ArchivoHistoria, { foreignKey: 'historia_id', as: 'archivos', onDelete: 'CASCADE' });
+ArchivoHistoria.belongsTo(HistoriaClinica, { foreignKey: 'historia_id', as: 'historia' });
+Usuario.hasMany(ArchivoHistoria, { foreignKey: 'usuario_id', as: 'archivosHistoria' });
+ArchivoHistoria.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+ArchivoHistoria.hasMany(ArchivoInterpretacion, { foreignKey: 'archivo_id', as: 'interpretaciones', onDelete: 'CASCADE' });
+ArchivoInterpretacion.belongsTo(ArchivoHistoria, { foreignKey: 'archivo_id', as: 'archivo' });
+Usuario.hasMany(ArchivoInterpretacion, { foreignKey: 'usuario_id', as: 'interpretacionesArchivos' });
+ArchivoInterpretacion.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+
+Paciente.hasMany(EntregaExpediente, { foreignKey: 'paciente_id', as: 'entregasExpediente' });
+EntregaExpediente.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+Usuario.hasMany(EntregaExpediente, { foreignKey: 'responsable_id', as: 'entregasExpediente' });
+EntregaExpediente.belongsTo(Usuario, { foreignKey: 'responsable_id', as: 'responsable' });
+
+Paciente.hasMany(Periodontograma, { foreignKey: 'paciente_id', as: 'periodontogramas' });
+Periodontograma.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+Usuario.hasMany(Periodontograma, { foreignKey: 'doctor_id', as: 'periodontogramas' });
+Periodontograma.belongsTo(Usuario, { foreignKey: 'doctor_id', as: 'doctor' });
 
 // Consentimientos
 Paciente.hasMany(Consentimiento, { foreignKey: 'paciente_id', as: 'consentimientos' });
@@ -103,8 +125,12 @@ module.exports = {
   Odontograma,
   Pago,
   HistoriaClinica,
+  ArchivoHistoria,
+  ArchivoInterpretacion,
   Configuracion,
   Consentimiento,
   LogActividad,
-  Receta
+  Receta,
+  Periodontograma,
+  EntregaExpediente
 };

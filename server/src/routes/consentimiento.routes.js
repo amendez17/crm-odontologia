@@ -1,7 +1,12 @@
 const express = require('express');
-const { Consentimiento, Paciente, Usuario } = require('../models');
+const crypto = require('crypto');
+const { Consentimiento, Paciente, Usuario, Configuracion } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
+const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
+
+const hash = value => crypto.createHmac('sha256', process.env.EXPEDIENTE_SIGNING_SECRET || process.env.JWT_SECRET)
+  .update(JSON.stringify(value)).digest('hex');
 
 const PLANTILLAS = {
   
@@ -277,17 +282,47 @@ Yo, el/la paciente abajo firmante, declaro que:
 5. Entiendo que pueden surgir situaciones imprevistas durante el procedimiento que requieran modificaciones al plan original.`
 };
 
+const cargarConfiguracion = async () => {
+  const filas = await Configuracion.findAll();
+  return Object.fromEntries(filas.map(fila => [fila.clave, fila.valor || '']));
+};
+
+const construirAvisoPrivacidad = config => `AVISO DE PRIVACIDAD Y AUTORIZACIÓN PARA EL TRATAMIENTO DE DATOS PERSONALES SENSIBLES
+
+Responsable: ${config.privacidad_responsable || config.clinica_nombre || '[PENDIENTE DE CONFIGURAR]'}.
+Domicilio: ${config.clinica_direccion || '[PENDIENTE DE CONFIGURAR]'}.
+
+Los datos personales y datos personales sensibles relativos a la salud serán utilizados para identificación, integración y conservación del expediente clínico, diagnóstico, tratamiento odontológico, seguimiento, gestión de citas, facturación, contacto y cumplimiento de obligaciones sanitarias y legales.
+
+El titular puede ejercer sus derechos de Acceso, Rectificación, Cancelación u Oposición (ARCO), así como revocar su consentimiento, mediante solicitud presentada en ${config.privacidad_domicilio_arco || '[PENDIENTE DE CONFIGURAR]'} o al correo ${config.privacidad_email_arco || '[PENDIENTE DE CONFIGURAR]'}. La solicitud deberá permitir acreditar la identidad del titular y describir el derecho que desea ejercer.
+
+Transferencias: ${config.privacidad_transferencias || 'No se realizarán transferencias distintas de las legalmente permitidas o necesarias para la atención médica.'}
+
+Los cambios a este aviso se comunicarán en el domicilio del responsable y por los medios de contacto registrados. Versión: ${config.privacidad_version || '[PENDIENTE DE CONFIGURAR]'}.
+
+Declaro que recibí y comprendí este aviso y autorizo expresamente el tratamiento de mis datos personales sensibles para las finalidades señaladas.`;
+
 // GET /api/consentimiento/plantillas
-router.get('/plantillas', auth, (req, res) => {
-  res.json(Object.keys(PLANTILLAS).map(tipo => ({ tipo, contenido: PLANTILLAS[tipo] })));
+router.get('/plantillas', auth, async (_req, res) => {
+  try {
+    const config = await cargarConfiguracion();
+    const plantillas = Object.keys(PLANTILLAS).map(tipo => ({ tipo, contenido: PLANTILLAS[tipo] }));
+    plantillas.unshift({ tipo: 'Aviso de privacidad y datos sensibles', contenido: construirAvisoPrivacidad(config) });
+    res.json(plantillas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // GET /api/consentimiento/paciente/:pacienteId
-router.get('/paciente/:pacienteId', auth, async (req, res) => {
+router.get('/paciente/:pacienteId', auth, registrarActividad('consultar', 'consentimiento', {
+  entidadId: req => req.params.pacienteId,
+  contexto: req => ({ paciente_id: Number(req.params.pacienteId) })
+}), async (req, res) => {
   try {
     const consentimientos = await Consentimiento.findAll({
       where: { paciente_id: req.params.pacienteId },
-      include: [{ model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] }],
+      include: [{ model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido', 'cedula'] }],
       order: [['createdAt', 'DESC']]
     });
     res.json(consentimientos);
@@ -297,14 +332,37 @@ router.get('/paciente/:pacienteId', auth, async (req, res) => {
 });
 
 // POST /api/consentimiento
-router.post('/', auth, esDoctor, async (req, res) => {
+router.post('/', auth, registrarActividad('crear', 'consentimiento', {
+  contexto: (req, respuesta) => ({ paciente_id: Number(req.body.paciente_id), doctor_id: Number(respuesta?.doctor_id || req.body.doctor_id) })
+}), async (req, res) => {
   try {
-    const { paciente_id, tipo, contenido } = req.body;
+    const { paciente_id, doctor_id, tipo, contenido } = req.body;
+    const doctorResponsableId = req.usuario.rol === 'doctor' ? req.usuario.id : Number(doctor_id);
+    const doctor = await Usuario.findOne({ where: { id: doctorResponsableId, rol: 'doctor', activo: true } });
+    if (!doctor) return res.status(400).json({ error: 'Selecciona un doctor activo responsable del consentimiento.' });
+    if (!tipo?.trim()) return res.status(400).json({ error: 'El tipo de consentimiento es obligatorio.' });
+    if (tipo.trim() === 'Aviso de privacidad y datos sensibles') {
+      const config = await cargarConfiguracion();
+      const faltantes = [
+        ['privacidad_responsable', 'responsable del tratamiento'],
+        ['clinica_direccion', 'domicilio del responsable'],
+        ['privacidad_email_arco', 'correo para derechos ARCO'],
+        ['privacidad_domicilio_arco', 'domicilio para derechos ARCO'],
+        ['privacidad_version', 'versión del aviso']
+      ].filter(([clave]) => !config[clave]).map(([, etiqueta]) => etiqueta);
+      if (faltantes.length) return res.status(409).json({ error: `Completa en Configuración: ${faltantes.join(', ')}.` });
+    }
+    const texto = contenido || PLANTILLAS[tipo] || PLANTILLAS['Procedimiento general'];
+    if (!texto?.trim()) return res.status(400).json({ error: 'El contenido del consentimiento es obligatorio.' });
     const consentimiento = await Consentimiento.create({
       paciente_id,
-      doctor_id: req.usuario.id,
-      tipo,
-      contenido: contenido || PLANTILLAS[tipo] || PLANTILLAS['Procedimiento general']
+      doctor_id: doctor.id,
+      creado_por_id: req.usuario.id,
+      doctor_nombre: `${doctor.nombre} ${doctor.apellido}`.trim(),
+      doctor_cedula: doctor.cedula || null,
+      tipo: tipo.trim(),
+      contenido: texto,
+      documento_hash: hash({ paciente_id: Number(paciente_id), doctor_id: doctor.id, tipo: tipo.trim(), contenido: texto })
     });
     res.status(201).json(consentimiento);
   } catch (error) {
@@ -313,14 +371,32 @@ router.post('/', auth, esDoctor, async (req, res) => {
 });
 
 // PUT /api/consentimiento/:id/firmar
-router.put('/:id/firmar', auth, async (req, res) => {
+router.put('/:id/firmar', auth, esDoctor, registrarActividad('firmar', 'consentimiento'), async (req, res) => {
   try {
     const consentimiento = await Consentimiento.findByPk(req.params.id);
     if (!consentimiento) return res.status(404).json({ error: 'Consentimiento no encontrado.' });
+    if (consentimiento.firmado) return res.status(409).json({ error: 'El consentimiento ya fue firmado y es inmutable.' });
+    const { firmante_nombre, firmante_caracter, aceptacion_explicita } = req.body;
+    const caracteresValidos = ['paciente', 'madre_padre', 'tutor', 'representante_legal'];
+    if (!firmante_nombre?.trim()) return res.status(400).json({ error: 'El nombre completo del firmante es obligatorio.' });
+    if (!caracteresValidos.includes(firmante_caracter)) return res.status(400).json({ error: 'Indica el carácter con el que firma.' });
+    if (aceptacion_explicita !== true) return res.status(400).json({ error: 'Se requiere la aceptación expresa del consentimiento.' });
+    const fechaFirma = new Date();
+    const documentoHash = consentimiento.documento_hash || hash({
+      paciente_id: Number(consentimiento.paciente_id), doctor_id: Number(consentimiento.doctor_id),
+      tipo: consentimiento.tipo, contenido: consentimiento.contenido
+    });
+    const firmaHash = hash({ documento_hash: documentoHash, firmante_nombre: firmante_nombre.trim(), firmante_caracter, fecha_firma: fechaFirma.toISOString() });
     await consentimiento.update({
       firmado: true,
-      fecha_firma: new Date(),
-      ip_firma: req.ip
+      fecha_firma: fechaFirma,
+      ip_firma: req.ip,
+      firmado_por_id: req.usuario.id,
+      firmante_nombre: firmante_nombre.trim(),
+      firmante_caracter,
+      aceptacion_explicita: true,
+      documento_hash: documentoHash,
+      firma_hash: firmaHash
     });
     res.json(consentimiento);
   } catch (error) {

@@ -19,8 +19,25 @@ const LABELS = {
   protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura'
 };
 
+const ESTADOS_POR_TIPO = {
+  hallazgo: {
+    diente: ['sano', 'corona', 'extraccion', 'endodoncia', 'implante', 'protesis', 'ausente'],
+    cara: ['sano', 'caries', 'obturacion', 'fractura']
+  },
+  plan: { diente: ['corona', 'extraccion', 'endodoncia', 'implante', 'protesis'], cara: ['obturacion'] },
+  realizado: { diente: ['corona', 'extraccion', 'endodoncia', 'implante', 'protesis'], cara: ['obturacion'] }
+};
+const TIPOS_REGISTRO = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
+
 const DIENTES_SUPERIOR = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const DIENTES_INFERIOR = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const DIENTES_TEMPORALES_SUPERIOR = [55,54,53,52,51,61,62,63,64,65];
+const DIENTES_TEMPORALES_INFERIOR = [85,84,83,82,81,71,72,73,74,75];
+const nombreCara = (cara, pieza) => {
+  if (cara === 'completa') return 'Diente completo';
+  if (cara === 'lingual') return [1, 2, 5, 6].includes(Math.floor(Number(pieza) / 10)) ? 'Palatina' : 'Lingual';
+  return cara.charAt(0).toUpperCase() + cara.slice(1);
+};
 
 // Tooth types by position for SVG rendering
 const TIPO_DIENTE = {
@@ -34,7 +51,11 @@ const TIPO_DIENTE = {
   13:'canino',23:'canino',43:'canino',33:'canino',
   // Incisors
   12:'incisivo',11:'incisivo',21:'incisivo',22:'incisivo',
-  42:'incisivo',41:'incisivo',31:'incisivo',32:'incisivo'
+  42:'incisivo',41:'incisivo',31:'incisivo',32:'incisivo',
+  // Dentición temporal
+  55:'molar',54:'molar',65:'molar',64:'molar',85:'molar',84:'molar',75:'molar',74:'molar',
+  53:'canino',63:'canino',83:'canino',73:'canino',
+  52:'incisivo',51:'incisivo',61:'incisivo',62:'incisivo',82:'incisivo',81:'incisivo',71:'incisivo',72:'incisivo'
 };
 
 // SVG tooth with 5 clickable surfaces
@@ -65,43 +86,37 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     const raizStroke = esAusente ? '#bdbdbd' : '#d4a574';
 
     if (tipo === 'molar') {
-      // 3 roots for molars (2 for lower)
-      if (esInferior) {
+      // Superiores: tres raíces hacia arriba. Inferiores: dos hacia abajo.
+      if (!esInferior) {
         return (
           <g>
-            <path d="M16,0 L19,16 Q20,18 18,18 L14,18 Q12,18 13,16 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
-            <path d="M28,0 L31,16 Q32,18 30,18 L26,18 Q24,18 25,16 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+            <path d="M8,24 L6,4 Q6,2 8,2 L12,2 Q14,2 13,4 L15,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+            <path d="M18,24 L19,2 Q19,0 21,0 L23,0 Q25,0 25,2 L26,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+            <path d="M30,24 L31,4 Q30,2 32,2 L36,2 Q38,2 38,4 L36,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
           </g>
         );
       }
       return (
         <g>
-          <path d="M10,42 L13,58 Q14,60 12,60 L8,60 Q6,60 7,58 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
-          <path d="M22,42 L24,60 Q25,62 23,62 L19,62 Q17,62 19,60 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
-          <path d="M34,42 L37,58 Q38,60 36,60 L32,60 Q30,60 31,58 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+          <path d="M12,40 L14,62 Q14,64 16,64 L19,64 Q21,64 20,62 L21,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+          <path d="M25,40 L26,62 Q25,64 27,64 L30,64 Q32,64 32,62 L34,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
         </g>
       );
     } else if (tipo === 'premolar') {
-      if (esInferior) {
-        return <path d="M20,0 L23,18 Q24,20 22,20 L18,20 Q16,20 17,18 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
-      }
-      return (
+      if (!esInferior) return (
         <g>
-          <path d="M14,38 L16,54 Q17,56 15,56 L11,56 Q9,56 10,54 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
-          <path d="M30,38 L32,54 Q33,56 31,56 L27,56 Q25,56 26,54 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+          <path d="M13,24 L12,4 Q12,2 14,2 L17,2 Q19,2 19,4 L20,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
+          <path d="M24,24 L25,4 Q25,2 27,2 L30,2 Q32,2 31,4 L31,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>
         </g>
       );
+      return <path d="M18,40 L18,62 Q18,64 20,64 L23,64 Q25,64 25,62 L26,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
     } else if (tipo === 'canino') {
-      if (esInferior) {
-        return <path d="M18,0 L21,22 Q22,24 20,24 L16,24 Q14,24 15,22 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
-      }
-      return <path d="M18,38 L21,62 Q22,64 20,64 L16,64 Q14,64 15,62 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
+      if (!esInferior) return <path d="M16,24 L17,2 Q17,0 19,0 L22,0 Q24,0 24,2 L25,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
+      return <path d="M16,40 L17,63 Q17,65 19,65 L22,65 Q24,65 24,63 L25,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
     } else {
       // Incisors
-      if (esInferior) {
-        return <path d="M17,0 L20,18 Q21,20 19,20 L15,20 Q13,20 14,18 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
-      }
-      return <path d="M17,38 L20,58 Q21,60 19,60 L15,60 Q13,60 14,58 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
+      if (!esInferior) return <path d="M16,24 L17,4 Q17,2 19,2 L21,2 Q23,2 23,4 L24,24 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
+      return <path d="M16,40 L17,61 Q17,63 19,63 L21,63 Q23,63 23,61 L24,40 Z" fill={raizColor} stroke={raizStroke} strokeWidth="0.8"/>;
     }
   };
 
@@ -109,7 +124,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
    const renderCorona = () => {
     const size = tipo === 'molar' ? 44 : tipo === 'premolar' ? 40 : 36;
     const cx = size / 2 + (44 - size) / 2;
-    const cy = esInferior ? 30 : 20;
+    const cy = esInferior ? 22 : 42;
     const r = size / 2 - 2;
     const ri = r * 0.45; // inner radius for oclusal
 
@@ -123,7 +138,9 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
 
     // Surface paths using diamond/cross pattern
     const topColor = getCaraColor('vestibular');
-    const bottomColor = getCaraColor(esInferior ? 'palatino' : 'lingual');
+    // Se almacena como "lingual" para mantener compatibilidad con el modelo;
+    // clínicamente se presenta como palatina en la arcada superior.
+    const bottomColor = getCaraColor('lingual');
     const leftColor = getCaraColor('mesial');
     const rightColor = getCaraColor('distal');
     const centerColor = getCaraColor('oclusal');
@@ -133,7 +150,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     return (
   <g>
     {/* Tooth crown base */}
-    <rect x={cx-r} y={cy-r} width={r*2} height={r*2} rx={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} ry={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} fill={baseFill} stroke={baseStroke} strokeWidth="1.2"/>
+    <rect x={cx-r} y={cy-r} width={r*2} height={r*2} rx={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} ry={tipo === 'molar' ? 4 : tipo === 'incisivo' ? 2 : 3} fill={dienteFill} stroke={dienteStroke} strokeWidth={dienteEstadoActivo ? '2' : '1.2'}/>
 
         {/* Top surface (vestibular) */}
         <path
@@ -152,7 +169,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
           stroke={bottomColor ? bottomColor.stroke : baseStroke}
           strokeWidth={bottomColor ? '1.5' : '0.5'}
           className={!readOnly && !esAusente ? 'cursor-pointer hover:opacity-75' : ''}
-          onClick={(e) => handleCaraClick(esInferior ? 'palatino' : 'lingual', e)}
+          onClick={(e) => handleCaraClick('lingual', e)}
         />
 
         {/* Left surface (mesial) */}
@@ -208,7 +225,7 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
     );
   };
   
-  const svgHeight = esInferior ? 58 : (tipo === 'canino' ? 68 : tipo === 'molar' ? 66 : 62);
+  const svgHeight = 66;
   const svgWidth = 44;
 
   return (
@@ -225,19 +242,8 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
         className={`${!readOnly ? 'cursor-pointer' : ''} transition-transform group-hover:scale-105`}
         onClick={handleDienteClick}
       >
-        {esInferior ? (
-          <>
-            {renderRaiz()}
-            <g transform={`translate(0, ${tipo === 'molar' ? 14 : tipo === 'premolar' ? 16 : 18})`}>
-              {renderCorona()}
-            </g>
-          </>
-        ) : (
-          <>
-            {renderCorona()}
-            {renderRaiz()}
-          </>
-        )}
+        {renderRaiz()}
+        {renderCorona()}
       </svg>
       {!esInferior && (
         <span className={`text-[10px] font-bold mt-0.5 transition-colors ${
@@ -248,18 +254,31 @@ function DienteGrafico({ numero, estado, caras, estadoSeleccionado, onCaraClick,
   );
 }
 
-export default function Odontograma({ registros = [], onPiezaClick, readOnly = false }) {
-  const [estadoSeleccionado, setEstadoSeleccionado] = useState('caries');
+export default function Odontograma({ registros = [], onPiezaClick, readOnly = false, edad = null }) {
+  const [denticion, setDenticion] = useState(edad !== null && edad <= 5 ? 'temporal' : edad !== null && edad <= 12 ? 'mixta' : 'permanente');
+  const [estadoSeleccionado, setEstadoSeleccionado] = useState('corona');
   const [modoAplicacion, setModoAplicacion] = useState('diente'); // 'diente' | 'cara'
+  const [tipoRegistro, setTipoRegistro] = useState('hallazgo');
+  const [observacion, setObservacion] = useState('');
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
+  const [cambioPendiente, setCambioPendiente] = useState(null);
+  const [filtroPieza, setFiltroPieza] = useState('todas');
+  const tieneRegistrosTemporales = registros.some(registro => Number(registro.pieza_dental) >= 51);
+
+  useEffect(() => {
+    if (tieneRegistrosTemporales) setDenticion('mixta');
+  }, [tieneRegistrosTemporales]);
 
   // Hidrata caras por diente desde registros del backend (cara !== 'completa')
   const carasPorDiente = useMemo(() => {
     const map = {};
-    registros.forEach(r => {
+    [...registros].filter(r => (r.tipo_registro || 'hallazgo') !== 'plan').sort((a, b) => b.id - a.id).forEach(r => {
       const cara = r.cara || 'completa';
       if (cara === 'completa') return;
       if (!map[r.pieza_dental]) map[r.pieza_dental] = {};
-      map[r.pieza_dental][cara] = r.estado;
+      // El API devuelve también versiones históricas. La primera por pieza/cara
+      // es la más reciente y no debe ser reemplazada por una versión anterior.
+      if (map[r.pieza_dental][cara] === undefined) map[r.pieza_dental][cara] = r.estado;
     });
     return map;
   }, [registros]);
@@ -267,42 +286,100 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
   const getEstadoPieza = (pieza) => {
     // Si hay duplicados, usar el de mayor id (el más reciente)
     const reg = registros
-      .filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === 'completa')
+      .filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === 'completa' && (r.tipo_registro || 'hallazgo') !== 'plan')
       .sort((a, b) => b.id - a.id)[0];
     return reg ? reg.estado : 'sano';
   };
 
+  const idsVigentes = useMemo(() => {
+    const claves = new Set();
+    const ids = new Set();
+    [...registros].sort((a, b) => b.id - a.id).forEach(registro => {
+      const clave = `${registro.pieza_dental}-${registro.cara || 'completa'}-${registro.tipo_registro || 'hallazgo'}`;
+      if (!claves.has(clave)) { claves.add(clave); ids.add(registro.id); }
+    });
+    return ids;
+  }, [registros]);
+  const piezasConHistorial = useMemo(() => [...new Set(registros.map(registro => Number(registro.pieza_dental)))].sort((a, b) => a - b), [registros]);
+  const registrosHistorial = filtroPieza === 'todas' ? registros : registros.filter(registro => Number(registro.pieza_dental) === Number(filtroPieza));
+
   const handleDienteClick = (numero) => {
     if (readOnly) return;
     if (modoAplicacion === 'diente') {
-      onPiezaClick?.(numero, { estado: estadoSeleccionado, cara: 'completa' });
+      setCambioPendiente({ pieza: numero, estadoAnterior: getEstadoPieza(numero), estado: estadoSeleccionado, cara: 'completa', tipo_registro: tipoRegistro, observacion: observacion.trim() || null });
     }
   };
 
   const handleCaraClick = (numero, cara, estado) => {
     if (readOnly || modoAplicacion !== 'cara') return;
     const actual = carasPorDiente[numero]?.[cara];
-    const nuevoEstado = actual === estado ? 'sano' : estado;
+    const nuevoEstado = tipoRegistro === 'hallazgo' && actual === estado ? 'sano' : estado;
     // Envía un registro por (pieza + cara) — coincide con el modelo Sequelize
-    onPiezaClick?.(numero, { estado: nuevoEstado, cara });
+    setCambioPendiente({ pieza: numero, estadoAnterior: actual || 'sano', estado: nuevoEstado, cara, tipo_registro: tipoRegistro, observacion: observacion.trim() || null });
   };
+
+  const confirmarCambio = async () => {
+    if (!cambioPendiente) return;
+    const guardado = await onPiezaClick?.(cambioPendiente.pieza, {
+      estado: cambioPendiente.estado,
+      cara: cambioPendiente.cara,
+      tipo_registro: cambioPendiente.tipo_registro,
+      observacion: cambioPendiente.observacion
+    });
+    if (guardado !== false) {
+      setCambioPendiente(null);
+      setObservacion('');
+    }
+  };
+
+  const cambiarModo = modo => {
+    setModoAplicacion(modo);
+    setEstadoSeleccionado(ESTADOS_POR_TIPO[tipoRegistro][modo][0]);
+  };
+  const cambiarTipoRegistro = tipo => {
+    setTipoRegistro(tipo);
+    setEstadoSeleccionado(ESTADOS_POR_TIPO[tipo][modoAplicacion][0]);
+    setCambioPendiente(null);
+  };
+  const cambioSinVariacion = cambioPendiente && cambioPendiente.estadoAnterior === cambioPendiente.estado && !cambioPendiente.observacion;
+  const gruposDenticion = denticion === 'permanente'
+    ? [{ key: 'permanente', label: 'Dentición permanente', superior: DIENTES_SUPERIOR, inferior: DIENTES_INFERIOR }]
+    : denticion === 'temporal'
+      ? [{ key: 'temporal', label: 'Dentición temporal', superior: DIENTES_TEMPORALES_SUPERIOR, inferior: DIENTES_TEMPORALES_INFERIOR }]
+      : [
+          { key: 'permanente', label: 'Dentición permanente', superior: DIENTES_SUPERIOR, inferior: DIENTES_INFERIOR },
+          { key: 'temporal', label: 'Dentición temporal', superior: DIENTES_TEMPORALES_SUPERIOR, inferior: DIENTES_TEMPORALES_INFERIOR }
+        ];
 
   return (
     <div className="space-y-5">
+      <div>
+        <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Dentición:</span>
+        <div className="mt-2 grid grid-cols-3 gap-2 rounded-xl bg-surface-100 p-1">
+          {[['permanente', 'Permanente'], ['temporal', 'Temporal'], ['mixta', 'Mixta']].map(([key, label]) => <button key={key} type="button" onClick={() => { setDenticion(key); setCambioPendiente(null); }} className={`rounded-lg px-2 py-2 text-xs font-semibold transition-all ${denticion === key ? 'bg-white text-primary-700 shadow-sm' : 'text-surface-500'}`}>{label}</button>)}
+        </div>
+        {edad !== null && edad <= 12 && <p className="mt-1 text-xs text-surface-500">Vista sugerida según la edad del paciente: {edad <= 5 ? 'temporal' : 'mixta'}.</p>}
+      </div>
       {!readOnly && (
         <div className="space-y-3">
+          <div>
+            <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Registrar como:</span>
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {Object.entries(TIPOS_REGISTRO).map(([key, label]) => <button key={key} type="button" onClick={() => cambiarTipoRegistro(key)} className={`rounded-xl border px-3 py-2 text-xs font-semibold ${tipoRegistro === key ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200 bg-white text-surface-600'}`}>{label}</button>)}
+            </div>
+          </div>
           {/* Mode selector */}
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold text-surface-500 uppercase tracking-wider">Modo:</span>
             <div className="flex bg-surface-100 rounded-xl p-0.5">
               <button
-                onClick={() => setModoAplicacion('diente')}
+                onClick={() => cambiarModo('diente')}
                 className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${modoAplicacion === 'diente' ? 'bg-white text-primary-700 shadow-sm' : 'text-surface-500'}`}
               >
                 Diente completo
               </button>
               <button
-                onClick={() => setModoAplicacion('cara')}
+                onClick={() => cambiarModo('cara')}
                 className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${modoAplicacion === 'cara' ? 'bg-white text-primary-700 shadow-sm' : 'text-surface-500'}`}
               >
                 Por cara
@@ -312,7 +389,7 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
 
           {/* Estado selector */}
           <div className="flex flex-wrap gap-1.5">
-            {Object.entries(LABELS).map(([key, label]) => (
+            {ESTADOS_POR_TIPO[tipoRegistro][modoAplicacion].map(key => (
               <button
                 key={key}
                 onClick={() => setEstadoSeleccionado(key)}
@@ -328,76 +405,91 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
                 } : {}}
               >
                 <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: COLORES[key].stroke }} />
-                {label}
+                {LABELS[key]}
               </button>
             ))}
           </div>
+          <label className="block text-xs font-medium text-surface-600">
+            Observación clínica del cambio (opcional)
+            <input
+              value={observacion}
+              onChange={e => setObservacion(e.target.value)}
+              className="input-field mt-1"
+              placeholder="Ej. caries activa, restauración filtrada, pieza indicada para extracción"
+              maxLength={1000}
+            />
+          </label>
         </div>
       )}
 
       {/* Dental chart */}
-      <div className="bg-gradient-to-b from-surface-50 to-white rounded-2xl p-5 border border-surface-200">
-        {/* Superior arch */}
-        <div className="mb-1">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="h-px flex-1 bg-surface-200" />
-            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Superior</span>
-            <div className="h-px flex-1 bg-surface-200" />
-          </div>
-          <div className="flex justify-center gap-0 overflow-x-auto pb-2">
-            {DIENTES_SUPERIOR.map((num, i) => (
-              <div key={num} className="flex items-end">
-                <DienteGrafico
-                  numero={num}
-                  estado={getEstadoPieza(num)}
-                  caras={carasPorDiente[num]}
-                  estadoSeleccionado={estadoSeleccionado}
-                  onCaraClick={handleCaraClick}
-                  onDienteClick={handleDienteClick}
-                  readOnly={readOnly}
-                  esInferior={false}
-                />
-                {i === 7 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
+      <div className="space-y-4">
+        {gruposDenticion.map(grupo => <div key={grupo.key} className="bg-gradient-to-b from-surface-50 to-white rounded-2xl p-3 sm:p-5 border border-surface-200">
+          {denticion === 'mixta' && <p className="mb-3 text-center text-xs font-bold uppercase tracking-wider text-primary-700">{grupo.label}</p>}
+          <div className="mb-1">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="h-px flex-1 bg-surface-200" />
+              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Superior</span>
+              <div className="h-px flex-1 bg-surface-200" />
+            </div>
+            <div className="overflow-x-auto pb-2">
+              <div className="flex w-max min-w-full justify-start gap-0 sm:justify-center">
+              {grupo.superior.map((num, i) => (
+                <div key={num} className="flex items-end">
+                  <DienteGrafico numero={num} estado={getEstadoPieza(num)} caras={carasPorDiente[num]} estadoSeleccionado={estadoSeleccionado} onCaraClick={handleCaraClick} onDienteClick={handleDienteClick} readOnly={readOnly} esInferior={false} />
+                  {i === Math.floor(grupo.superior.length / 2) - 1 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
+                </div>
+              ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
 
-        {/* Divider - midline */}
-        <div className="flex items-center my-3">
-          <div className="flex-1 border-t-2 border-surface-300 border-dashed" />
-          <div className="mx-3 w-8 h-8 rounded-full bg-primary-50 border-2 border-primary-200 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-primary-400">L.M</span>
+          <div className="flex items-center my-3">
+            <div className="flex-1 border-t-2 border-surface-300 border-dashed" />
+            <div className="mx-3 w-8 h-8 rounded-full bg-primary-50 border-2 border-primary-200 flex items-center justify-center"><span className="text-[10px] font-bold text-primary-400">L.M</span></div>
+            <div className="flex-1 border-t-2 border-surface-300 border-dashed" />
           </div>
-          <div className="flex-1 border-t-2 border-surface-300 border-dashed" />
-        </div>
 
-        {/* Inferior arch */}
-        <div className="mt-1">
-          <div className="flex justify-center gap-0 overflow-x-auto pt-2">
-            {DIENTES_INFERIOR.map((num, i) => (
-              <div key={num} className="flex items-start">
-                <DienteGrafico
-                  numero={num}
-                  estado={getEstadoPieza(num)}
-                  caras={carasPorDiente[num]}
-                  estadoSeleccionado={estadoSeleccionado}
-                  onCaraClick={handleCaraClick}
-                  onDienteClick={handleDienteClick}
-                  readOnly={readOnly}
-                  esInferior={true}
-                />
-                {i === 7 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
+          <div className="mt-1">
+            <div className="overflow-x-auto pt-2">
+              <div className="flex w-max min-w-full justify-start gap-0 sm:justify-center">
+              {grupo.inferior.map((num, i) => (
+                <div key={num} className="flex items-start">
+                  <DienteGrafico numero={num} estado={getEstadoPieza(num)} caras={carasPorDiente[num]} estadoSeleccionado={estadoSeleccionado} onCaraClick={handleCaraClick} onDienteClick={handleDienteClick} readOnly={readOnly} esInferior={true} />
+                  {i === Math.floor(grupo.inferior.length / 2) - 1 && <div className="w-6 border-l-2 border-dashed border-primary-300 h-16 mx-1 self-center" />}
+                </div>
+              ))}
               </div>
-            ))}
+            </div>
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <div className="h-px flex-1 bg-surface-200" />
+              <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Inferior</span>
+              <div className="h-px flex-1 bg-surface-200" />
+            </div>
           </div>
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <div className="h-px flex-1 bg-surface-200" />
-            <span className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">Arcada Inferior</span>
-            <div className="h-px flex-1 bg-surface-200" />
-          </div>
-        </div>
+        </div>)}
       </div>
+
+      {cambioPendiente && !readOnly && (
+        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-900">Confirmar registro clínico</p>
+          <p className="mt-1 text-sm text-amber-800">
+            Pieza {cambioPendiente.pieza} · {nombreCara(cambioPendiente.cara, cambioPendiente.pieza)} · {TIPOS_REGISTRO[cambioPendiente.tipo_registro]}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <span className="rounded-lg bg-white px-2 py-1 text-surface-600">Actual: {LABELS[cambioPendiente.estadoAnterior] || cambioPendiente.estadoAnterior}</span>
+            <span className="font-bold text-amber-700">→</span>
+            <span className="rounded-lg bg-amber-200 px-2 py-1 font-semibold text-amber-900">Nuevo: {LABELS[cambioPendiente.estado] || cambioPendiente.estado}</span>
+          </div>
+          {cambioPendiente.observacion && <p className="mt-1 text-xs text-amber-700">Observación: {cambioPendiente.observacion}</p>}
+          <p className="mt-2 text-xs text-amber-700">Al confirmar se conservará como parte del historial del expediente.</p>
+          {cambioSinVariacion && <p className="mt-2 rounded-lg bg-red-50 px-2 py-1 text-xs font-medium text-red-700">No hay un cambio ni una observación nueva para registrar.</p>}
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={confirmarCambio} disabled={cambioSinVariacion} className="btn-primary text-sm disabled:cursor-not-allowed disabled:opacity-50">Confirmar y guardar</button>
+            <button type="button" onClick={() => setCambioPendiente(null)} className="btn-secondary text-sm">Cancelar</button>
+          </div>
+        </div>
+      )}
 
       {/* Surface legend for cara mode */}
       {!readOnly && modoAplicacion === 'cara' && (
@@ -421,6 +513,42 @@ export default function Odontograma({ registros = [], onPiezaClick, readOnly = f
           </div>
         ))}
       </div>
+
+      {registros.length > 0 && (
+        <div className="border-t border-surface-200 pt-4">
+          <button type="button" onClick={() => setMostrarHistorial(actual => !actual)} className="text-sm font-semibold text-primary-700">
+            {mostrarHistorial ? 'Ocultar historial' : `Ver historial clínico (${registros.length})`}
+          </button>
+          {mostrarHistorial && (
+            <div className="mt-3">
+              <label className="mb-2 flex items-center gap-2 text-xs text-surface-600">
+                Filtrar por pieza
+                <select value={filtroPieza} onChange={e => setFiltroPieza(e.target.value)} className="input-field py-1 w-auto">
+                  <option value="todas">Todas</option>
+                  {piezasConHistorial.map(numero => <option key={numero} value={numero}>Pieza {numero}</option>)}
+                </select>
+              </label>
+              <div className="max-h-80 overflow-auto rounded-xl border border-surface-200 divide-y divide-surface-100">
+              {registrosHistorial.map(registro => (
+                <div key={registro.id} className="p-3 text-xs">
+                  <div className="flex flex-wrap justify-between gap-2">
+                    <span className="font-semibold text-primary-900">
+                      Pieza {registro.pieza_dental} · {nombreCara(registro.cara || 'completa', registro.pieza_dental)} · {LABELS[registro.estado] || registro.estado}
+                      <span className="ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700">{TIPOS_REGISTRO[registro.tipo_registro || 'hallazgo']}</span>
+                      <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${idsVigentes.has(registro.id) ? 'bg-green-100 text-green-700' : 'bg-surface-100 text-surface-500'}`}>{idsVigentes.has(registro.id) ? 'Vigente' : 'Anterior'}</span>
+                    </span>
+                    <span className="text-surface-500">{new Date(registro.fecha_hora || registro.createdAt || registro.fecha).toLocaleString('es-MX')}</span>
+                  </div>
+                  <p className="mt-1 text-surface-600">Dr. {registro.doctor_nombre || [registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}{registro.doctor_cedula ? ` · Cédula ${registro.doctor_cedula}` : ''}</p>
+                  {registro.observacion && <p className="mt-1 text-surface-700">Observación: {registro.observacion}</p>}
+                  <p className={`mt-1 text-[10px] ${registro.integridad_valida === true ? 'text-green-700' : registro.integridad_valida === false ? 'text-red-700' : 'text-surface-400'}`}>{registro.integridad_valida === true ? 'Integridad verificada' : registro.integridad_valida === false ? 'Revisar integridad' : 'Registro anterior sin sello electrónico'}</p>
+                </div>
+              ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

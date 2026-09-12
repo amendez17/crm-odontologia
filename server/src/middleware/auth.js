@@ -11,7 +11,7 @@ const auth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const usuario = await Usuario.findByPk(decoded.id);
 
-    if (!usuario || !usuario.activo) {
+    if (!usuario || !usuario.activo || (decoded.v ?? 0) !== usuario.token_version) {
       return res.status(401).json({ error: 'Token inválido o usuario inactivo.' });
     }
 

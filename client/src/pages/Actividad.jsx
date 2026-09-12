@@ -69,7 +69,7 @@ export default function Actividad() {
               <label className="block text-sm font-medium text-surface-600 mb-1">Entidad</label>
               <select value={filtros.entidad} onChange={e => setFiltros({ ...filtros, entidad: e.target.value })} className="input-field">
                 <option value="">Todas</option>
-                {['paciente', 'cita', 'presupuesto', 'pago', 'tratamiento', 'usuario', 'consentimiento', 'odontograma', 'historia'].map(e => (
+                {['paciente', 'expediente_clinico', 'historia_clinica', 'archivo_historia', 'entrega_expediente', 'cita', 'presupuesto', 'pago', 'tratamiento', 'usuario', 'consentimiento', 'odontograma', 'receta'].map(e => (
                   <option key={e} value={e}>{e.charAt(0).toUpperCase() + e.slice(1)}</option>
                 ))}
               </select>
@@ -78,7 +78,7 @@ export default function Actividad() {
               <label className="block text-sm font-medium text-surface-600 mb-1">Acción</label>
               <select value={filtros.accion} onChange={e => setFiltros({ ...filtros, accion: e.target.value })} className="input-field">
                 <option value="">Todas</option>
-                {['crear', 'actualizar', 'eliminar', 'login', 'firmar'].map(a => (
+                {['consultar', 'crear', 'crear_adenda', 'anexar_archivo', 'actualizar', 'eliminar', 'intento_eliminar', 'exportar', 'login', 'firmar'].map(a => (
                   <option key={a} value={a}>{a.charAt(0).toUpperCase() + a.slice(1)}</option>
                 ))}
               </select>

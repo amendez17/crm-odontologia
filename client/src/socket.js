@@ -1,7 +1,10 @@
 import { io } from 'socket.io-client';
 
+const apiUrl = import.meta.env.VITE_API_URL || 'https://crm-odontologia.onrender.com/api';
+const socketUrl = import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api\/?$/, '');
+
 const socket = io(
-  import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL.replace('/api', ''),
+  socketUrl,
   {
     transports: ['websocket', 'polling'],
     reconnection: true,

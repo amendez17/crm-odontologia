@@ -24,6 +24,11 @@ const Odontograma = sequelize.define('Odontograma', {
     type: DataTypes.ENUM('sano', 'caries', 'obturacion', 'corona', 'extraccion', 'endodoncia', 'implante', 'protesis', 'ausente', 'fractura'),
     defaultValue: 'sano'
   },
+  tipo_registro: {
+    type: DataTypes.ENUM('hallazgo', 'plan', 'realizado'),
+    allowNull: false,
+    defaultValue: 'hallazgo'
+  },
   observacion: {
     type: DataTypes.TEXT,
     allowNull: true
@@ -32,6 +37,12 @@ const Odontograma = sequelize.define('Odontograma', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
+  fecha_hora: { type: DataTypes.DATE, allowNull: true },
+  doctor_nombre: { type: DataTypes.STRING(220), allowNull: true },
+  doctor_cedula: { type: DataTypes.STRING(80), allowNull: true },
+  firma_hash: { type: DataTypes.STRING(64), allowNull: true },
+  registro_previo_hash: { type: DataTypes.STRING(64), allowNull: true },
+  firma_version: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 1 },
   fecha: {
     type: DataTypes.DATEONLY,
     allowNull: false,

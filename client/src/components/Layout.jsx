@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import socket from '../socket';
 import Modal from './Modal';
 import toast from 'react-hot-toast';
 import {
   FiHome, FiUsers, FiCalendar, FiClipboard, FiFileText, FiDollarSign,
   FiSettings, FiLogOut, FiMenu, FiX, FiBarChart2, FiBell, FiLock,
-  FiSliders, FiSearch, FiActivity, FiChevronsLeft, FiChevronsRight, FiShield
+  FiSliders, FiSearch, FiActivity, FiChevronsLeft, FiChevronsRight, FiShield,
+  FiCheckCircle, FiPhone
 } from 'react-icons/fi';
 
 const navItems = [
@@ -42,23 +44,70 @@ export default function Layout() {
     localStorage.setItem('sidebar-collapsed', String(next));
   };
 
+  const cargarNotificaciones = async () => {
+    try {
+      const hoy = new Date();
+      const manana = new Date(hoy);
+      manana.setDate(hoy.getDate() + 1);
+      const hoyStr = hoy.toISOString().split('T')[0];
+      const mananaStr = manana.toISOString().split('T')[0];
+      const [citasRespuesta, alertasRespuesta] = await Promise.all([
+        api.get('/citas', { params: { desde: hoyStr, hasta: mananaStr } }),
+        api.get('/notificaciones')
+      ]);
+      const citas = citasRespuesta.data
+        .filter(c => c.estado === 'programada' || c.estado === 'confirmada')
+        .map(cita => ({ ...cita, tipo_notificacion: 'cita', clave: `cita-${cita.id}` }));
+      const facturas = (alertasRespuesta.data.facturas || []).map(pago => ({ ...pago, tipo_notificacion: 'factura', clave: `factura-${pago.id}` }));
+      const limpiezas = (alertasRespuesta.data.limpiezas || []).map(paciente => ({ ...paciente, tipo_notificacion: 'limpieza', clave: `limpieza-${paciente.id}` }));
+      setNotificaciones([...facturas, ...limpiezas, ...citas]);
+    } catch {}
+  };
+
   useEffect(() => {
-    const cargarNotificaciones = async () => {
-      try {
-        const hoy = new Date();
-        const manana = new Date(hoy);
-        manana.setDate(hoy.getDate() + 1);
-        const hoyStr = hoy.toISOString().split('T')[0];
-        const mananaStr = manana.toISOString().split('T')[0];
-        const { data } = await api.get('/citas', { params: { desde: hoyStr, hasta: mananaStr } });
-        const pendientes = data.filter(c => c.estado === 'programada' || c.estado === 'confirmada');
-        setNotificaciones(pendientes);
-      } catch {}
-    };
     cargarNotificaciones();
     const interval = setInterval(cargarNotificaciones, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const actualizarPorCita = cita => {
+      if (cita?.estado === 'completada') {
+        setNotificaciones(actuales => actuales.filter(item =>
+          item.clave !== `cita-${cita.id}` && item.clave !== `limpieza-${cita.paciente_id}`
+        ));
+      }
+      cargarNotificaciones();
+    };
+    const actualizarSinDatos = () => cargarNotificaciones();
+    socket.on('cita-creada', actualizarPorCita);
+    socket.on('cita-editada', actualizarPorCita);
+    socket.on('cita-eliminada', actualizarSinDatos);
+    socket.on('reconnect', actualizarSinDatos);
+    return () => {
+      socket.off('cita-creada', actualizarPorCita);
+      socket.off('cita-editada', actualizarPorCita);
+      socket.off('cita-eliminada', actualizarSinDatos);
+      socket.off('reconnect', actualizarSinDatos);
+    };
+  }, []);
+
+  const marcarFacturaEmitida = async pagoId => {
+    try {
+      await api.put(`/notificaciones/facturas/${pagoId}/emitida`);
+      setNotificaciones(actuales => actuales.filter(item => !(item.tipo_notificacion === 'factura' && item.id === pagoId)));
+      toast.success('Factura marcada como emitida');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'No se pudo actualizar la factura');
+    }
+  };
+
+  const enlaceWhatsAppLimpieza = paciente => {
+    const digitos = String(paciente.telefono || '').replace(/\D/g, '');
+    const numero = digitos.length === 10 ? `52${digitos}` : digitos;
+    const mensaje = `Hola ${paciente.nombre}, te recordamos que han pasado 4 meses desde tu última visita a Clínica Dental Almar. Es buen momento para agendar tu limpieza dental preventiva. ¿Te gustaría programar una cita?`;
+    return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+  };
 
   useEffect(() => {
     if (busqueda.length < 2) { setResultados([]); return; }
@@ -89,8 +138,8 @@ export default function Layout() {
       toast.error('Las contraseñas no coinciden');
       return;
     }
-    if (passwordForm.nueva.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres');
+    if (passwordForm.nueva.length < 12 || !/[a-z]/.test(passwordForm.nueva) || !/[A-Z]/.test(passwordForm.nueva) || !/\d/.test(passwordForm.nueva) || !/[^A-Za-z0-9]/.test(passwordForm.nueva)) {
+      toast.error('Usa al menos 12 caracteres con mayúscula, minúscula, número y símbolo');
       return;
     }
     try {
@@ -106,7 +155,7 @@ export default function Layout() {
     }
   };
 
-  const sidebarW = collapsed   ? 'w-[72px]'   : 'w-[260px] xl:w-[280px]';
+  const sidebarW = collapsed ? 'w-[min(86vw,300px)] lg:w-[72px]' : 'w-[min(86vw,300px)] lg:w-[260px] xl:w-[280px]';
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -120,7 +169,7 @@ export default function Layout() {
       {/* Logo */}
 <div
   className={`flex items-center border-b border-white/5 h-[70px] flex-shrink-0 ${
-    collapsed ? 'justify-center px-0' : 'px-4 gap-3'
+    collapsed ? 'px-4 gap-3 lg:justify-center lg:px-0 lg:gap-0' : 'px-4 gap-3'
   }`}
 >
   {/* Logo glass */}
@@ -146,8 +195,7 @@ export default function Layout() {
   />
 </div>
   {/* Texto */}
-  {!collapsed && (
-    <div className="min-w-0">
+    <div className={`min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
       <p className="text-white font-bold text-base leading-tight truncate">
         Clinica Dental Almar
       </p>
@@ -156,7 +204,6 @@ export default function Layout() {
         Sistema dental
       </p>
     </div>
-  )}
 
   {/* Mobile close */}
   <button
@@ -176,11 +223,11 @@ export default function Layout() {
               onClick={() => setSidebarOpen(false)}
               title={collapsed ? label : undefined}
               className={({ isActive }) =>
-                `nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${collapsed ? 'justify-center px-0' : ''}`
+                `nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${collapsed ? 'lg:justify-center lg:px-0' : ''}`
               }
             >
               <Icon size={19} className="flex-shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
+              <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>{label}</span>
             </NavLink>
           ))}
         </nav>
@@ -190,18 +237,18 @@ export default function Layout() {
           <button
             onClick={() => setModalPassword(true)}
             title={collapsed ? 'Cambiar contraseña' : undefined}
-            className={`nav-item nav-item-inactive ${collapsed ? 'justify-center px-0' : ''}`}
+            className={`nav-item nav-item-inactive ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
           >
             <FiLock size={18} className="flex-shrink-0" />
-            {!collapsed && <span className="truncate">Cambiar clave</span>}
+            <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>Cambiar clave</span>
           </button>
           <button
             onClick={handleLogout}
             title={collapsed ? 'Cerrar sesión' : undefined}
-            className={`nav-item text-red-300 hover:bg-red-500/20 hover:text-red-200 ${collapsed ? 'justify-center px-0' : ''}`}
+            className={`nav-item text-red-300 hover:bg-red-500/20 hover:text-red-200 ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
           >
             <FiLogOut size={18} className="flex-shrink-0" />
-            {!collapsed && <span className="truncate">Cerrar sesión</span>}
+            <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>Cerrar sesión</span>
           </button>
 
           {/* Collapse toggle (desktop only) */}
@@ -276,7 +323,11 @@ export default function Layout() {
           {/* Notifications */}
           <div className="relative">
             <button
-              onClick={() => setShowNotif(!showNotif)}
+              onClick={() => {
+                const abrir = !showNotif;
+                setShowNotif(abrir);
+                if (abrir) cargarNotificaciones();
+              }}
               className="relative p-2.5 text-surface-500 hover:bg-primary-50 hover:text-primary-600 rounded-xl transition-all"
             >
               <FiBell size={20} />
@@ -290,34 +341,42 @@ export default function Layout() {
             {showNotif && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />
-                <div className="absolute right-0 top-14 z-[9999] w-80 bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-slide-up">
+                <div className="fixed left-3 right-3 top-[72px] z-[9999] sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-80 bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden animate-slide-up">
                   <div className="px-4 py-3 bg-gradient-to-r from-[#cbb27c] to-[#b89a5f] text-white">
-                    <h3 className="font-semibold text-sm">Citas pendientes</h3>
-                    <p className="text-xs text-white/80">Hoy y mañana</p>
+                    <h3 className="font-semibold text-sm">Notificaciones</h3>
+                    <p className="text-xs text-white/80">Citas, facturas y seguimiento preventivo</p>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notificaciones.length === 0 ? (
-                      <p className="text-sm text-surface-400 text-center py-6">No hay citas pendientes</p>
+                      <p className="text-sm text-surface-400 text-center py-6">No hay notificaciones pendientes</p>
                     ) : (
-                      notificaciones.map(cita => {
+                      notificaciones.map(notificacion => {
+                        if (notificacion.tipo_notificacion === 'factura') return <div key={notificacion.clave} className="border-b border-surface-100 bg-amber-50/50 px-4 py-3">
+                          <div className="flex items-start justify-between gap-2"><div><span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">FACTURA PENDIENTE</span><p className="mt-1 text-sm font-semibold text-gray-900">{notificacion.paciente?.nombre} {notificacion.paciente?.apellido}</p><p className="text-xs text-surface-500">Pago de ${Number(notificacion.monto).toLocaleString()} · {new Date(`${notificacion.fecha}T12:00:00`).toLocaleDateString('es-MX')}</p></div><FiFileText className="mt-1 text-amber-600" /></div>
+                          <div className="mt-2 flex gap-2"><Link to={`/pacientes/${notificacion.paciente_id}`} onClick={() => setShowNotif(false)} className="text-xs font-semibold text-primary-700">Ver paciente</Link><button type="button" onClick={() => marcarFacturaEmitida(notificacion.id)} className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-green-700"><FiCheckCircle /> Marcar emitida</button></div>
+                        </div>;
+                        if (notificacion.tipo_notificacion === 'limpieza') return <div key={notificacion.clave} className="border-b border-surface-100 bg-blue-50/50 px-4 py-3">
+                          <div className="flex items-start justify-between gap-2"><div><span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">LIMPIEZA · 4 MESES</span><p className="mt-1 text-sm font-semibold text-gray-900">{notificacion.nombre} {notificacion.apellido}</p><p className="text-xs text-surface-500">Última visita: {new Date(`${notificacion.ultima_visita}T12:00:00`).toLocaleDateString('es-MX')}</p></div><FiPhone className="mt-1 text-blue-600" /></div>
+                          <div className="mt-2 flex gap-3"><Link to={`/pacientes/${notificacion.id}`} onClick={() => setShowNotif(false)} className="text-xs font-semibold text-primary-700">Ver paciente</Link>{notificacion.telefono && <a href={enlaceWhatsAppLimpieza(notificacion)} target="_blank" rel="noreferrer" className="text-xs font-semibold text-green-700">Enviar WhatsApp</a>}</div>
+                        </div>;
                         const hoyStr = new Date().toISOString().split('T')[0];
-                        const esHoy = cita.fecha === hoyStr;
+                        const esHoy = notificacion.fecha === hoyStr;
                         return (
-                          <div key={cita.id} className="px-4 py-3 border-b border-surface-100 hover:bg-surface-50 transition-colors">
+                          <div key={notificacion.clave} className="px-4 py-3 border-b border-surface-100 hover:bg-surface-50 transition-colors">
                             <div className="flex items-center justify-between">
                               <p className="text-sm font-semibold text-gray-900">
-                                {cita.paciente?.nombre} {cita.paciente?.apellido}
+                                {notificacion.paciente?.nombre} {notificacion.paciente?.apellido}
                               </p>
                               <div className="text-right flex items-center gap-2">
-                                <span className="text-sm font-bold text-primary-600">{cita.hora_inicio?.slice(0, 5)}</span>
+                                <span className="text-sm font-bold text-primary-600">{notificacion.hora_inicio?.slice(0, 5)}</span>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${esHoy ? 'bg-dental-100 text-dental-700' : 'bg-primary-100 text-primary-700'}`}>
                                   {esHoy ? 'HOY' : 'MAÑANA'}
                                 </span>
                               </div>
                             </div>
                             <p className="text-xs text-surface-400 mt-0.5">
-                              Dr. {cita.doctor?.nombre} {cita.doctor?.apellido}
-                              {cita.motivo && ` - ${cita.motivo}`}
+                              Dr. {notificacion.doctor?.nombre} {notificacion.doctor?.apellido}
+                              {notificacion.motivo && ` - ${notificacion.motivo}`}
                             </p>
                           </div>
                         );
@@ -369,7 +428,7 @@ export default function Layout() {
               onChange={e => setPasswordForm({ ...passwordForm, nueva: e.target.value })}
               className="input-field"
               required
-              minLength={6}
+              minLength={12}
             />
           </div>
           <div>
@@ -380,7 +439,7 @@ export default function Layout() {
               onChange={e => setPasswordForm({ ...passwordForm, confirmar: e.target.value })}
               className="input-field"
               required
-              minLength={6}
+              minLength={12}
             />
           </div>
           <div className="flex justify-end gap-3">

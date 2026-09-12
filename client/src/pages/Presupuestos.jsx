@@ -1147,7 +1147,7 @@ const exportarCSV = async () => {
                 <FiPrinter size={15} /> Imprimir Presupuesto
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div><span className="text-gray-500">Paciente:</span> <span className="font-medium">{modalDetalle.paciente?.nombre} {modalDetalle.paciente?.apellido}</span></div>
               <div><span className="text-gray-500">Doctor:</span> <span className="font-medium">Dr. {modalDetalle.doctor?.nombre} {modalDetalle.doctor?.apellido}</span></div>
             </div>

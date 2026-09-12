@@ -46,7 +46,8 @@ const Usuario = sequelize.define('Usuario', {
   activo: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
-  }
+  },
+  token_version: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 }
 }, {
   tableName: 'usuarios',
   timestamps: true,

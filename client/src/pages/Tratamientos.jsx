@@ -188,7 +188,7 @@ export default function Tratamientos() {
               {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-surface-600 mb-1">Precio *</label>
               <input name="precio" type="number" step="0.01" value={form.precio} onChange={handleChange} className="input-field" required />

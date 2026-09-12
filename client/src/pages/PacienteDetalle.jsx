@@ -2,13 +2,46 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import Odontograma from '../components/Odontograma';
+import Periodontograma from '../components/Periodontograma';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
-import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock, FiUploadCloud, FiImage, FiExternalLink } from 'react-icons/fi';
 import { fechaHoy } from '../utils/fecha';
 import socket from '../socket';
+import { useAuth } from '../context/AuthContext';
+
+const notaClinicaVacia = () => ({
+  tipo_nota: 'subsecuente', antecedentes_heredofamiliares: '', antecedentes_patologicos: '', antecedentes_no_patologicos: '',
+  antecedentes_odontologicos: '', habitos_orales: '', interrogatorio_sistemas: '',
+  motivo_consulta: '', interrogatorio: '', exploracion_extraoral: '', exploracion_intraoral: '',
+  presion_arterial: '', frecuencia_cardiaca: '', frecuencia_respiratoria: '', temperatura: '', peso: '', talla: '',
+  diagnostico: '', pronostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', indicaciones: '', notas: ''
+});
+
+const cuestionarioVacio = () => ({
+  heredofamiliares: [], patologicos: [], no_patologicos: [], odontologicos: [], habitos: [], sistemas: [],
+  detalle_heredofamiliares: '', detalle_patologicos: '', detalle_no_patologicos: '',
+  detalle_odontologicos: '', detalle_habitos: '', detalle_sistemas: ''
+});
+
+const opcionesAntecedentes = {
+  heredofamiliares: ['Diabetes', 'Hipertensión', 'Cardiopatías', 'Cáncer', 'Enfermedad renal'],
+  patologicos: ['Diabetes', 'Hipertensión', 'Cardiopatía', 'Anticoagulantes', 'Alergias', 'Cirugías', 'Hospitalizaciones', 'Embarazo'],
+  no_patologicos: ['Tabaquismo', 'Alcohol', 'Drogas', 'Dieta alta en azúcar'],
+  odontologicos: ['Tratamiento previo', 'Mala experiencia dental', 'Anestesia adversa', 'Sangrado prolongado'],
+  habitos: ['Bruxismo', 'Respiración bucal', 'Onicofagia', 'Morder objetos', 'Higiene deficiente'],
+  sistemas: ['Cardiovascular', 'Respiratorio', 'Digestivo', 'Neurológico', 'Endocrino', 'Hematológico']
+};
+
+const documentosEntrega = {
+  historia_clinica: 'Historia clínica', odontograma: 'Odontograma', periodontograma: 'Periodontograma',
+  consentimientos: 'Consentimientos', recetas: 'Recetas', estudios_imagenes: 'Estudios e imágenes', otros: 'Otros documentos'
+};
+const entregaVacia = () => ({ solicitante_nombre: '', solicitante_caracter: 'paciente', documentos: [], documentos_detalle: '', motivo: '', medio_entrega: 'digital' });
 
 export default function PacienteDetalle() {
+  const { usuario } = useAuth();
+  const puedeModificarClinico = ['administrador', 'doctor'].includes(usuario?.rol);
   const { id } = useParams();
   const [paciente, setPaciente] = useState(null);
   const [odontograma, setOdontograma] = useState([]);
@@ -16,16 +49,32 @@ export default function PacienteDetalle() {
   const [balance, setBalance] = useState(null);
   const [tab, setTab] = useState('info');
   const [modalHistoria, setModalHistoria] = useState(false);
+  const [pasoHistoria, setPasoHistoria] = useState(1);
+  const [modalAdenda, setModalAdenda] = useState(false);
+  const [historiaOrigen, setHistoriaOrigen] = useState(null);
   const [modalPago, setModalPago] = useState(false);
   const [modalCita, setModalCita] = useState(false);
   const [doctores, setDoctores] = useState([]);
-  const [formHistoria, setFormHistoria] = useState({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
-  const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '',  notas: ''});
+  const [formHistoria, setFormHistoria] = useState(notaClinicaVacia);
+  const [cuestionario, setCuestionario] = useState(cuestionarioVacio);
+  const [formAdenda, setFormAdenda] = useState({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+  const [archivosHistoria, setArchivosHistoria] = useState([]);
+  const [subiendoArchivos, setSubiendoArchivos] = useState(null);
+  const [cargaAdjuntos, setCargaAdjuntos] = useState(null);
+  const [archivoInterpretacion, setArchivoInterpretacion] = useState(null);
+  const [interpretacionClinica, setInterpretacionClinica] = useState('');
+  const [entregasExpediente, setEntregasExpediente] = useState([]);
+  const [modalEntregaExpediente, setModalEntregaExpediente] = useState(false);
+  const [formEntregaExpediente, setFormEntregaExpediente] = useState(entregaVacia);
+  const [formPago, setFormPago] = useState({ monto: '', metodo_pago: 'efectivo',fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: '', requiere_factura: false });
   const [formCita, setFormCita] = useState({ doctor_id: '', fecha: new Date().toISOString().split('T')[0], hora_inicio: '', hora_fin: '', motivo: '' });
   const [consentimientos, setConsentimientos] = useState([]);
   const [plantillas, setPlantillas] = useState([]);
   const [modalConsentimiento, setModalConsentimiento] = useState(false);
-  const [formConsent, setFormConsent] = useState({ tipo: '', contenido: '' });
+  const [formConsent, setFormConsent] = useState({ doctor_id: '', tipo: '', contenido: '' });
+  const [modalFirmaConsentimiento, setModalFirmaConsentimiento] = useState(false);
+  const [consentimientoFirma, setConsentimientoFirma] = useState(null);
+  const [formFirma, setFormFirma] = useState({ firmante_nombre: '', firmante_caracter: 'paciente', aceptacion_explicita: false });
   const [loading, setLoading] = useState(true);
   const [formReceta, setFormReceta] = useState({diagnostico: '',medicamentos: '', indicaciones: '' });
   const [modalReceta, setModalReceta] = useState(false);
@@ -84,18 +133,33 @@ useEffect(() => {
   cargarBalance();
 }, [id]);
   const cargar = async () => {
-    try {const [pacRes, odonRes, histRes, balRes, consRes] = await Promise.all([api.get(`/pacientes/${id}`), api.get(`/odontograma/${id}`), api.get(`/historia/${id}`), api.get(`/reportes/balance/${id}`), api.get(`/consentimiento/paciente/${id}`)]);
+    try {
+      const pacRes = await api.get(`/pacientes/${id}`);
       setPaciente(pacRes.data);
-      setOdontograma(odonRes.data);
-      setHistorias(histRes.data);
-      setBalance(balRes.data);
-      setConsentimientos(consRes.data);
-    } catch {
-      toast.error('Error al cargar datos del paciente');
+      const solicitudes = [
+        puedeModificarClinico ? api.get(`/odontograma/${id}`) : Promise.resolve({ data: [] }),
+        api.get(`/historia/${id}`),
+        api.get(`/reportes/balance/${id}`),
+        api.get(`/consentimiento/paciente/${id}`),
+        api.get(`/entregas-expediente/paciente/${id}`)
+      ];
+      const nombres = ['odontograma', 'historia clínica', 'cuenta corriente', 'consentimientos', 'entregas de copias'];
+      const resultados = await Promise.allSettled(solicitudes);
+      const asignar = [respuesta => setOdontograma(respuesta.data), respuesta => setHistorias(respuesta.data), respuesta => setBalance(respuesta.data), respuesta => setConsentimientos(respuesta.data), respuesta => setEntregasExpediente(respuesta.data)];
+      resultados.forEach((resultado, indice) => {
+        if (resultado.status === 'fulfilled') asignar[indice](resultado.value);
+        else console.error(`Error al cargar ${nombres[indice]}:`, resultado.reason?.response?.data || resultado.reason);
+      });
+      const fallidos = resultados.map((resultado, indice) => resultado.status === 'rejected' ? nombres[indice] : null).filter(Boolean);
+      if (fallidos.length) toast.error(`No se pudo cargar: ${fallidos.join(', ')}`);
+    } catch (error) {
+      console.error('Error al cargar paciente:', error.response?.data || error);
+      toast.error(error.response?.data?.error || 'Error al cargar los datos principales del paciente');
     } finally {
       setLoading(false);
     }};
  const cargarRecetas = async () => {
+  if (!puedeModificarClinico) { setRecetas([]); setLoadingRecetas(false); return; }
   try {setLoadingRecetas(true);
   const { data } = await api.get(`/pacientes/${id}/recetas`);
     setRecetas(data || []);
@@ -114,7 +178,7 @@ useEffect(() => {
       // Normaliza: acepta tanto string ('caries') como objeto ({ estado, cara })
       const payload = typeof data === 'string'? { estado: data, cara: 'completa' }: { cara: 'completa', ...data };
      // Busca el registro más reciente (mayor id) para esa pieza + cara
-      const registro = odontograma.filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara).sort((a, b) => b.id - a.id)[0];
+      const registro = odontograma.filter(r => r.pieza_dental === pieza && (r.cara || 'completa') === payload.cara && (r.tipo_registro || 'hallazgo') === (payload.tipo_registro || 'hallazgo')).sort((a, b) => b.id - a.id)[0];
       if (!registro) {
         await api.post('/odontograma', { paciente_id: parseInt(id), pieza_dental: pieza, ...payload});
       } else {
@@ -124,37 +188,181 @@ useEffect(() => {
       const { data: refreshed } = await api.get(`/odontograma/${id}`);
       setOdontograma(refreshed);
       toast.success('Odontograma actualizado');
+      return true;
     } catch (error) {
       console.error('Error guardando odontograma:', error.response?.data || error);
       toast.error('Error al guardar odontograma');
+      return false;
     }};
  
-  const guardarHistoria = async (e) => {
+  const validarArchivos = (files) => {
+    const permitidos = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (files.some(file => !permitidos.includes(file.type))) {
+      toast.error('Solo se permiten imágenes JPG, PNG, WEBP y archivos PDF');
+      return false;
+    }
+    if (files.some(file => file.size > 10 * 1024 * 1024)) {
+      toast.error('Cada archivo debe pesar máximo 10 MB');
+      return false;
+    }
+    if (files.length > 10) {
+      toast.error('Puedes subir máximo 10 archivos a la vez');
+      return false;
+    }
+    return true;
+  };
+
+  const prepararAdjuntos = files => {
+    const seleccionados = Array.from(files || []);
+    if (!seleccionados.length || !validarArchivos(seleccionados)) return [];
+    return seleccionados.map(file => ({ file, interpretacion: '' }));
+  };
+
+  const subirAdjuntos = async (historiaId, adjuntos, mostrarMensaje = true) => {
+    const seleccionados = (adjuntos || []).map(adjunto => adjunto.file);
+    if (!seleccionados.length || !validarArchivos(seleccionados)) return false;
+    if (adjuntos.some(adjunto => adjunto.interpretacion.trim() && (adjunto.interpretacion.trim().length < 5 || adjunto.interpretacion.trim().length > 5000))) {
+      toast.error('Las interpretaciones escritas deben contener entre 5 y 5000 caracteres');
+      return false;
+    }
+    const data = new FormData();
+    seleccionados.forEach(file => data.append('archivos', file));
+    data.append('interpretaciones', JSON.stringify(adjuntos.map(adjunto => adjunto.interpretacion.trim())));
+    setSubiendoArchivos(historiaId);
+    try {
+      await api.post(`/historia/${historiaId}/archivos`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const { data: historiasActualizadas } = await api.get(`/historia/${id}`);
+      setHistorias(historiasActualizadas);
+      if (mostrarMensaje) toast.success('Archivos agregados correctamente');
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error al subir los archivos');
+      return false;
+    } finally {
+      setSubiendoArchivos(null);
+    }
+  };
+
+  const confirmarCargaAdjuntos = async e => {
     e.preventDefault();
-    try { await api.post('/historia', { ...formHistoria, paciente_id: parseInt(id), fecha: new Date().toISOString().split('T')[0] });
-      toast.success('Registro añadido');
-      setModalHistoria(false);
-      setFormHistoria({ diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+    if (!cargaAdjuntos) return;
+    const guardados = await subirAdjuntos(cargaAdjuntos.historiaId, cargaAdjuntos.adjuntos);
+    if (guardados) setCargaAdjuntos(null);
+  };
+
+  const guardarInterpretacion = async e => {
+    e.preventDefault();
+    if (!archivoInterpretacion) return;
+    try {
+      await api.post(`/historia/archivos/${archivoInterpretacion.id}/interpretacion`, { interpretacion: interpretacionClinica });
       const { data } = await api.get(`/historia/${id}`);
       setHistorias(data);
-    } catch {
-      toast.error('Error al guardar');
+      setArchivoInterpretacion(null);
+      setInterpretacionClinica('');
+      toast.success('Interpretación clínica guardada');
+    } catch (error) { toast.error(error.response?.data?.error || 'No se pudo guardar la interpretación'); }
+  };
+
+  const alternarDocumentoEntrega = documento => setFormEntregaExpediente(actual => ({
+    ...actual,
+    documentos: actual.documentos.includes(documento)
+      ? actual.documentos.filter(item => item !== documento)
+      : [...actual.documentos, documento]
+  }));
+
+  const guardarEntregaExpediente = async e => {
+    e.preventDefault();
+    if (!formEntregaExpediente.documentos.length) return toast.error('Selecciona al menos un documento entregado');
+    try {
+      await api.post('/entregas-expediente', { ...formEntregaExpediente, paciente_id: Number(id) });
+      const { data } = await api.get(`/entregas-expediente/paciente/${id}`);
+      setEntregasExpediente(data);
+      setFormEntregaExpediente(entregaVacia());
+      setModalEntregaExpediente(false);
+      toast.success('Entrega de copias registrada');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'No se pudo registrar la entrega');
+    }
+  };
+
+  const guardarHistoria = async (e) => {
+    e.preventDefault();
+    if (archivosHistoria.some(adjunto => adjunto.interpretacion.trim() && (adjunto.interpretacion.trim().length < 5 || adjunto.interpretacion.trim().length > 5000))) {
+      return toast.error('Las interpretaciones escritas deben contener entre 5 y 5000 caracteres');
+    }
+    try {
+      const respuesta = (grupo, detalle) => {
+        const seleccion = cuestionario[grupo];
+        const texto = seleccion.length ? seleccion.join(', ') : 'Ninguno referido';
+        return cuestionario[detalle]?.trim() ? `${texto}. Detalles: ${cuestionario[detalle].trim()}` : texto;
+      };
+      const antecedentes = formHistoria.tipo_nota === 'inicial' ? {
+        antecedentes_heredofamiliares: respuesta('heredofamiliares', 'detalle_heredofamiliares'),
+        antecedentes_patologicos: respuesta('patologicos', 'detalle_patologicos'),
+        antecedentes_no_patologicos: respuesta('no_patologicos', 'detalle_no_patologicos'),
+        antecedentes_odontologicos: respuesta('odontologicos', 'detalle_odontologicos'),
+        habitos_orales: respuesta('habitos', 'detalle_habitos'),
+        interrogatorio_sistemas: respuesta('sistemas', 'detalle_sistemas')
+      } : {};
+      const { data: nuevaHistoria } = await api.post('/historia', { ...formHistoria, ...antecedentes, paciente_id: parseInt(id), fecha: new Date().toISOString().split('T')[0] });
+      if (archivosHistoria.length) await subirAdjuntos(nuevaHistoria.id, archivosHistoria, false);
+      toast.success(archivosHistoria.length ? 'Registro y archivos añadidos' : 'Registro añadido');
+      setModalHistoria(false);
+      setPasoHistoria(1);
+      setFormHistoria(notaClinicaVacia());
+      setCuestionario(cuestionarioVacio());
+      setArchivosHistoria([]);
+      const { data } = await api.get(`/historia/${id}`);
+      setHistorias(data);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error al guardar');
     }};
+
+  const avanzarHistoria = () => {
+    if (pasoHistoria === 1 && !formHistoria.motivo_consulta.trim()) return toast.error('Captura el motivo de consulta');
+    if (pasoHistoria === 1 && formHistoria.tipo_nota === 'inicial' && !formHistoria.interrogatorio.trim()) return toast.error('Captura el padecimiento actual');
+    if (pasoHistoria === 2 && formHistoria.tipo_nota === 'inicial' && !formHistoria.exploracion_intraoral.trim()) return toast.error('Captura la exploración intraoral');
+    setPasoHistoria(paso => paso + 1);
+  };
+
+  const alternarAntecedente = (grupo, opcion) => {
+    setCuestionario(actual => ({
+      ...actual,
+      [grupo]: actual[grupo].includes(opcion) ? actual[grupo].filter(item => item !== opcion) : [...actual[grupo], opcion]
+    }));
+  };
+
+  const guardarAdenda = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/historia/${historiaOrigen.id}/adendas`, formAdenda);
+      const { data } = await api.get(`/historia/${id}`);
+      setHistorias(data);
+      setModalAdenda(false);
+      setHistoriaOrigen(null);
+      setFormAdenda({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' });
+      toast.success('Adenda registrada sin modificar la nota original');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Error al guardar la adenda');
+    }
+  };
 
   const crearConsentimiento = async (e) => {e.preventDefault();
     try {
-      await api.post('/consentimiento', { paciente_id: parseInt(id), tipo: formConsent.tipo, contenido: formConsent.contenido });
+      await api.post('/consentimiento', { paciente_id: parseInt(id), doctor_id: formConsent.doctor_id, tipo: formConsent.tipo, contenido: formConsent.contenido });
       toast.success('Consentimiento creado');
       setModalConsentimiento(false);
       const { data } = await api.get(`/consentimiento/paciente/${id}`);
       setConsentimientos(data);
     } catch { toast.error('Error al crear consentimiento'); }};
-  const firmarConsentimiento = async (consentId) => { if (!confirm('¿Confirmar firma del consentimiento?')) return;
-    try { await api.put(`/consentimiento/${consentId}/firmar`);
+  const firmarConsentimiento = async (e) => { e.preventDefault();
+    try { await api.put(`/consentimiento/${consentimientoFirma.id}/firmar`, formFirma);
       toast.success('Consentimiento firmado');
+      setModalFirmaConsentimiento(false);
+      setConsentimientoFirma(null);
       const { data } = await api.get(`/consentimiento/paciente/${id}`);
       setConsentimientos(data);
-    } catch { toast.error('Error al firmar'); }};
+    } catch (error) { toast.error(error.response?.data?.error || 'Error al firmar'); }};
 
   const imprimirConsentimiento = (c) => {
   const win = window.open('', '_blank', 'width=700,height=900');
@@ -227,8 +435,11 @@ body{ font-family: 'Segoe UI', Arial, sans-serif; margin:0; padding:5px 10px 10p
   <div class="content">${c.contenido || 'Sin contenido'} </div>
 
   ${c.firmado  ? `<div class="estado">
-          ✔ FIRMADO el ${new Date(c.fecha_firma).toLocaleDateString('es-MX')}
+          ✔ ACEPTADO Y FIRMADO el ${new Date(c.fecha_firma).toLocaleString('es-MX')}<br>
+          Firmante: ${c.firmante_nombre || 'No registrado'} · Carácter: ${(c.firmante_caracter || '').replace('_', ' ')}
         </div>` : '' }
+
+  ${c.firma_hash ? `<div style="font-size:8px;color:#6b7280;overflow-wrap:anywhere"><strong>Sello de integridad:</strong> ${c.firma_hash}</div>` : ''}
 
   <div class="firma-section">
     <div>
@@ -253,21 +464,152 @@ win.onload = () => {
   win.print();
 };
   };
+ const imprimirOdontograma = () => {
+  const win = window.open('', '_blank', 'width=850,height=900');
+  if (!win) return toast.error('Permite las ventanas emergentes para imprimir');
+  const nombresEstado = { sano: 'Sano', caries: 'Caries', obturacion: 'Obturación', corona: 'Corona', extraccion: 'Extracción', endodoncia: 'Endodoncia', implante: 'Implante', protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura' };
+  const nombresTipoOdontograma = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
+  const nombreCara = registro => registro.cara === 'completa' ? 'Diente completo' : registro.cara === 'lingual' ? ([1, 2, 5, 6].includes(Math.floor(Number(registro.pieza_dental) / 10)) ? 'Palatina' : 'Lingual') : `${registro.cara.charAt(0).toUpperCase()}${registro.cara.slice(1)}`;
+  const actuales = [...odontograma]
+    .sort((a, b) => b.id - a.id)
+    .filter((registro, indice, lista) => indice === lista.findIndex(item => item.pieza_dental === registro.pieza_dental && (item.cara || 'completa') === (registro.cara || 'completa') && (item.tipo_registro || 'hallazgo') === (registro.tipo_registro || 'hallazgo')));
+  const filas = actuales.map(registro => `<tr>
+    <td>${registro.pieza_dental}</td>
+    <td>${Number(registro.pieza_dental) >= 51 ? 'Temporal' : 'Permanente'}</td>
+    <td>${nombreCara(registro)}</td>
+    <td>${nombresTipoOdontograma[registro.tipo_registro || 'hallazgo']}</td>
+    <td>${nombresEstado[registro.estado] || registro.estado}</td>
+    <td>${registro.observacion || '—'}</td>
+    <td>${registro.doctor_nombre || [registro.doctor?.nombre, registro.doctor?.apellido].filter(Boolean).join(' ') || 'No especificado'}${registro.doctor_cedula ? `<br>Cédula: ${registro.doctor_cedula}` : ''}</td>
+    <td>${new Date(registro.fecha_hora || registro.createdAt || registro.fecha).toLocaleString('es-MX')}<br>${registro.integridad_valida === true ? 'Integridad verificada' : registro.integridad_valida === false ? 'Revisar integridad' : 'Registro legado'}</td>
+  </tr>`).join('');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Odontograma - ${paciente.nombre} ${paciente.apellido}</title><style>
+    @page{size:Letter;margin:12mm} body{font-family:Arial,sans-serif;color:#263248;font-size:11px;margin:0}.header{text-align:center;border-bottom:2px solid #c8a24a;padding-bottom:10px}.logo{width:65px}.header h1{font-size:18px;color:#b58b23;margin:2px}.header p{margin:2px}.paciente{margin:14px 0;padding:10px;background:#fffaf0;border-left:4px solid #c8a24a;display:flex;justify-content:space-between;gap:10px}.resumen{margin:10px 0;color:#475569}table{width:100%;border-collapse:collapse}th,td{padding:7px;border:1px solid #e5e7eb;text-align:left;vertical-align:top}th{background:#f8f4e8;color:#72591d}.firma{margin-top:45px;display:flex;justify-content:flex-end}.firma div{width:260px;text-align:center;border-top:1px solid #64748b;padding-top:5px}.footer{margin-top:20px;border-top:1px solid #ddd;padding-top:7px;text-align:center;color:#64748b;font-size:9px}
+  </style></head><body>
+    <div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><p>Odontograma clínico</p></div>
+    <div class="paciente"><span><b>Paciente:</b> ${paciente.nombre} ${paciente.apellido}</span><span><b>Número:</b> ${paciente.dni || '—'}</span><span><b>Edad:</b> ${edad !== null ? `${edad} años` : '—'}</span></div>
+    <p class="resumen"><b>Estado actual:</b> ${actuales.length} hallazgos registrados. El historial electrónico conserva ${odontograma.length} movimientos.</p>
+    <table><thead><tr><th>Pieza</th><th>Dentición</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha y hora</th></tr></thead><tbody>${filas || '<tr><td colspan="8" style="text-align:center">Sin registros odontológicos</td></tr>'}</tbody></table>
+    <div class="firma"><div>Nombre, firma y cédula del odontólogo</div></div>
+    <div class="footer">Documento generado desde el expediente clínico · ${new Date().toLocaleString('es-MX')}</div>
+  </body></html>`);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+ };
+
+ const imprimirExpedienteCompleto = async () => {
+  const win = window.open('', '_blank', 'width=900,height=950');
+  if (!win) return toast.error('Permite las ventanas emergentes para exportar');
+  win.document.write('<p style="font-family:Arial;padding:30px">Preparando expediente clínico completo…</p>');
+  const esc = valor => String(valor ?? '').replace(/[&<>'"]/g, caracter => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[caracter]));
+  const fecha = valor => valor ? new Date(valor).toLocaleString('es-MX') : '—';
+  let fechaGeneracion = new Date();
+  let folioExportacion = 'Exportación sin folio de auditoría';
+  const responsable = [usuario?.nombre, usuario?.apellido].filter(Boolean).join(' ') || 'Usuario autenticado';
+  let evaluacionesPeriodontales = [];
+  try { evaluacionesPeriodontales = (await api.get(`/periodontograma/${id}`)).data || []; } catch {}
+
+  try {
+    const { data } = await api.post(`/historia/${id}/exportar`, {
+      formato: 'impresion_pdf',
+      secciones: ['historia_clinica', 'odontograma', 'periodontograma', 'consentimientos', 'recetas', 'entregas_copias'],
+      totales: { historias: historias.length, odontograma: odontograma.length, consentimientos: consentimientos.length, recetas: recetas.length, entregas: entregasExpediente.length }
+    });
+    folioExportacion = data.folio || folioExportacion;
+    if (data.fecha_servidor) fechaGeneracion = new Date(data.fecha_servidor);
+  } catch {
+    toast.error('El expediente se imprimirá, pero no fue posible registrar la exportación en auditoría.');
+  }
+
+  const nombresEstado = { sano: 'Sano', caries: 'Caries', obturacion: 'Obturación', corona: 'Corona', extraccion: 'Extracción', endodoncia: 'Endodoncia', implante: 'Implante', protesis: 'Prótesis', ausente: 'Ausente', fractura: 'Fractura' };
+  const nombresTipo = { hallazgo: 'Hallazgo clínico', plan: 'Tratamiento indicado', realizado: 'Tratamiento realizado' };
+  const odontogramaActual = [...odontograma].sort((a, b) => b.id - a.id).filter((r, i, lista) => i === lista.findIndex(x => x.pieza_dental === r.pieza_dental && (x.cara || 'completa') === (r.cara || 'completa') && (x.tipo_registro || 'hallazgo') === (r.tipo_registro || 'hallazgo')));
+  const odontogramaHtml = odontogramaActual.map(r => `<tr><td>${r.pieza_dental}</td><td>${Number(r.pieza_dental) >= 51 ? 'Temporal' : 'Permanente'}</td><td>${esc(r.cara === 'completa' ? 'Diente completo' : r.cara)}</td><td>${esc(nombresTipo[r.tipo_registro || 'hallazgo'])}</td><td>${esc(nombresEstado[r.estado] || r.estado)}</td><td>${esc(r.observacion || '—')}</td><td>${esc(r.doctor_nombre || [r.doctor?.nombre, r.doctor?.apellido].filter(Boolean).join(' ') || '—')}</td><td>${fecha(r.fecha_hora || r.createdAt || r.fecha)}</td></tr>`).join('');
+
+  const historiaHtml = historias.map(h => `<article class="registro"><h3>${fecha(h.fecha_hora || h.fecha)} · Dr. ${esc(h.doctor_nombre || [h.doctor?.nombre, h.doctor?.apellido].filter(Boolean).join(' '))}${h.es_adenda ? ' · ADENDA' : ''}</h3>
+    ${[['Motivo',h.motivo_consulta],['Interrogatorio',h.interrogatorio],['Antecedentes heredofamiliares',h.antecedentes_heredofamiliares],['Antecedentes patológicos',h.antecedentes_patologicos],['Antecedentes no patológicos',h.antecedentes_no_patologicos],['Antecedentes odontológicos',h.antecedentes_odontologicos],['Hábitos',h.habitos_orales],['Exploración extraoral',h.exploracion_extraoral],['Exploración intraoral',h.exploracion_intraoral],['Diagnóstico',h.diagnostico],['Pronóstico',h.pronostico],['Tratamiento realizado',h.tratamiento_realizado],['Piezas',h.piezas_tratadas],['Plan',h.receta],['Indicaciones',h.indicaciones],['Notas',h.notas],['Motivo de adenda',h.motivo_adenda]].filter(([,v]) => v).map(([k,v]) => `<p><b>${k}:</b> ${esc(v)}</p>`).join('')}
+    ${(h.archivos || []).length ? `<div class="anexos">${h.archivos.map(a => `<div class="anexo">${a.tipo === 'imagen' ? `<img src="${esc(a.url)}" alt="${esc(a.nombre_original)}">` : '<div class="pdf">PDF</div>'}<b>${esc(a.nombre_original)}</b>${(a.interpretaciones || []).length ? a.interpretaciones.map((i, indice) => `<p><b>Interpretación ${indice + 1}:</b> ${esc(i.texto)}</p><small>${esc(i.usuario_nombre || '')} · ${fecha(i.fecha)}</small>`).join('') : '<small>Sin interpretación registrada</small>'}</div>`).join('')}</div>` : ''}
+    <small>${h.integridad_valida === true ? 'Integridad verificada' : h.integridad_valida === false ? 'Revisar integridad' : 'Registro legado'}</small></article>`).join('');
+
+  const periodontal = evaluacionesPeriodontales[0];
+  const periodontalHtml = periodontal ? `<p><b>Evaluación:</b> ${fecha(periodontal.fecha_hora)} · Dr. ${esc(periodontal.doctor_nombre)} · ${periodontal.integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</p>${esc(periodontal.observaciones || '')}${(periodontal.mediciones || []).map(m => `<div class="pieza"><b>Pieza ${m.pieza} · Movilidad ${m.movilidad ?? 0} · Furca ${m.furca ?? 0}</b><table><thead><tr><th>Sitio</th><th>Prof.</th><th>Rec.</th><th>NIC</th><th>Sang.</th><th>Placa</th><th>Sup.</th></tr></thead><tbody>${(m.sitios || []).map(s => `<tr><td>${s.sitio}</td><td>${s.profundidad}</td><td>${s.recesion}</td><td>${Number(s.profundidad || 0)+Number(s.recesion || 0)}</td><td>${s.sangrado?'Sí':'No'}</td><td>${s.placa?'Sí':'No'}</td><td>${s.supuracion?'Sí':'No'}</td></tr>`).join('')}</tbody></table></div>`).join('')}` : '<p>Sin evaluaciones periodontales.</p>';
+  const consentimientosHtml = consentimientos.map(c => `<article class="registro"><h3>${esc(c.tipo)} · ${fecha(c.createdAt)}</h3><p>${esc(c.contenido)}</p><p><b>Odontólogo:</b> ${esc(c.doctor_nombre || [c.doctor?.nombre,c.doctor?.apellido].filter(Boolean).join(' '))}</p><small>${c.firmado ? `Firmado por ${esc(c.firmante_nombre || 'paciente')} · ${fecha(c.fecha_firma)}` : 'Pendiente de firma'}${c.integridad_valida === true ? ' · Integridad verificada' : ''}</small></article>`).join('');
+  const recetasHtml = recetas.map(r => `<article class="registro"><h3>Receta ${esc(r.folio || '')} · ${fecha(r.createdAt)}</h3><p><b>Odontólogo:</b> ${esc([r.doctor?.nombre,r.doctor?.apellido].filter(Boolean).join(' '))}</p><p><b>Diagnóstico:</b> ${esc(r.diagnostico)}</p><p><b>Medicamentos:</b> ${esc(r.medicamentos)}</p><p><b>Indicaciones:</b> ${esc(r.indicaciones)}</p></article>`).join('');
+  const entregasHtml = entregasExpediente.map(entrega => `<article class="registro"><h3>${fecha(entrega.fecha_entrega)} · Entrega de copias</h3><p><b>Solicitante:</b> ${esc(entrega.solicitante_nombre)} (${esc(entrega.solicitante_caracter)})</p><p><b>Documentos:</b> ${(entrega.documentos || []).map(item => esc(documentosEntrega[item] || item)).join(', ')}${entrega.documentos_detalle ? ` · ${esc(entrega.documentos_detalle)}` : ''}</p><p><b>Motivo:</b> ${esc(entrega.motivo)}</p><p><b>Medio:</b> ${esc(entrega.medio_entrega)}</p><p><b>Responsable:</b> ${esc(entrega.responsable_nombre)} (${esc(entrega.responsable_rol)})</p><small>${entrega.integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</small></article>`).join('');
+
+  win.document.open();
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Expediente clínico - ${esc(paciente.nombre)} ${esc(paciente.apellido)}</title><style>@page{size:Letter;margin:11mm 11mm 16mm}body{font-family:Arial,sans-serif;color:#263248;font-size:10px;margin:0;padding-bottom:8mm}.header{text-align:center;border-bottom:2px solid #c8a24a;padding-bottom:8px}.logo{width:60px}.header h1{color:#b58b23;margin:2px;font-size:18px}.paciente{margin:12px 0;padding:10px;background:#fffaf0;border-left:4px solid #c8a24a;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.seccion{page-break-before:auto;margin-top:18px}.seccion>h2{font-size:14px;color:#8a6a20;border-bottom:1px solid #c8a24a;padding-bottom:4px}.registro,.pieza{page-break-inside:avoid;border:1px solid #e5e7eb;border-radius:6px;padding:8px;margin:7px 0}.registro h3{font-size:11px;color:#8a6a20;margin:0 0 5px}.registro p{margin:3px 0;white-space:pre-wrap}table{width:100%;border-collapse:collapse;margin-top:5px;page-break-inside:avoid}th,td{border:1px solid #e5e7eb;padding:4px;text-align:left}th{background:#f8f4e8}.anexos{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:7px}.anexo{border:1px solid #eee;padding:5px;page-break-inside:avoid}.anexo img{width:100%;height:150px;object-fit:contain}.anexo small{display:block;color:#64748b;margin-top:3px}.pdf{height:45px;display:flex;align-items:center;justify-content:center;background:#fee2e2;color:#b91c1c;font-weight:bold}.footer{position:fixed;left:0;right:0;bottom:-9mm;text-align:center;border-top:1px solid #ddd;padding-top:4px;color:#64748b;font-size:8px;background:white}</style></head><body>
+  <div class="header"><img src="/logo_clinica-removebg-preview.png" class="logo"><h1>Clínica Dental Almar</h1><div>Expediente clínico integral</div><small><b>Folio:</b> ${esc(folioExportacion)} · Generado por ${esc(responsable)} (${esc(usuario?.rol || 'usuario')}) · ${fecha(fechaGeneracion)}</small></div>
+  <div class="paciente"><div><b>Paciente:</b> ${esc(paciente.nombre)} ${esc(paciente.apellido)}</div><div><b>Número:</b> ${esc(paciente.dni)}</div><div><b>Edad:</b> ${edad !== null ? edad+' años' : '—'}</div><div><b>Teléfono:</b> ${esc(paciente.telefono || '—')}</div><div><b>Alergias:</b> ${esc(paciente.alergias || 'No referidas')}</div><div><b>Antecedentes:</b> ${esc(paciente.antecedentes_medicos || 'No referidos')}</div></div>
+  <section class="seccion"><h2>Historia clínica</h2>${historiaHtml || '<p>Sin notas clínicas.</p>'}</section>
+  <section class="seccion"><h2>Odontograma actual</h2><table><thead><tr><th>Pieza</th><th>Dentición</th><th>Cara</th><th>Tipo</th><th>Estado</th><th>Observación</th><th>Odontólogo</th><th>Fecha</th></tr></thead><tbody>${odontogramaHtml || '<tr><td colspan="8">Sin registros.</td></tr>'}</tbody></table></section>
+  <section class="seccion"><h2>Último periodontograma</h2>${periodontalHtml}</section>
+  <section class="seccion"><h2>Consentimientos informados</h2>${consentimientosHtml || '<p>Sin consentimientos.</p>'}</section>
+  <section class="seccion"><h2>Recetas</h2>${recetasHtml || '<p>Sin recetas.</p>'}</section>
+  <section class="seccion"><h2>Entregas de copias al paciente</h2>${entregasHtml || '<p>Sin entregas registradas.</p>'}</section>
+  <div class="footer">Folio ${esc(folioExportacion)} · Expediente generado por ${esc(responsable)} · ${fecha(fechaGeneracion)} · ${historias.length} notas · ${odontograma.length} movimientos odontológicos · ${consentimientos.length} consentimientos · ${recetas.length} recetas · ${entregasExpediente.length} entregas</div></body></html>`);
+  win.document.close();
+  win.onload = () => setTimeout(() => { win.focus(); win.print(); }, 400);
+ };
+
  const imprimirHistoria = () => {
   const win = window.open('', '_blank', 'width=700,height=900');
-  const registros = historias.map(h => `
+  const registros = historias.map(h => {
+    const imagenes = (h.archivos || []).filter(archivo => archivo.tipo === 'imagen');
+    const pdfs = (h.archivos || []).filter(archivo => archivo.tipo === 'pdf');
+    return `
     <div class="registro">
       <div class="registro-header">
-        ${h.fecha} - Dr. ${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}
+        ${h.fecha_hora ? new Date(h.fecha_hora).toLocaleString('es-MX') : h.fecha} - Dr. ${h.doctor_nombre || `${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}`}
+        ${h.doctor_cedula || h.doctor?.cedula ? ` · Cédula: ${h.doctor_cedula || h.doctor.cedula}` : ''}
+        ${h.es_adenda ? ' · ADENDA' : ''}
+        ${h.tipo_nota === 'inicial' ? ' · PRIMERA CONSULTA' : h.tipo_nota === 'subsecuente' ? ' · SUBSECUENTE' : ''}
       </div>
 
       ${h.diagnostico ? `<p><strong>Diagnóstico:</strong> ${h.diagnostico}</p>` : ''}
+      ${h.motivo_consulta ? `<p><strong>Motivo de consulta:</strong> ${h.motivo_consulta}</p>` : ''}
+      ${h.interrogatorio ? `<p><strong>Interrogatorio:</strong> ${h.interrogatorio}</p>` : ''}
+      ${h.antecedentes_heredofamiliares ? `<p><strong>Antecedentes heredofamiliares:</strong> ${h.antecedentes_heredofamiliares}</p>` : ''}
+      ${h.antecedentes_patologicos ? `<p><strong>Antecedentes patológicos:</strong> ${h.antecedentes_patologicos}</p>` : ''}
+      ${h.antecedentes_no_patologicos ? `<p><strong>Antecedentes no patológicos:</strong> ${h.antecedentes_no_patologicos}</p>` : ''}
+      ${h.antecedentes_odontologicos ? `<p><strong>Antecedentes odontológicos:</strong> ${h.antecedentes_odontologicos}</p>` : ''}
+      ${h.habitos_orales ? `<p><strong>Hábitos orales:</strong> ${h.habitos_orales}</p>` : ''}
+      ${h.interrogatorio_sistemas ? `<p><strong>Interrogatorio por sistemas:</strong> ${h.interrogatorio_sistemas}</p>` : ''}
+      ${h.exploracion_extraoral ? `<p><strong>Exploración extraoral:</strong> ${h.exploracion_extraoral}</p>` : ''}
+      ${h.exploracion_intraoral ? `<p><strong>Exploración intraoral:</strong> ${h.exploracion_intraoral}</p>` : ''}
+      ${(h.presion_arterial || h.frecuencia_cardiaca || h.frecuencia_respiratoria || h.temperatura || h.peso || h.talla) ? `<p><strong>Signos vitales:</strong> ${[
+        h.presion_arterial && `TA ${h.presion_arterial} mmHg`, h.frecuencia_cardiaca && `FC ${h.frecuencia_cardiaca} lpm`,
+        h.frecuencia_respiratoria && `FR ${h.frecuencia_respiratoria} rpm`, h.temperatura && `Temp. ${h.temperatura} °C`,
+        h.peso && `Peso ${h.peso} kg`, h.talla && `Talla ${h.talla} cm`
+      ].filter(Boolean).join(' · ')}</p>` : ''}
+      ${h.pronostico ? `<p><strong>Pronóstico:</strong> ${h.pronostico}</p>` : ''}
       ${h.tratamiento_realizado ? `<p><strong>Tratamiento:</strong> ${h.tratamiento_realizado}</p>` : ''}
       ${h.piezas_tratadas ? `<p><strong>Piezas:</strong> ${h.piezas_tratadas}</p>` : ''}
       ${h.receta ? `<p><strong>Plan de tratamiento:</strong> ${h.receta}</p>` : ''}
+      ${h.indicaciones ? `<p><strong>Indicaciones:</strong> ${h.indicaciones}</p>` : ''}
       ${h.notas ? `<p class="notas">${h.notas}</p>` : ''}
+      ${h.es_adenda ? `<p><strong>Motivo de la adenda:</strong> ${h.motivo_adenda || ''}</p>` : ''}
+      ${h.firma_hash ? `<p class="sello-integridad"><strong>Sello de integridad:</strong> ${h.firma_hash}</p>` : ''}
+
+      ${imagenes.length ? `
+        <div class="anexos-titulo">Fotografías clínicas</div>
+        <div class="galeria-impresion">
+          ${imagenes.map(archivo => `
+            <figure>
+              <img src="${archivo.url}" alt="${archivo.nombre_original || 'Fotografía clínica'}" />
+              <figcaption>${archivo.nombre_original || 'Fotografía clínica'}${(archivo.interpretaciones || []).map((interpretacion, indice) => `<br><strong>Interpretación ${indice + 1}:</strong> ${interpretacion.texto}<br>${interpretacion.usuario_nombre || ''}${interpretacion.fecha ? ` · ${new Date(interpretacion.fecha).toLocaleString('es-MX')}` : ''}`).join('')}</figcaption>
+            </figure>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${pdfs.length ? `
+        <div class="pdfs-impresion">
+          <strong>Estudios PDF anexos:</strong>${pdfs.map(archivo => `<div><b>${archivo.nombre_original}</b>${(archivo.interpretaciones || []).length ? archivo.interpretaciones.map((interpretacion, indice) => `<br>Interpretación ${indice + 1}: ${interpretacion.texto}<br>${interpretacion.usuario_nombre || ''}${interpretacion.fecha ? ` · ${new Date(interpretacion.fecha).toLocaleString('es-MX')}` : ''}`).join('') : ' · Sin interpretación registrada'}</div>`).join('')}
+        </div>
+      ` : ''}
     </div>
-  `).join('');
+  `}).join('');
   win.document.write(`
 <!DOCTYPE html>
 <html>
@@ -298,13 +640,27 @@ body{font-family: 'Segoe UI', Arial, sans-serif; padding:10px; max-width:700px; 
 .alerta.normal{ color:#333;}
 
 /* REGISTROS */
-.registro{ border:1px solid #f0e6c8; border-radius:10px; padding:14px; margin-bottom:10px; page-break-inside:avoid; background:#fff;}
+.registro{ border:1px solid #f0e6c8; border-radius:10px; padding:14px; margin-bottom:10px; background:#fff;}
 
 .registro-header{ font-weight:bold; color:#c8a24a; margin-bottom:6px; font-size:12px; border-bottom:1px solid #f5e6b3;  padding-bottom:4px;}
 
 .registro p{ margin:3px 0; font-size:12px;}
 
 .notas{ color:#6b7280; font-style:italic;}
+
+.anexos-titulo{ margin-top:10px; padding-top:8px; border-top:1px solid #f5e6b3; font-size:11px; font-weight:bold; color:#7a5c1b;}
+
+.galeria-impresion{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; margin-top:7px;}
+
+.galeria-impresion figure{ margin:0; border:1px solid #eee; border-radius:6px; padding:4px; page-break-inside:avoid;}
+
+.galeria-impresion img{ display:block; width:100%; height:190px; object-fit:contain; background:#fafafa; border-radius:4px;}
+
+.galeria-impresion figcaption{ margin-top:3px; font-size:8px; color:#6b7280; text-align:center; overflow-wrap:anywhere;}
+
+.pdfs-impresion{ margin-top:8px; padding:7px; background:#f8fafc; border-radius:5px; font-size:10px; color:#475569; page-break-inside:avoid;}
+
+.sello-integridad{ margin-top:8px !important; font-family:monospace; font-size:7px !important; color:#64748b; overflow-wrap:anywhere;}
 
 /* FOOTER */
 .footer{ text-align:center; margin-top:20px; font-size:10px; color:#9ca3af; border-top:1px solid #eee; padding-top:8px;}
@@ -372,11 +728,12 @@ ${paciente.alergias ? `
         fecha: formPago.fecha,
         presupuesto_id: formPago.presupuesto_id || null,
         numero_recibo: formPago.numero_recibo || null,
-        notas: formPago.notas || null
+        notas: formPago.notas || null,
+        requiere_factura: formPago.requiere_factura
       });
       toast.success('Pago registrado');
       setModalPago(false);
-      setFormPago({ monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: ''});
+      setFormPago({ monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), presupuesto_id: '', numero_recibo: '', notas: '', requiere_factura: false });
     } catch (err) {
      toast.error(
     err.response?.data?.error ||
@@ -503,10 +860,13 @@ window.onload = () => window.print();
 
  const tabs = [
   { key: 'info', label: 'Información' },
-  { key: 'odontograma', label: 'Odontograma' },
+  ...(puedeModificarClinico ? [
+    { key: 'odontograma', label: 'Odontograma' },
+    { key: 'periodontograma', label: 'Periodontograma' },
+    { key: 'recetas', label: 'Recetas' }
+  ] : []),
   { key: 'historia', label: 'Historia Clínica' },
   { key: 'consentimientos', label: 'Consentimientos' },
-  { key: 'recetas', label: 'Recetas' }, // 👈 AQUÍ
   { key: 'balance', label: 'Cuenta Corriente' },
   { key: 'citas', label: 'Citas' },
   { key: 'pagos', label: 'Pagos' }
@@ -960,14 +1320,14 @@ window.onload = () => window.print();
 };
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <Link to="/pacientes" className="p-2.5 hover:bg-white/80 rounded-xl border border-surface-200 transition-all hover:shadow-sm"><FiArrowLeft size={20} className="text-surface-600" /></Link>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-primary-800">{paciente.nombre}, {paciente.apellido}</h1>
           <p className="text-surface-500">Número de paciente: {paciente.dni} {edad !== null && `| ${edad} años`}</p>
         </div>
         {balance && (
-          <div className={`text-right px-5 py-3 rounded-2xl ${balance.saldo > 0 ? 'bg-red-50 border border-red-200' : 'bg-dental-50 border border-dental-200'}`}>
+          <div className={`w-full text-left sm:w-auto sm:text-right px-5 py-3 rounded-2xl ${balance.saldo > 0 ? 'bg-red-50 border border-red-200' : 'bg-dental-50 border border-dental-200'}`}>
             <p className="text-xs text-surface-500">Saldo</p>
             <p className={`text-lg font-bold ${balance.saldo > 0 ? 'text-red-600' : 'text-dental-600'}`}>
               {balance.saldo > 0 ? `Debe: $${Number(balance.saldo).toLocaleString()}` : 'Al día'}
@@ -1002,12 +1362,12 @@ window.onload = () => window.print();
       })()}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-surface-100 p-1 rounded-2xl w-fit flex-wrap">
+      <div className="flex w-full gap-1 overflow-x-auto rounded-2xl bg-surface-100 p-1 sm:w-fit sm:flex-wrap">
         {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${tab === t.key ? 'bg-white text-primary-700 shadow-md' : 'text-surface-500 hover:text-primary-600'}`}
+            className={`shrink-0 px-3 sm:px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${tab === t.key ? 'bg-white text-primary-700 shadow-md' : 'text-surface-500 hover:text-primary-600'}`}
           >
             {t.label}
           </button>
@@ -1036,7 +1396,7 @@ window.onload = () => window.print();
               ))}
             </dl>
           </div>
-          <div className="card">
+          {puedeModificarClinico && <div className="card">
             <h3 className="font-semibold text-primary-900 mb-4">Información Médica</h3>
             <dl className="space-y-3 text-sm">
               <div><dt className="text-surface-500 mb-1">Antecedentes Médicos</dt><dd className="text-primary-900">{paciente.antecedentes_medicos || 'Sin antecedentes'}</dd></div>
@@ -1044,51 +1404,269 @@ window.onload = () => window.print();
               <div><dt className="text-surface-500 mb-1">Medicamentos</dt><dd className="text-primary-900">{paciente.medicamentos || 'Ninguno'}</dd></div>
               <div><dt className="text-surface-500 mb-1">Notas</dt><dd className="text-primary-900">{paciente.notas || '-'}</dd></div>
             </dl>
-          </div>
+          </div>}
         </div>
       )}
 
       {/* Tab Odontograma */}
       {tab === 'odontograma' && (
         <div className="card">
-          <h3 className="font-semibold text-primary-900 mb-4">Odontograma Digital</h3>
-          <Odontograma registros={odontograma} onPiezaClick={handleOdontograma} />
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h3 className="font-semibold text-primary-900">Odontograma Digital</h3>
+            <button type="button" onClick={imprimirOdontograma} className="btn-secondary flex items-center gap-2">
+              <FiPrinter size={16} /> Imprimir odontograma
+            </button>
+          </div>
+          <Odontograma registros={odontograma} onPiezaClick={handleOdontograma} edad={edad} />
         </div>
+      )}
+
+      {tab === 'periodontograma' && (
+        <div className="card"><Periodontograma pacienteId={id} paciente={paciente} /></div>
       )}
 
       {/* Tab Historia */}
       {tab === 'historia' && (
         <div className="space-y-4">
-          <div className="flex gap-2">
-            <button onClick={() => setModalHistoria(true)} className="btn-primary flex items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            {puedeModificarClinico && <button onClick={() => { setFormHistoria({ ...notaClinicaVacia(), tipo_nota: historias.length === 0 ? 'inicial' : 'subsecuente' }); setCuestionario(cuestionarioVacio()); setPasoHistoria(1); setModalHistoria(true); }} className="btn-primary flex items-center gap-2">
               <FiPlus size={16} /> Nuevo Registro
-            </button>
+            </button>}
             {historias.length > 0 && (
               <button onClick={imprimirHistoria} className="btn-secondary flex items-center gap-2">
                 <FiPrinter size={16} /> Imprimir Historia
               </button>
             )}
+            {puedeModificarClinico && <button onClick={imprimirExpedienteCompleto} className="btn-primary flex items-center gap-2"><FiFileText size={16} /> Expediente completo</button>}
+            {puedeModificarClinico && <button onClick={() => { setFormEntregaExpediente(entregaVacia()); setModalEntregaExpediente(true); }} className="btn-secondary flex items-center gap-2"><FiFileText size={16} /> Registrar entrega de copia</button>}
+          </div>
+          <div className="card">
+            <h3 className="font-semibold text-primary-900">Entregas de copias del expediente</h3>
+            <p className="mt-1 text-xs text-surface-500">Registro de quién solicitó y recibió documentación clínica.</p>
+            {entregasExpediente.length === 0 ? <p className="mt-3 text-sm text-surface-400">No hay entregas registradas.</p> : <div className="mt-3 space-y-3">
+              {entregasExpediente.map(entrega => <div key={entrega.id} className="rounded-xl border border-surface-200 p-3 text-sm">
+                <div className="flex flex-wrap items-start justify-between gap-2"><p className="font-semibold text-primary-900">{entrega.solicitante_nombre}</p><span className="text-xs text-surface-500">{new Date(entrega.fecha_entrega).toLocaleString('es-MX')}</span></div>
+                <p className="mt-1 text-surface-600">Solicitó como: <span className="font-medium">{entrega.solicitante_caracter.replaceAll('_', ' ')}</span></p>
+                <p className="text-surface-600"><span className="font-medium">Documentos:</span> {(entrega.documentos || []).map(item => documentosEntrega[item] || item).join(', ')}{entrega.documentos_detalle ? ` · ${entrega.documentos_detalle}` : ''}</p>
+                <p className="text-surface-600"><span className="font-medium">Motivo:</span> {entrega.motivo}</p>
+                <p className="text-surface-600"><span className="font-medium">Entrega:</span> {entrega.medio_entrega} · Responsable: {entrega.responsable_nombre}</p>
+                <p className={`mt-1 text-xs ${entrega.integridad_valida ? 'text-green-700' : 'text-red-700'}`}>{entrega.integridad_valida ? 'Integridad verificada' : 'Revisar integridad'}</p>
+              </div>)}
+            </div>}
           </div>
           {historias.length === 0 ? (
             <div className="card text-center text-gray-500">Sin registros en historia clínica</div>
           ) : historias.map(h => (
             <div key={h.id} className="card">
               <div className="flex justify-between items-start mb-2">
-                <p className="text-sm text-surface-500 font-medium">{h.fecha} - Dr. {h.doctor?.nombre} {h.doctor?.apellido}</p>
+                <div>
+                  <p className="text-sm text-surface-500 font-medium">
+                    {h.fecha_hora ? new Date(h.fecha_hora).toLocaleString('es-MX') : h.fecha} - Dr. {h.doctor_nombre || `${h.doctor?.nombre || ''} ${h.doctor?.apellido || ''}`}
+                  </p>
+                  {(h.doctor_cedula || h.doctor?.cedula) && <p className="text-xs text-surface-500">Cédula profesional: {h.doctor_cedula || h.doctor.cedula}</p>}
+                </div>
+                <div className="flex flex-wrap justify-end gap-2">
+                  {h.tipo_nota === 'inicial' && <span className="badge bg-blue-100 text-blue-700">Primera consulta</span>}
+                  {h.tipo_nota === 'subsecuente' && <span className="badge bg-surface-100 text-surface-700">Subsecuente</span>}
+                  {h.es_adenda && <span className="badge bg-amber-100 text-amber-700">Adenda</span>}
+                  {h.integridad_valida === true && <span className="badge bg-green-100 text-green-700">Integridad verificada</span>}
+                  {h.integridad_valida === false && <span className="badge bg-red-100 text-red-700">Revisar integridad</span>}
+                </div>
               </div>
               {h.diagnostico && <p className="text-sm"><span className="font-medium">Diagnóstico:</span> {h.diagnostico}</p>}
+              {h.motivo_consulta && <p className="text-sm"><span className="font-medium">Motivo de consulta:</span> {h.motivo_consulta}</p>}
+              {h.interrogatorio && <p className="text-sm"><span className="font-medium">Interrogatorio:</span> {h.interrogatorio}</p>}
+              {h.antecedentes_heredofamiliares && <p className="text-sm"><span className="font-medium">Antecedentes heredofamiliares:</span> {h.antecedentes_heredofamiliares}</p>}
+              {h.antecedentes_patologicos && <p className="text-sm"><span className="font-medium">Antecedentes patológicos:</span> {h.antecedentes_patologicos}</p>}
+              {h.antecedentes_no_patologicos && <p className="text-sm"><span className="font-medium">Antecedentes no patológicos:</span> {h.antecedentes_no_patologicos}</p>}
+              {h.antecedentes_odontologicos && <p className="text-sm"><span className="font-medium">Antecedentes odontológicos:</span> {h.antecedentes_odontologicos}</p>}
+              {h.habitos_orales && <p className="text-sm"><span className="font-medium">Hábitos orales:</span> {h.habitos_orales}</p>}
+              {h.interrogatorio_sistemas && <p className="text-sm"><span className="font-medium">Interrogatorio por sistemas:</span> {h.interrogatorio_sistemas}</p>}
+              {h.exploracion_extraoral && <p className="text-sm"><span className="font-medium">Exploración extraoral:</span> {h.exploracion_extraoral}</p>}
+              {h.exploracion_intraoral && <p className="text-sm"><span className="font-medium">Exploración intraoral:</span> {h.exploracion_intraoral}</p>}
+              {(h.presion_arterial || h.frecuencia_cardiaca || h.frecuencia_respiratoria || h.temperatura || h.peso || h.talla) && <p className="text-sm"><span className="font-medium">Signos vitales:</span> {[
+                h.presion_arterial && `TA ${h.presion_arterial}`, h.frecuencia_cardiaca && `FC ${h.frecuencia_cardiaca}`,
+                h.frecuencia_respiratoria && `FR ${h.frecuencia_respiratoria}`, h.temperatura && `${h.temperatura} °C`, h.peso && `${h.peso} kg`, h.talla && `${h.talla} cm`
+              ].filter(Boolean).join(' · ')}</p>}
+              {h.pronostico && <p className="text-sm"><span className="font-medium">Pronóstico:</span> {h.pronostico}</p>}
               {h.tratamiento_realizado && <p className="text-sm"><span className="font-medium">Tratamiento:</span> {h.tratamiento_realizado}</p>}
               {h.piezas_tratadas && <p className="text-sm"><span className="font-medium">Piezas:</span> {h.piezas_tratadas}</p>}
               {h.receta && <p className="text-sm"><span className="font-medium">Plan de Tratamiento:</span> {h.receta}</p>}
+              {h.indicaciones && <p className="text-sm"><span className="font-medium">Indicaciones:</span> {h.indicaciones}</p>}
               {h.notas && <p className="text-sm text-surface-500 mt-1 italic">{h.notas}</p>}
+              {h.es_adenda && <p className="text-sm mt-2 text-amber-700"><span className="font-medium">Motivo de la adenda:</span> {h.motivo_adenda}</p>}
+              {h.archivos?.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {h.archivos.map(archivo => (
+                    <div key={archivo.id} className="relative border border-surface-200 rounded-lg overflow-hidden bg-white group">
+                      {archivo.tipo === 'imagen' ? (
+                        <a href={archivo.url} target="_blank" rel="noreferrer" title="Abrir imagen">
+                          <img src={archivo.url} alt={archivo.nombre_original} className="w-full h-28 object-cover" loading="lazy" />
+                        </a>
+                      ) : (
+                        <a href={archivo.url} target="_blank" rel="noreferrer" className="h-28 flex flex-col items-center justify-center text-red-600 bg-red-50">
+                          <FiFileText size={32} />
+                          <span className="text-xs font-medium mt-1">Ver PDF</span>
+                        </a>
+                      )}
+                      <div className="p-2 flex items-center gap-1">
+                        <span className="text-xs text-surface-600 truncate flex-1" title={archivo.nombre_original}>{archivo.nombre_original}</span>
+                        <a href={archivo.url} target="_blank" rel="noreferrer" className="text-primary-600" title="Abrir archivo"><FiExternalLink size={14} /></a>
+                      </div>
+                      {(archivo.interpretaciones || []).map((interpretacion, indice) => <div key={interpretacion.id || indice} className="border-t border-surface-100 p-2 text-xs">
+                        <p className="font-semibold text-primary-900">Interpretación clínica {indice + 1}</p>
+                        <p className="mt-1 whitespace-pre-wrap text-surface-700">{interpretacion.texto}</p>
+                        <p className="mt-1 text-[10px] text-surface-500">{interpretacion.usuario_nombre || 'Odontólogo'}{interpretacion.usuario_cedula ? ` · Cédula ${interpretacion.usuario_cedula}` : ''}{interpretacion.fecha ? ` · ${new Date(interpretacion.fecha).toLocaleString('es-MX')}` : ''}</p>
+                        <p className={`mt-1 text-[10px] ${interpretacion.integridad_valida === true ? 'text-green-700' : interpretacion.integridad_valida === false ? 'text-red-700' : 'text-surface-500'}`}>{interpretacion.integridad_valida === true ? 'Integridad verificada' : interpretacion.integridad_valida === false ? 'Revisar integridad' : 'Registro anterior sin sello'}</p>
+                      </div>)}
+                      {puedeModificarClinico && <button type="button" onClick={() => { setArchivoInterpretacion(archivo); setInterpretacionClinica(''); }} className="w-full border-t border-surface-100 p-2 text-left text-xs font-medium text-primary-600 hover:bg-primary-50">Agregar otra interpretación</button>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {puedeModificarClinico && <label className={`mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary-600 cursor-pointer ${subiendoArchivos === h.id ? 'opacity-50 pointer-events-none' : ''}`}>
+                <FiUploadCloud size={16} /> {subiendoArchivos === h.id ? 'Subiendo...' : 'Agregar imágenes o PDF'}
+                <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => {
+                  const adjuntos = prepararAdjuntos(e.target.files);
+                  if (adjuntos.length) setCargaAdjuntos({ historiaId: h.id, adjuntos });
+                  e.target.value = '';
+                }} />
+              </label>}
+              {puedeModificarClinico && <button type="button" onClick={() => { setHistoriaOrigen(h); setFormAdenda({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' }); setModalAdenda(true); }} className="mt-3 ml-4 text-sm font-medium text-amber-700 hover:text-amber-800">
+                Agregar adenda
+              </button>}
             </div>
           ))}
+
+          <Modal isOpen={modalEntregaExpediente} onClose={() => setModalEntregaExpediente(false)} title="Registrar entrega de copia" size="lg">
+            <form onSubmit={guardarEntregaExpediente} className="space-y-4">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Este registro quedará fechado, sellado y no podrá eliminarse. Responsable: <strong>{usuario?.nombre} {usuario?.apellido}</strong>.</div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div><label className="mb-1 block text-sm font-medium text-surface-600">Nombre completo del solicitante *</label><input required minLength={3} maxLength={220} value={formEntregaExpediente.solicitante_nombre} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, solicitante_nombre: e.target.value })} className="input-field" /></div>
+                <div><label className="mb-1 block text-sm font-medium text-surface-600">Solicitó en carácter de *</label><select required value={formEntregaExpediente.solicitante_caracter} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, solicitante_caracter: e.target.value })} className="input-field"><option value="paciente">Paciente</option><option value="madre_padre">Madre o padre</option><option value="tutor">Tutor</option><option value="representante_legal">Representante legal</option><option value="otro">Otro</option></select></div>
+              </div>
+              <fieldset className="rounded-xl border border-surface-200 p-3"><legend className="px-2 text-sm font-medium text-surface-600">Documentos entregados *</legend><div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{Object.entries(documentosEntrega).map(([key, label]) => <label key={key} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${formEntregaExpediente.documentos.includes(key) ? 'border-primary-400 bg-primary-50 text-primary-700' : 'border-surface-200'}`}><input type="checkbox" checked={formEntregaExpediente.documentos.includes(key)} onChange={() => alternarDocumentoEntrega(key)} />{label}</label>)}</div></fieldset>
+              {formEntregaExpediente.documentos.includes('otros') && <div><label className="mb-1 block text-sm font-medium text-surface-600">Describe los otros documentos *</label><textarea required maxLength={2000} rows={2} value={formEntregaExpediente.documentos_detalle} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, documentos_detalle: e.target.value })} className="input-field" /></div>}
+              <div><label className="mb-1 block text-sm font-medium text-surface-600">Motivo de la solicitud *</label><textarea required minLength={5} maxLength={2000} rows={3} value={formEntregaExpediente.motivo} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, motivo: e.target.value })} className="input-field" placeholder="Ej. Continuidad de atención con otro profesional, trámite personal o solicitud del titular." /></div>
+              <div><label className="mb-1 block text-sm font-medium text-surface-600">Medio de entrega *</label><select required value={formEntregaExpediente.medio_entrega} onChange={e => setFormEntregaExpediente({ ...formEntregaExpediente, medio_entrega: e.target.value })} className="input-field"><option value="digital">Digital</option><option value="impresa">Impresa</option><option value="ambas">Impresa y digital</option></select></div>
+              <div className="flex justify-end gap-2"><button type="button" onClick={() => setModalEntregaExpediente(false)} className="btn-secondary">Cancelar</button><button type="submit" className="btn-primary">Registrar entrega</button></div>
+            </form>
+          </Modal>
+
+          <Modal isOpen={Boolean(archivoInterpretacion)} onClose={() => { setArchivoInterpretacion(null); setInterpretacionClinica(''); }} title="Interpretación clínica del estudio" size="lg">
+            <form onSubmit={guardarInterpretacion} className="space-y-4">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                La nueva interpretación quedará vinculada a <strong>{archivoInterpretacion?.nombre_original}</strong>, con tu identidad profesional, fecha, hora y sello de integridad. Las interpretaciones anteriores permanecerán sin cambios.
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-surface-600">Nueva interpretación *</label>
+                <textarea required minLength={5} maxLength={5000} rows={7} value={interpretacionClinica} onChange={e => setInterpretacionClinica(e.target.value)} className="input-field" placeholder="Describe la calidad del estudio, estructuras observadas, hallazgos relevantes, impresión diagnóstica y correlación clínica recomendada." />
+                <p className="mt-1 text-right text-xs text-surface-400">{interpretacionClinica.length}/5000</p>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={() => { setArchivoInterpretacion(null); setInterpretacionClinica(''); }} className="btn-secondary">Cancelar</button>
+                <button type="submit" className="btn-primary">Guardar interpretación</button>
+              </div>
+            </form>
+          </Modal>
+
+          <Modal isOpen={Boolean(cargaAdjuntos)} onClose={() => subiendoArchivos === null && setCargaAdjuntos(null)} title="Interpretar imágenes y estudios" size="lg">
+            <form onSubmit={confirmarCargaAdjuntos} className="space-y-4">
+              <div className="rounded-lg border border-primary-200 bg-primary-50 p-3 text-sm text-primary-800">
+                Puedes registrar una interpretación para cada archivo antes de cargarlo. También podrás agregar más interpretaciones posteriormente.
+              </div>
+              <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+                {(cargaAdjuntos?.adjuntos || []).map((adjunto, indice) => <div key={`${adjunto.file.name}-${adjunto.file.lastModified}-${indice}`} className="rounded-xl border border-surface-200 p-3">
+                  <p className="truncate text-sm font-semibold text-primary-900" title={adjunto.file.name}>{adjunto.file.name}</p>
+                  <p className="mb-2 text-xs text-surface-500">{adjunto.file.type === 'application/pdf' ? 'Estudio PDF' : 'Imagen clínica'} · {(adjunto.file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                  <label className="mb-1 block text-sm font-medium text-surface-600">Interpretación clínica <span className="font-normal text-surface-400">(opcional)</span></label>
+                  <textarea maxLength={5000} rows={4} value={adjunto.interpretacion} onChange={e => setCargaAdjuntos(actual => ({ ...actual, adjuntos: actual.adjuntos.map((item, posicion) => posicion === indice ? { ...item, interpretacion: e.target.value } : item) }))} className="input-field" placeholder="Calidad del estudio, estructuras observadas, hallazgos e impresión diagnóstica." />
+                  <p className="mt-1 text-right text-xs text-surface-400">{adjunto.interpretacion.length}/5000</p>
+                </div>)}
+              </div>
+              <div className="flex justify-end gap-2">
+                <button type="button" disabled={subiendoArchivos !== null} onClick={() => setCargaAdjuntos(null)} className="btn-secondary disabled:opacity-50">Cancelar</button>
+                <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Cargando...' : 'Guardar archivos'}</button>
+              </div>
+            </form>
+          </Modal>
 
           <Modal isOpen={modalHistoria} onClose={() => setModalHistoria(false)} title="Nueva Entrada - Historia Clínica" size="lg">
             <form onSubmit={guardarHistoria} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Diagnóstico</label>
-                <textarea value={formHistoria.diagnostico} onChange={e => setFormHistoria({ ...formHistoria, diagnostico: e.target.value })} className="input-field" rows={2} />
+                <div className="flex justify-between text-xs text-surface-500 mb-2"><span>Paso {pasoHistoria} de {formHistoria.tipo_nota === 'inicial' ? 4 : 3}</span><span>{Math.round((pasoHistoria / (formHistoria.tipo_nota === 'inicial' ? 4 : 3)) * 100)}%</span></div>
+                <div className="h-2 rounded-full bg-surface-100 overflow-hidden"><div className="h-full bg-primary-500 transition-all" style={{ width: `${(pasoHistoria / (formHistoria.tipo_nota === 'inicial' ? 4 : 3)) * 100}%` }} /></div>
+              </div>
+              {pasoHistoria === 1 && <>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Tipo de atención *</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setFormHistoria({ ...formHistoria, tipo_nota: 'inicial' })} className={`p-3 rounded-xl border text-sm font-medium ${formHistoria.tipo_nota === 'inicial' ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200'}`}>Primera consulta · extensa</button>
+                  <button type="button" onClick={() => setFormHistoria({ ...formHistoria, tipo_nota: 'subsecuente' })} className={`p-3 rounded-xl border text-sm font-medium ${formHistoria.tipo_nota === 'subsecuente' ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200'}`}>Consulta subsecuente · básica</button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Motivo de consulta *</label>
+                <textarea required value={formHistoria.motivo_consulta} onChange={e => setFormHistoria({ ...formHistoria, motivo_consulta: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">{formHistoria.tipo_nota === 'inicial' ? 'Padecimiento actual y evolución *' : 'Evolución desde la consulta anterior'}</label>
+                <textarea required={formHistoria.tipo_nota === 'inicial'} value={formHistoria.interrogatorio} onChange={e => setFormHistoria({ ...formHistoria, interrogatorio: e.target.value })} className="input-field" rows={3} />
+                {formHistoria.tipo_nota === 'subsecuente' && <button type="button" onClick={() => setFormHistoria({ ...formHistoria, interrogatorio: 'Sin cambios clínicos referidos desde la consulta anterior.' })} className="mt-2 text-xs font-medium text-primary-600">Marcar sin cambios referidos</button>}
+              </div>
+              </>}
+              {formHistoria.tipo_nota === 'inicial' && pasoHistoria === 2 && <>
+              <fieldset className="border border-surface-200 rounded-xl p-4 space-y-3">
+                <legend className="px-2 text-sm font-semibold text-primary-700">Antecedentes de primera consulta</legend>
+                {[
+                  ['heredofamiliares', 'Heredofamiliares', 'detalle_heredofamiliares'],
+                  ['patologicos', 'Personales patológicos', 'detalle_patologicos'],
+                  ['no_patologicos', 'Personales no patológicos', 'detalle_no_patologicos'],
+                  ['odontologicos', 'Antecedentes odontológicos', 'detalle_odontologicos'],
+                  ['habitos', 'Hábitos orales', 'detalle_habitos'],
+                  ['sistemas', 'Datos positivos por aparatos y sistemas', 'detalle_sistemas']
+                ].map(([grupo, titulo, detalle]) => <div key={grupo} className="rounded-xl bg-surface-50 p-3">
+                  <p className="text-sm font-medium text-primary-900 mb-2">{titulo}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {opcionesAntecedentes[grupo].map(opcion => <label key={opcion} className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-xs ${cuestionario[grupo].includes(opcion) ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-surface-200 bg-white text-surface-600'}`}>
+                      <input type="checkbox" checked={cuestionario[grupo].includes(opcion)} onChange={() => alternarAntecedente(grupo, opcion)} /> {opcion}
+                    </label>)}
+                  </div>
+                  {(cuestionario[grupo].length > 0 || cuestionario[detalle]) && <textarea value={cuestionario[detalle]} onChange={e => setCuestionario({ ...cuestionario, [detalle]: e.target.value })} className="input-field mt-3" rows={2} placeholder="Detalles, fechas, tratamiento o información adicional" />}
+                </div>)}
+                <p className="text-xs text-surface-500">Las categorías sin seleccionar se guardarán como “Ninguno referido”.</p>
+              </fieldset>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-surface-600 mb-1">Exploración extraoral</label>
+                  <textarea value={formHistoria.exploracion_extraoral} onChange={e => setFormHistoria({ ...formHistoria, exploracion_extraoral: e.target.value })} className="input-field" rows={3} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-surface-600 mb-1">Exploración intraoral</label>
+                  <textarea required value={formHistoria.exploracion_intraoral} onChange={e => setFormHistoria({ ...formHistoria, exploracion_intraoral: e.target.value })} className="input-field" rows={3} />
+                </div>
+              </div>
+              </>}
+              {pasoHistoria === (formHistoria.tipo_nota === 'inicial' ? 3 : 2) &&
+              <fieldset className="border border-surface-200 rounded-xl p-4">
+                <legend className="px-2 text-sm font-medium text-surface-600">Signos vitales y somatometría</legend>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <input value={formHistoria.presion_arterial} onChange={e => setFormHistoria({ ...formHistoria, presion_arterial: e.target.value })} className="input-field" placeholder="TA 120/80" pattern="[0-9]{2,3}/[0-9]{2,3}" />
+                  <input type="number" min="20" max="250" value={formHistoria.frecuencia_cardiaca} onChange={e => setFormHistoria({ ...formHistoria, frecuencia_cardiaca: e.target.value })} className="input-field" placeholder="FC lpm" />
+                  <input type="number" min="5" max="80" value={formHistoria.frecuencia_respiratoria} onChange={e => setFormHistoria({ ...formHistoria, frecuencia_respiratoria: e.target.value })} className="input-field" placeholder="FR rpm" />
+                  <input type="number" min="30" max="45" step="0.1" value={formHistoria.temperatura} onChange={e => setFormHistoria({ ...formHistoria, temperatura: e.target.value })} className="input-field" placeholder="Temperatura °C" />
+                  <input type="number" min="1" max="500" step="0.01" value={formHistoria.peso} onChange={e => setFormHistoria({ ...formHistoria, peso: e.target.value })} className="input-field" placeholder="Peso kg" />
+                  <input type="number" min="30" max="250" step="0.1" value={formHistoria.talla} onChange={e => setFormHistoria({ ...formHistoria, talla: e.target.value })} className="input-field" placeholder="Talla cm" />
+                </div>
+              </fieldset>}
+              {pasoHistoria === (formHistoria.tipo_nota === 'inicial' ? 4 : 3) && <>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Diagnóstico o problemas clínicos *</label>
+                <textarea required value={formHistoria.diagnostico} onChange={e => setFormHistoria({ ...formHistoria, diagnostico: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Pronóstico</label>
+                <textarea value={formHistoria.pronostico} onChange={e => setFormHistoria({ ...formHistoria, pronostico: e.target.value })} className="input-field" rows={2} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Tratamiento Realizado</label>
@@ -1099,16 +1677,81 @@ window.onload = () => window.print();
                 <input value={formHistoria.piezas_tratadas} onChange={e => setFormHistoria({ ...formHistoria, piezas_tratadas: e.target.value })} className="input-field" placeholder="Ej: 11, 21, 36" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-600 mb-1">Plan de tratamiento</label>
-                <textarea value={formHistoria.receta} onChange={e => setFormHistoria({ ...formHistoria, receta: e.target.value })} className="input-field" rows={2} />
+                <label className="block text-sm font-medium text-surface-600 mb-1">Plan de tratamiento *</label>
+                <textarea required value={formHistoria.receta} onChange={e => setFormHistoria({ ...formHistoria, receta: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Indicaciones al paciente</label>
+                <textarea value={formHistoria.indicaciones} onChange={e => setFormHistoria({ ...formHistoria, indicaciones: e.target.value })} className="input-field" rows={2} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>
                 <textarea value={formHistoria.notas} onChange={e => setFormHistoria({ ...formHistoria, notas: e.target.value })} className="input-field" rows={2} />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Imágenes y estudios PDF</label>
+                <label className="border-2 border-dashed border-surface-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors">
+                  <div className="flex items-center gap-2 text-primary-600 font-medium"><FiUploadCloud size={20} /> Seleccionar archivos</div>
+                  <span className="text-xs text-surface-500 mt-1">JPG, PNG, WEBP o PDF · máximo 10 MB por archivo</span>
+                  <input type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={e => {
+                    const adjuntos = prepararAdjuntos(e.target.files);
+                    if (adjuntos.length) setArchivosHistoria(adjuntos);
+                    e.target.value = '';
+                  }} />
+                </label>
+                {archivosHistoria.length > 0 && (
+                  <div className="mt-3 space-y-3">
+                    {archivosHistoria.map((adjunto, indice) => <div key={`${adjunto.file.name}-${adjunto.file.lastModified}-${indice}`} className="rounded-xl border border-surface-200 p-3">
+                      <div className="mb-2 flex items-center gap-2 text-sm text-surface-600"><FiImage /><span className="min-w-0 flex-1 truncate" title={adjunto.file.name}>{adjunto.file.name}</span><button type="button" onClick={() => setArchivosHistoria(actual => actual.filter((_, posicion) => posicion !== indice))} className="text-xs font-medium text-red-500">Quitar</button></div>
+                      <label className="mb-1 block text-sm font-medium text-surface-600">Interpretación clínica <span className="font-normal text-surface-400">(opcional)</span></label>
+                      <textarea maxLength={5000} rows={3} value={adjunto.interpretacion} onChange={e => setArchivosHistoria(actual => actual.map((item, posicion) => posicion === indice ? { ...item, interpretacion: e.target.value } : item))} className="input-field" placeholder="Calidad del estudio, estructuras observadas, hallazgos e impresión diagnóstica." />
+                      <p className="mt-1 text-right text-xs text-surface-400">{adjunto.interpretacion.length}/5000</p>
+                    </div>)}
+                  </div>
+                )}
+              </div>
+              </>}
               <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setModalHistoria(false)} className="btn-secondary">Cancelar</button>
-                <button type="submit" className="btn-primary">Guardar</button>
+                {pasoHistoria === 1 ? <button type="button" onClick={() => { setModalHistoria(false); setArchivosHistoria([]); setPasoHistoria(1); }} className="btn-secondary">Cancelar</button> : <button type="button" onClick={() => setPasoHistoria(paso => paso - 1)} className="btn-secondary">Anterior</button>}
+                {pasoHistoria < (formHistoria.tipo_nota === 'inicial' ? 4 : 3)
+                  ? <button type="button" onClick={avanzarHistoria} className="btn-primary">Siguiente</button>
+                  : <button type="submit" disabled={subiendoArchivos !== null} className="btn-primary disabled:opacity-50">{subiendoArchivos !== null ? 'Guardando...' : 'Revisar y guardar'}</button>}
+              </div>
+            </form>
+          </Modal>
+
+          <Modal isOpen={modalAdenda} onClose={() => { setModalAdenda(false); setHistoriaOrigen(null); }} title="Agregar adenda a la nota clínica" size="lg">
+            <form onSubmit={guardarAdenda} className="space-y-4">
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                La nota original no se modificará. La adenda quedará fechada, firmada y vinculada al registro #{historiaOrigen?.id}.
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Motivo de la adenda *</label>
+                <textarea required value={formAdenda.motivo_adenda} onChange={e => setFormAdenda({ ...formAdenda, motivo_adenda: e.target.value })} className="input-field" rows={2} placeholder="Explique por qué se agrega esta información" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Diagnóstico complementario</label>
+                <textarea value={formAdenda.diagnostico} onChange={e => setFormAdenda({ ...formAdenda, diagnostico: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Tratamiento o aclaración</label>
+                <textarea value={formAdenda.tratamiento_realizado} onChange={e => setFormAdenda({ ...formAdenda, tratamiento_realizado: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Piezas relacionadas</label>
+                <input value={formAdenda.piezas_tratadas} onChange={e => setFormAdenda({ ...formAdenda, piezas_tratadas: e.target.value })} className="input-field" placeholder="Ej: 11, 21, 36" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Plan de tratamiento complementario</label>
+                <textarea value={formAdenda.receta} onChange={e => setFormAdenda({ ...formAdenda, receta: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>
+                <textarea value={formAdenda.notas} onChange={e => setFormAdenda({ ...formAdenda, notas: e.target.value })} className="input-field" rows={2} />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => { setModalAdenda(false); setHistoriaOrigen(null); }} className="btn-secondary">Cancelar</button>
+                <button type="submit" className="btn-primary">Registrar adenda</button>
               </div>
             </form>
           </Modal>
@@ -1118,7 +1761,7 @@ window.onload = () => window.print();
       {/* Tab Consentimientos */}
       {tab === 'consentimientos' && (
         <div className="space-y-4">
-          <button onClick={() => { setFormConsent({ tipo: '', contenido: '' }); setModalConsentimiento(true); }} className="btn-primary flex items-center gap-2">
+          <button onClick={() => { setFormConsent({ doctor_id: usuario?.rol === 'doctor' ? String(usuario.id) : '', tipo: '', contenido: '' }); setModalConsentimiento(true); }} className="btn-primary flex items-center gap-2">
             <FiPlus size={16} /> Nuevo Consentimiento
           </button>
           {consentimientos.length === 0 ? (
@@ -1135,11 +1778,11 @@ window.onload = () => window.print();
                 <div className="flex items-center gap-2">
                   {c.firmado ? (
                     <span className="badge bg-green-100 text-green-700">Firmado {c.fecha_firma ? new Date(c.fecha_firma).toLocaleDateString('es-AR') : ''}</span>
-                  ) : (
-                    <button onClick={() => firmarConsentimiento(c.id)} className="btn-success text-xs px-3 py-1">
+                  ) : puedeModificarClinico ? (
+                    <button onClick={() => { setConsentimientoFirma(c); setFormFirma({ firmante_nombre: `${paciente.nombre || ''} ${paciente.apellido || ''}`.trim(), firmante_caracter: 'paciente', aceptacion_explicita: false }); setModalFirmaConsentimiento(true); }} className="btn-success text-xs px-3 py-1">
                       Firmar
                     </button>
-                  )}
+                  ) : <span className="badge bg-gray-100 text-gray-600">Pendiente</span>}
                   <button onClick={() => imprimirConsentimiento(c)} className="p-1 text-primary-600 hover:bg-primary-50 rounded" title="Imprimir">
                     <FiPrinter size={16} />
                   </button>
@@ -1153,12 +1796,20 @@ window.onload = () => window.print();
           <Modal isOpen={modalConsentimiento} onClose={() => setModalConsentimiento(false)} title="Nuevo Consentimiento Informado" size="lg">
             <form onSubmit={crearConsentimiento} className="space-y-4">
               <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Doctor responsable *</label>
+                <select value={formConsent.doctor_id} onChange={e => setFormConsent({ ...formConsent, doctor_id: e.target.value })} className="input-field" required disabled={usuario?.rol === 'doctor'}>
+                  <option value="">Seleccionar doctor...</option>
+                  {doctores.map(d => <option key={d.id} value={d.id}>Dr. {d.nombre} {d.apellido}{d.cedula ? ` · Cédula ${d.cedula}` : ''}</option>)}
+                </select>
+                {usuario?.rol === 'doctor' && <p className="text-xs text-surface-500 mt-1">El consentimiento quedará asignado a tu usuario.</p>}
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-surface-600 mb-1">Plantilla</label>
                 <select
                   className="input-field"
                   onChange={e => {
                     const p = plantillas.find(pl => pl.tipo === e.target.value);
-                    if (p) setFormConsent({ tipo: p.tipo, contenido: p.contenido });
+                    if (p) setFormConsent(actual => ({ ...actual, tipo: p.tipo, contenido: p.contenido }));
                   }}
                 >
                   <option value="">Seleccionar plantilla...</option>
@@ -1176,6 +1827,35 @@ window.onload = () => window.print();
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setModalConsentimiento(false)} className="btn-secondary">Cancelar</button>
                 <button type="submit" className="btn-primary">Crear Consentimiento</button>
+              </div>
+            </form>
+          </Modal>
+
+          <Modal isOpen={modalFirmaConsentimiento} onClose={() => { setModalFirmaConsentimiento(false); setConsentimientoFirma(null); }} title="Confirmar consentimiento informado" size="lg">
+            <form onSubmit={firmarConsentimiento} className="space-y-4">
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+                Confirma que el contenido fue explicado, que se resolvieron las dudas y que el firmante manifestó su voluntad. Después de confirmar, el documento será inmutable.
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Nombre completo del firmante *</label>
+                <input required value={formFirma.firmante_nombre} onChange={e => setFormFirma({ ...formFirma, firmante_nombre: e.target.value })} className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-600 mb-1">Firma en carácter de *</label>
+                <select required value={formFirma.firmante_caracter} onChange={e => setFormFirma({ ...formFirma, firmante_caracter: e.target.value })} className="input-field">
+                  <option value="paciente">Paciente</option>
+                  <option value="madre_padre">Madre o padre</option>
+                  <option value="tutor">Tutor</option>
+                  <option value="representante_legal">Representante legal</option>
+                </select>
+              </div>
+              <label className="flex items-start gap-3 text-sm text-surface-700">
+                <input type="checkbox" required checked={formFirma.aceptacion_explicita} onChange={e => setFormFirma({ ...formFirma, aceptacion_explicita: e.target.checked })} className="mt-1" />
+                <span>El firmante declara haber recibido y comprendido la información, riesgos, beneficios y alternativas, y acepta libremente el procedimiento descrito.</span>
+              </label>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => { setModalFirmaConsentimiento(false); setConsentimientoFirma(null); }} className="btn-secondary">Cancelar</button>
+                <button type="submit" className="btn-primary">Aceptar y firmar</button>
               </div>
             </form>
           </Modal>
@@ -1697,7 +2377,7 @@ window.onload = () => window.print();
           {/* Modal Pago */}
           <Modal isOpen={modalPago} onClose={() => setModalPago(false)} title="Registrar Pago">
             <form onSubmit={registrarPago} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-surface-600 mb-1">Monto *</label>
                   <input type="number" step="0.01" value={formPago.monto} onChange={e => setFormPago({ ...formPago, monto: e.target.value })} className="input-field" required />
@@ -1707,7 +2387,7 @@ window.onload = () => window.print();
                   <input type="date" value={formPago.fecha} onChange={e => setFormPago({ ...formPago, fecha: e.target.value })} className="input-field" required />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-surface-600 mb-1">Método *</label>
                   <select value={formPago.metodo_pago} onChange={e => setFormPago({ ...formPago, metodo_pago: e.target.value })} className="input-field" required>
@@ -1744,6 +2424,10 @@ window.onload = () => window.print();
                 <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>
                 <textarea value={formPago.notas} onChange={e => setFormPago({ ...formPago, notas: e.target.value })} className="input-field" rows={2} />
               </div>
+              <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 ${formPago.requiere_factura ? 'border-primary-400 bg-primary-50' : 'border-surface-200'}`}>
+                <input type="checkbox" checked={formPago.requiere_factura} onChange={e => setFormPago({ ...formPago, requiere_factura: e.target.checked })} className="mt-1" />
+                <span><span className="block text-sm font-semibold text-primary-900">El paciente requiere factura</span><span className="block text-xs text-surface-500">Se creará una notificación hasta marcarla como emitida.</span></span>
+              </label>
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setModalPago(false)} className="btn-secondary">Cancelar</button>
                 <button type="submit" className="btn-primary">Registrar Pago</button>
@@ -1763,7 +2447,7 @@ window.onload = () => window.print();
                   {doctores.map(d => <option key={d.id} value={d.id}>Dr. {d.nombre} {d.apellido} - {d.especialidad || 'General'}</option>)}
                 </select>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-surface-600 mb-1">Fecha *</label>
                   <input type="date" value={formCita.fecha} onChange={e => setFormCita({ ...formCita, fecha: e.target.value })} className="input-field" required />

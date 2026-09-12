@@ -22,11 +22,9 @@ export default function Mantenimiento() {
   const [loadingRestore, setLoadingRestore] = useState(false);
   const [progRestore, setProgRestore] = useState(false);
   const fileRef = useRef();
-
-  // reset
-  const [showReset, setShowReset]     = useState(false);
-  const [confirmText, setConfirmText] = useState('');
+  const [showReset, setShowReset] = useState(false);
   const [loadingReset, setLoadingReset] = useState(false);
+  const [resetForm, setResetForm] = useState({ confirmacion: '', password: '', respaldo_confirmado: false });
 
   /* ── cargar estadísticas ── */
   const cargarStats = async () => {
@@ -86,17 +84,13 @@ export default function Mantenimiento() {
     }
   };
 
-  /* ── reset ── */
   const handleReset = async () => {
-    if (confirmText !== 'RESET SISTEMA') {
-      return toast.error('Debes escribir exactamente: RESET SISTEMA');
-    }
     setLoadingReset(true);
     try {
-      await api.post('/mantenimiento/reset', { confirmacion: 'RESET SISTEMA' });
-      toast.success('✅ Sistema reseteado. Listo para nueva empresa');
+      await api.post('/mantenimiento/reset', resetForm);
+      toast.success('Sistema reseteado correctamente');
       setShowReset(false);
-      setConfirmText('');
+      setResetForm({ confirmacion: '', password: '', respaldo_confirmado: false });
       cargarStats();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error al resetear el sistema');
@@ -289,66 +283,37 @@ export default function Mantenimiento() {
         </ActionCard>
       </div>
 
-      {/* ── RESET ── */}
       <div className="bg-white rounded-2xl shadow-card border border-red-100 overflow-hidden">
         <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center flex-shrink-0">
-              <FiAlertTriangle size={22} className="text-red-500" />
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-800 text-base">Resetear Sistema para Nueva Empresa</h2>
-              <p className="text-sm text-surface-400 mt-0.5">
-                Elimina todos los datos clínicos (pacientes, citas, tratamientos…) y deja el sistema listo para una nueva organización.
-                Los usuarios y la configuración se conservan.
-              </p>
-            </div>
+          <div>
+            <h2 className="font-bold text-gray-800">Reset administrativo del sistema</h2>
+            <p className="text-sm text-surface-500 mt-1">Disponible exclusivamente para administradores. Elimina datos clínicos y operativos de forma irreversible.</p>
           </div>
-          {!showReset && (
-            <button
-              onClick={() => setShowReset(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors text-sm whitespace-nowrap"
-            >
-              <FiRefreshCw size={15} />
-              Iniciar Reset
-            </button>
-          )}
+          {!showReset && <button onClick={() => setShowReset(true)} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl text-sm">Iniciar reset</button>}
         </div>
-
-        {showReset && (
-          <div className="border-t border-red-100 px-6 py-5 bg-red-50 space-y-4">
-            <InfoBox icon={<FiAlertTriangle size={14} />} color="red">
-              <strong>¡ATENCIÓN!</strong> Se eliminarán permanentemente: pacientes, citas, tratamientos, presupuestos, pagos, historias clínicas, odontogramas y consentimientos. <strong>Esta acción es irreversible.</strong>
-            </InfoBox>
-            <p className="text-sm font-semibold text-gray-700">
-              Para confirmar, escribe exactamente: <code className="bg-red-100 text-red-700 px-2 py-0.5 rounded font-mono">RESET SISTEMA</code>
-            </p>
-            <input
-              type="text"
-              value={confirmText}
-              onChange={e => setConfirmText(e.target.value)}
-              placeholder="Escribe: RESET SISTEMA"
-              className="input-field border-red-200 focus:ring-red-300 focus:border-red-400"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => { setShowReset(false); setConfirmText(''); }}
-                className="btn-secondary flex-1"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleReset}
-                disabled={confirmText !== 'RESET SISTEMA' || loadingReset}
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 disabled:bg-red-200 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors text-sm"
-              >
-                {loadingReset
-                  ? <><FiRefreshCw size={14} className="animate-spin" /> Procesando...</>
-                  : <><FiAlertTriangle size={14} /> Confirmar Reset</>}
-              </button>
-            </div>
+        {showReset && <div className="border-t border-red-100 p-6 bg-red-50 space-y-4">
+          <InfoBox icon={<FiAlertTriangle size={14} />} color="red">
+            No utilices esta función para eliminar expedientes que todavía deban conservarse legalmente. Genera y resguarda primero un respaldo verificable.
+          </InfoBox>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña actual del administrador</label>
+            <input type="password" value={resetForm.password} onChange={e => setResetForm({ ...resetForm, password: e.target.value })} className="input-field" autoComplete="current-password" />
           </div>
-        )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Escribe exactamente: RESET SISTEMA</label>
+            <input value={resetForm.confirmacion} onChange={e => setResetForm({ ...resetForm, confirmacion: e.target.value })} className="input-field" />
+          </div>
+          <label className="flex items-start gap-3 text-sm text-red-800">
+            <input type="checkbox" checked={resetForm.respaldo_confirmado} onChange={e => setResetForm({ ...resetForm, respaldo_confirmado: e.target.checked })} className="mt-1" />
+            <span>Confirmo que generé, descargué y resguardé una copia de seguridad antes de continuar.</span>
+          </label>
+          <div className="flex gap-3">
+            <button onClick={() => { setShowReset(false); setResetForm({ confirmacion: '', password: '', respaldo_confirmado: false }); }} className="btn-secondary flex-1">Cancelar</button>
+            <button onClick={handleReset} disabled={loadingReset || !resetForm.password || resetForm.confirmacion !== 'RESET SISTEMA' || !resetForm.respaldo_confirmado} className="flex-1 px-5 py-2.5 bg-red-600 disabled:bg-red-200 text-white font-semibold rounded-xl text-sm">
+              {loadingReset ? 'Procesando…' : 'Confirmar eliminación irreversible'}
+            </button>
+          </div>
+        </div>}
       </div>
     </div>
   );

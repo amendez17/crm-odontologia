@@ -1,10 +1,11 @@
 const express = require('express');
 const { Usuario } = require('../models');
 const { auth, esAdmin } = require('../middleware/auth');
+const { validarPasswordSegura } = require('../utils/passwordPolicy');
 const router = express.Router();
 
 // GET /api/usuarios
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, esAdmin, async (req, res) => {
   try {
     const usuarios = await Usuario.findAll({
       attributes: { exclude: ['password'] },
@@ -33,6 +34,9 @@ router.get('/doctores', auth, async (req, res) => {
 // GET /api/usuarios/:id
 router.get('/:id', auth, async (req, res) => {
   try {
+    if (req.usuario.rol !== 'administrador' && Number(req.params.id) !== req.usuario.id) {
+      return res.status(403).json({ error: 'Sin permisos para consultar este usuario.' });
+    }
     const usuario = await Usuario.findByPk(req.params.id, {
       attributes: { exclude: ['password'] }
     });
@@ -46,6 +50,8 @@ router.get('/:id', auth, async (req, res) => {
 // POST /api/usuarios
 router.post('/', auth, esAdmin, async (req, res) => {
   try {
+    const errorPassword = validarPasswordSegura(req.body.password);
+    if (errorPassword) return res.status(400).json({ error: errorPassword });
     const usuario = await Usuario.create(req.body);
     const { password, ...data } = usuario.toJSON();
     res.status(201).json(data);
