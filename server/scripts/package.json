@@ -6,8 +6,8 @@
     "backup:verify": "node backup-verificable.js"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.883.0",
     "cloudinary": "2.7.0",
+    "googleapis": "180.0.0",
     "mysql2": "3.11.0"
   }
 }

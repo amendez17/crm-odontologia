@@ -8,12 +8,12 @@ const { pipeline } = require('stream/promises');
 const { spawn } = require('child_process');
 const mysql = require('mysql2/promise');
 const { v2: cloudinary } = require('cloudinary');
-const { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { google } = require('googleapis');
 const { encryptFile, decryptFile } = require('./lib/backup-crypto');
 
 const REQUIRED = [
-  'BACKUP_DATABASE_URL', 'BACKUP_ENCRYPTION_KEY', 'BACKUP_S3_BUCKET',
-  'BACKUP_S3_ACCESS_KEY_ID', 'BACKUP_S3_SECRET_ACCESS_KEY',
+  'BACKUP_DATABASE_URL', 'BACKUP_ENCRYPTION_KEY',
+  'GOOGLE_DRIVE_CLIENT_ID', 'GOOGLE_DRIVE_CLIENT_SECRET', 'GOOGLE_DRIVE_REFRESH_TOKEN',
   'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET',
   'RESTORE_TEST_DATABASE_URL'
 ];
@@ -166,35 +166,58 @@ async function backupCloudinary(directory) {
   return entries;
 }
 
-function createS3Client() {
-  return new S3Client({
-    region: process.env.BACKUP_S3_REGION || 'auto',
-    endpoint: process.env.BACKUP_S3_ENDPOINT || undefined,
-    forcePathStyle: process.env.BACKUP_S3_FORCE_PATH_STYLE === 'true',
-    credentials: {
-      accessKeyId: process.env.BACKUP_S3_ACCESS_KEY_ID,
-      secretAccessKey: process.env.BACKUP_S3_SECRET_ACCESS_KEY
-    }
+function createDriveClient() {
+  const auth = new google.auth.OAuth2(
+    process.env.GOOGLE_DRIVE_CLIENT_ID,
+    process.env.GOOGLE_DRIVE_CLIENT_SECRET
+  );
+  auth.setCredentials({ refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN });
+  return google.drive({ version: 'v3', auth });
+}
+
+async function getOrCreateDriveFolder(drive) {
+  const folderName = process.env.GOOGLE_DRIVE_FOLDER_NAME || 'Respaldos CRM Odontología';
+  const escapedName = folderName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const existing = await drive.files.list({
+    q: `name = '${escapedName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+    spaces: 'drive',
+    fields: 'files(id,name)',
+    pageSize: 10
   });
+  if (existing.data.files?.length) return existing.data.files[0].id;
+
+  const created = await drive.files.create({
+    requestBody: {
+      name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+      appProperties: { application: 'crm-odontologia-backup' }
+    },
+    fields: 'id'
+  });
+  if (!created.data.id) throw new Error('Google Drive no devolvió el identificador de la carpeta.');
+  return created.data.id;
 }
 
-async function putFile(client, key, filePath, contentType) {
+async function putDriveFile(drive, folderId, name, filePath, contentType) {
   const { size } = await fs.promises.stat(filePath);
-  await client.send(new PutObjectCommand({
-    Bucket: process.env.BACKUP_S3_BUCKET,
-    Key: key,
-    Body: fs.createReadStream(filePath),
-    ContentLength: size,
-    ContentType: contentType,
-    ServerSideEncryption: process.env.BACKUP_S3_SERVER_SIDE_ENCRYPTION || undefined
-  }));
-  const head = await client.send(new HeadObjectCommand({ Bucket: process.env.BACKUP_S3_BUCKET, Key: key }));
-  if (Number(head.ContentLength) !== size) throw new Error('El tamaño almacenado no coincide con el archivo cifrado.');
+  const uploaded = await drive.files.create({
+    requestBody: {
+      name,
+      parents: [folderId],
+      appProperties: { application: 'crm-odontologia-backup' }
+    },
+    media: { mimeType: contentType, body: fs.createReadStream(filePath) },
+    fields: 'id,name,size,md5Checksum,createdTime'
+  });
+  if (!uploaded.data.id || Number(uploaded.data.size) !== size) {
+    throw new Error('El tamaño almacenado en Google Drive no coincide con el archivo enviado.');
+  }
+  return uploaded.data;
 }
 
-async function getFile(client, key, filePath) {
-  const response = await client.send(new GetObjectCommand({ Bucket: process.env.BACKUP_S3_BUCKET, Key: key }));
-  await pipeline(response.Body, fs.createWriteStream(filePath, { flags: 'wx', mode: 0o600 }));
+async function getDriveFile(drive, fileId, filePath) {
+  const response = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
+  await pipeline(response.data, fs.createWriteStream(filePath, { flags: 'wx', mode: 0o600 }));
 }
 
 async function verifyArchiveContents(extractedDir) {
@@ -262,10 +285,9 @@ async function main() {
   const filesDir = path.join(contentDir, 'files');
   const archivePath = path.join(workDir, 'backup.tar.gz');
   const encryptedPath = `${archivePath}.enc`;
-  const prefix = `${(process.env.BACKUP_S3_PREFIX || 'crm-odontologia').replace(/^\/+|\/+$/g, '')}/${startedAt.toISOString().slice(0, 7)}`;
-  const backupKey = `${prefix}/backup-${timestamp}.tar.gz.enc`;
-  const reportKey = `${prefix}/backup-${timestamp}.verification.json`;
-  const client = createS3Client();
+  const backupName = `backup-${timestamp}.tar.gz.enc`;
+  const reportName = `backup-${timestamp}.verification.json`;
+  const drive = createDriveClient();
 
   try {
     await fs.promises.mkdir(filesDir, { recursive: true });
@@ -291,16 +313,19 @@ async function main() {
     await encryptFile(archivePath, encryptedPath, process.env.BACKUP_ENCRYPTION_KEY);
     const encryptedSha256 = await sha256File(encryptedPath);
 
-    console.log('Cargando respaldo cifrado en almacenamiento privado...');
-    await putFile(client, backupKey, encryptedPath, 'application/octet-stream');
+    console.log('Cargando respaldo cifrado en Google Drive privado...');
+    const folderId = await getOrCreateDriveFolder(drive);
+    const uploadedBackup = await putDriveFile(drive, folderId, backupName, encryptedPath, 'application/octet-stream');
     const downloadedPath = path.join(workDir, 'from-storage.tar.gz.enc');
-    await getFile(client, backupKey, downloadedPath);
+    await getDriveFile(drive, uploadedBackup.id, downloadedPath);
     if (await sha256File(downloadedPath) !== encryptedSha256) throw new Error('El SHA-256 descargado no coincide con el respaldo enviado.');
 
     console.log('Restaurando el respaldo descargado en la base temporal...');
     const restoration = await verifyRestoration(downloadedPath, workDir, expectedCounts);
     const report = {
-      backup_key: backupKey,
+      backup_file_id: uploadedBackup.id,
+      backup_file_name: backupName,
+      drive_folder_id: folderId,
       created_at: startedAt.toISOString(),
       completed_at: new Date().toISOString(),
       encrypted_sha256: encryptedSha256,
@@ -311,8 +336,8 @@ async function main() {
     };
     const reportPath = path.join(workDir, 'verification.json');
     await fs.promises.writeFile(reportPath, JSON.stringify(report, null, 2), { mode: 0o600 });
-    await putFile(client, reportKey, reportPath, 'application/json');
-    console.log(`Respaldo verificado correctamente: ${backupKey}`);
+    await putDriveFile(drive, folderId, reportName, reportPath, 'application/json');
+    console.log(`Respaldo verificado correctamente en Google Drive: ${backupName}`);
   } finally {
     await fs.promises.rm(workDir, { recursive: true, force: true });
   }
