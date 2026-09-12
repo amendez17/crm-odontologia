@@ -9,6 +9,59 @@ const hash = value => crypto.createHmac('sha256', process.env.EXPEDIENTE_SIGNING
   .update(JSON.stringify(value)).digest('hex');
 
 const PLANTILLAS = {
+  
+  'Resina': `CONSENTIMIENTO INFORMADO PARA RESTAURACIÓN DENTAL CON RESINA
+
+PROCEDIMIENTO: Restauración dental con resina compuesta fotopolimerizable para reparar dientes afectados por caries, fracturas, desgaste o defectos estéticos.
+
+Yo, el/la paciente abajo firmante, declaro que he leído y comprendido este documento y que he sido informado(a) sobre lo siguiente:
+
+1. El tratamiento consiste en eliminar el tejido dental afectado, cuando sea necesario, y restaurar el diente mediante la colocación de resina compuesta del color más similar posible al de mis dientes naturales.
+2. Comprendo que el objetivo del tratamiento es devolver la función, forma y estética del diente; sin embargo, no se puede garantizar una coincidencia de color completamente exacta debido a las características propias de cada diente y del material restaurador.
+3. Se me informó que durante o después del procedimiento puedo presentar:
+
+* Sensibilidad temporal al frío, calor o presión.
+* Molestias leves al masticar durante los primeros días.
+* Irritación temporal de los tejidos blandos.
+
+4. Entiendo que las restauraciones de resina tienen una vida útil limitada y pueden requerir reparación o reemplazo con el paso del tiempo debido al desgaste, fracturas, filtraciones, cambios de color, caries recurrente o hábitos como apretar o rechinar los dientes (bruxismo).
+5. Comprendo que el éxito del tratamiento depende también de mis hábitos de higiene oral, alimentación, revisiones periódicas y del cuidado adecuado de la restauración.
+6. Se me informó que, si durante el procedimiento se detecta una lesión más profunda de lo esperado o existe afectación del nervio dental, podría ser necesario realizar tratamientos adicionales, como protección pulpar, endodoncia, colocación de una corona u otros procedimientos, los cuales tendrán un costo independiente.
+7. Entiendo que las restauraciones de resina pueden pigmentarse con el tiempo por el consumo frecuente de café, té, vino tinto, tabaco u otros alimentos o bebidas con colorantes.
+8. Se me informó sobre las alternativas de tratamiento, incluyendo no realizar el procedimiento, así como otras opciones restauradoras cuando sean aplicables, con sus ventajas y limitaciones.
+9. He tenido la oportunidad de realizar todas las preguntas que consideré necesarias y estas fueron respondidas de forma clara y satisfactoria.
+10. Autorizo de manera libre y voluntaria al odontólogo y a su equipo a realizar la restauración con resina, así como los procedimientos complementarios que sean necesarios para llevarla a cabo de forma segura.`,
+  'Limpieza Dental (Profilaxis)': `CONSENTIMIENTO INFORMADO PARA LIMPIEZA DENTAL (PROFILAXIS)
+
+PROCEDIMIENTO: Limpieza dental profesional (profilaxis), que consiste en la eliminación de placa bacteriana, sarro y manchas superficiales mediante instrumentos manuales y/o ultrasónicos, seguida de pulido dental y, cuando sea necesario, aplicación de flúor.
+
+Yo, el/la paciente abajo firmante, declaro que he leído y comprendido este documento y que he sido informado(a) sobre lo siguiente:
+
+1. La limpieza dental tiene como objetivo mejorar la salud bucal al remover placa, cálculo dental y pigmentaciones superficiales, contribuyendo a la prevención de caries y enfermedades de las encías.
+2. Entiendo que este procedimiento es preventivo y no sustituye otros tratamientos que pudieran ser necesarios, como restauraciones, tratamiento periodontal, endodoncia o cirugía.
+3. Se me informó que durante o después del procedimiento puedo presentar:
+
+* Sensibilidad dental temporal.
+* Molestias leves en las encías.
+* Sangrado gingival, especialmente si existe inflamación previa.
+* Ligera molestia al masticar o al consumir alimentos muy fríos o calientes durante un corto periodo.
+
+4. Comprendo que, si existe enfermedad periodontal o acumulación importante de sarro, una sola sesión de limpieza puede no ser suficiente y podría requerir tratamiento periodontal adicional.
+5. Entiendo que la limpieza dental no modifica el color natural de los dientes, aunque puede eliminar manchas superficiales y mejorar su apariencia.
+6. Se me informó sobre la importancia de mantener una adecuada higiene oral, incluyendo cepillado, uso de hilo dental y revisiones periódicas para conservar los resultados del tratamiento.
+7. He tenido la oportunidad de realizar preguntas y todas mis dudas fueron respondidas de manera satisfactoria.
+8. Autorizo de manera libre y voluntaria al odontólogo y a su equipo a realizar el procedimiento descrito.
+
+AUTORIZACIÓN PARA FOTOGRAFIAS Y VIDEOS 
+
+Autorizo la toma de fotografías y/o videos para:
+-Documentación clínica.
+-Seguimiento
+-Uso educativo o en redes sociales
+
+( ) Rostro completo
+( ) Solo Sonrisa
+( ) No autorizo`,
   'Extracción dental': `CONSENTIMIENTO INFORMADO PARA EXTRACCIÓN DENTAL
 
 Yo, el/la paciente abajo firmante, declaro que he sido informado/a por mi odontólogo/a tratante sobre:
