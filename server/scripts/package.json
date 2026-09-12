@@ -1,0 +1,13 @@
+{
+  "name": "crm-odontologia-backup-tools",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "backup:verify": "node backup-verificable.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.883.0",
+    "cloudinary": "2.7.0",
+    "mysql2": "3.11.0"
+  }
+}
