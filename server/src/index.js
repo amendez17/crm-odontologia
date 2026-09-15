@@ -83,6 +83,7 @@ app.use('/api/exportar', require('./routes/exportar.routes'));
 app.use('/api/consentimiento', require('./routes/consentimiento.routes'));
 app.use('/api/actividad', require('./routes/actividad.routes'));
 app.use('/api/notificaciones', require('./routes/notificaciones.routes'));
+app.use('/api/facturas', require('./routes/facturas.routes'));
 app.use('/api/entregas-expediente', require('./routes/entregas-expediente.routes'));
 app.use('/api/mantenimiento', require('./routes/mantenimiento.routes'));
 

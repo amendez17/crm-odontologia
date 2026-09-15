@@ -15,6 +15,7 @@ import Reportes from './pages/Reportes';
 import Configuracion from './pages/Configuracion';
 import Actividad from './pages/Actividad';
 import Mantenimiento from './pages/Mantenimiento';
+import Facturas from './pages/Facturas';
 
 /*function PrivateRoute({ children }) {
   const { usuario, loading } = useAuth();
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="tratamientos" element={ <PrivateRoute roles={["administrador", "doctor"]}> <Tratamientos /> </PrivateRoute>}/>
           <Route path="presupuestos" element={ <PrivateRoute roles={["administrador", "doctor"]}> <Presupuestos /> </PrivateRoute> }/>
           <Route path="pagos" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <Pagos /></PrivateRoute>}/>
+          <Route path="facturas" element={ <PrivateRoute roles={["administrador", "recepcionista"]}> <Facturas /></PrivateRoute>}/>
           <Route path="usuarios" element={ <PrivateRoute roles={["administrador"]}> <Usuarios />  </PrivateRoute> }/>
           <Route path="reportes" element={ <PrivateRoute roles={["administrador"]}> <Reportes /> </PrivateRoute> }/>
           <Route path="actividad" element={ <PrivateRoute roles={["administrador"]}> <Actividad /> </PrivateRoute>}/>
