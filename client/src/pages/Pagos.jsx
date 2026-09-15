@@ -12,7 +12,7 @@ export default function Pagos() {
   const [presupuestos, setPresupuestos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ paciente_id: '', presupuesto_id: '', monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), numero_recibo: '', notas: ''});  const [filtroDesde, setFiltroDesde] = useState('');
+  const [form, setForm] = useState({ paciente_id: '', presupuesto_id: '', monto: '', metodo_pago: 'efectivo', fecha: fechaHoy(), numero_recibo: '', notas: '', requiere_factura: false });  const [filtroDesde, setFiltroDesde] = useState('');
   const [filtroHasta, setFiltroHasta] = useState('');
 
   const cargar = async () => {
@@ -86,7 +86,8 @@ socket.on('reconnect', () => {
   metodo_pago: 'efectivo',
   fecha: fechaHoy(),
   numero_recibo: '',
-  notas: ''
+  notas: '',
+  requiere_factura: false
 });
       setModal(false);
       
@@ -170,7 +171,7 @@ const exportarPagos = async () => {
 >
   <FiDownload size={16} /> Exportar CSV
 </button>
-          <button onClick={() => { setForm({ paciente_id: '', presupuesto_id: '', monto: '',  metodo_pago: 'efectivo', fecha: fechaHoy(), numero_recibo: '', notas: ''}); setModal(true); }} className="btn-primary flex items-center gap-2">
+          <button onClick={() => { setForm({ paciente_id: '', presupuesto_id: '', monto: '',  metodo_pago: 'efectivo', fecha: fechaHoy(), numero_recibo: '', notas: '', requiere_factura: false }); setModal(true); }} className="btn-primary flex items-center gap-2">
             <FiPlus size={16} /> Registrar Pago
           </button>
         </div>
@@ -207,12 +208,13 @@ const exportarPagos = async () => {
                 <th>Monto</th>
                 <th>Método</th>
                 <th>Recibo</th>
+                <th>Factura</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {pagos.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-8 text-surface-400">No hay pagos registrados</td></tr>
+                <tr><td colSpan={7} className="text-center py-8 text-surface-400">No hay pagos registrados</td></tr>
               ) : pagos.map(p => (
                 <tr key={p.id}>
                   <td className="text-surface-600">   {formatearFecha(p.fecha)} </td>
@@ -220,6 +222,7 @@ const exportarPagos = async () => {
                   <td className="font-semibold text-dental-600">${Number(p.monto).toLocaleString()}</td>
                   <td><span className="badge bg-primary-50 text-primary-700 capitalize">{p.metodo_pago?.replace('_', ' ')}</span></td>
                   <td className="text-surface-500">{p.numero_recibo || '-'}</td>
+                  <td>{p.requiere_factura ? <span className={`badge ${p.factura_emitida ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>{p.factura_emitida ? 'Emitida' : 'Pendiente'}</span> : <span className="text-surface-400">-</span>}</td>
                   <td>
                     <button onClick={() => eliminar(p.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"><FiTrash2 size={16} /></button>
                   </td>
@@ -285,6 +288,10 @@ const exportarPagos = async () => {
             <label className="block text-sm font-medium text-surface-600 mb-1">Notas</label>
             <textarea name="notas" value={form.notas} onChange={handleChange} className="input-field" rows={2} />
           </div>
+          <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 ${form.requiere_factura ? 'border-primary-400 bg-primary-50' : 'border-surface-200'}`}>
+            <input type="checkbox" checked={form.requiere_factura} onChange={e => setForm({ ...form, requiere_factura: e.target.checked })} className="mt-1" />
+            <span><span className="block text-sm font-semibold text-primary-900">El paciente requiere factura</span><span className="block text-xs text-surface-500">Se agregará a Facturas pendientes.</span></span>
+          </label>
           <div className="flex justify-end gap-3">
             <button type="button" onClick={() => setModal(false)} className="btn-secondary">Cancelar</button>
             <button type="submit" className="btn-primary">Registrar Pago</button>

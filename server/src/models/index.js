@@ -17,6 +17,7 @@ const LogActividad = require('./LogActividad');
 const Receta = require('./Receta')(sequelize, require('sequelize').DataTypes);
 const Periodontograma = require('./Periodontograma');
 const EntregaExpediente = require('./EntregaExpediente');
+const Factura = require('./Factura');
 
 // --- Asociaciones ---
 
@@ -57,6 +58,12 @@ Paciente.hasMany(Pago, { foreignKey: 'paciente_id', as: 'pagos' });
 Pago.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
 Presupuesto.hasMany(Pago, { foreignKey: 'presupuesto_id', as: 'pagos' });
 Pago.belongsTo(Presupuesto, { foreignKey: 'presupuesto_id', as: 'presupuesto' });
+Pago.hasMany(Factura, { foreignKey: 'pago_id', as: 'facturas' });
+Factura.belongsTo(Pago, { foreignKey: 'pago_id', as: 'pago' });
+Paciente.hasMany(Factura, { foreignKey: 'paciente_id', as: 'facturas' });
+Factura.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+Usuario.hasMany(Factura, { foreignKey: 'creado_por_id', as: 'facturasRegistradas' });
+Factura.belongsTo(Usuario, { foreignKey: 'creado_por_id', as: 'creadoPor' });
 
 // Historia Clínica
 Paciente.hasMany(HistoriaClinica, { foreignKey: 'paciente_id', as: 'historias' });
@@ -132,5 +139,6 @@ module.exports = {
   LogActividad,
   Receta,
   Periodontograma,
-  EntregaExpediente
+  EntregaExpediente,
+  Factura
 };

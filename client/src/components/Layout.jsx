@@ -9,7 +9,7 @@ import {
   FiHome, FiUsers, FiCalendar, FiClipboard, FiFileText, FiDollarSign,
   FiSettings, FiLogOut, FiMenu, FiX, FiBarChart2, FiBell, FiLock,
   FiSliders, FiSearch, FiActivity, FiChevronsLeft, FiChevronsRight, FiShield,
-  FiCheckCircle, FiPhone
+  FiPhone
 } from 'react-icons/fi';
 
 const navItems = [
@@ -19,6 +19,7 @@ const navItems = [
   { to: '/tratamientos', icon: FiClipboard, label: 'Tratamientos', roles: ["administrador", "doctor"] },
   { to: '/presupuestos', icon: FiFileText, label: 'Presupuestos', roles: ["administrador", "doctor"] },
   { to: '/pagos', icon: FiDollarSign, label: 'Pagos', roles: ["administrador", "doctor", "recepcionista"] },
+  { to: '/facturas', icon: FiFileText, label: 'Facturas', roles: ["administrador", "recepcionista"] },
   { to: '/reportes', icon: FiBarChart2, label: 'Reportes', roles: ["administrador"] },
   { to: '/usuarios', icon: FiSettings, label: 'Usuarios', roles: ["administrador"] },
   { to: '/actividad', icon: FiActivity, label: 'Actividad', roles: ["administrador"] },
@@ -91,16 +92,6 @@ export default function Layout() {
       socket.off('reconnect', actualizarSinDatos);
     };
   }, []);
-
-  const marcarFacturaEmitida = async pagoId => {
-    try {
-      await api.put(`/notificaciones/facturas/${pagoId}/emitida`);
-      setNotificaciones(actuales => actuales.filter(item => !(item.tipo_notificacion === 'factura' && item.id === pagoId)));
-      toast.success('Factura marcada como emitida');
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'No se pudo actualizar la factura');
-    }
-  };
 
   const enlaceWhatsAppLimpieza = paciente => {
     const digitos = String(paciente.telefono || '').replace(/\D/g, '');
@@ -353,7 +344,7 @@ export default function Layout() {
                       notificaciones.map(notificacion => {
                         if (notificacion.tipo_notificacion === 'factura') return <div key={notificacion.clave} className="border-b border-surface-100 bg-amber-50/50 px-4 py-3">
                           <div className="flex items-start justify-between gap-2"><div><span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">FACTURA PENDIENTE</span><p className="mt-1 text-sm font-semibold text-gray-900">{notificacion.paciente?.nombre} {notificacion.paciente?.apellido}</p><p className="text-xs text-surface-500">Pago de ${Number(notificacion.monto).toLocaleString()} · {new Date(`${notificacion.fecha}T12:00:00`).toLocaleDateString('es-MX')}</p></div><FiFileText className="mt-1 text-amber-600" /></div>
-                          <div className="mt-2 flex gap-2"><Link to={`/pacientes/${notificacion.paciente_id}`} onClick={() => setShowNotif(false)} className="text-xs font-semibold text-primary-700">Ver paciente</Link><button type="button" onClick={() => marcarFacturaEmitida(notificacion.id)} className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-green-700"><FiCheckCircle /> Marcar emitida</button></div>
+                          <div className="mt-2 flex gap-2"><Link to={`/pacientes/${notificacion.paciente_id}`} onClick={() => setShowNotif(false)} className="text-xs font-semibold text-primary-700">Ver paciente</Link><Link to={`/facturas?pago=${notificacion.id}`} onClick={() => setShowNotif(false)} className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-green-700"><FiFileText /> Registrar factura</Link></div>
                         </div>;
                         if (notificacion.tipo_notificacion === 'limpieza') return <div key={notificacion.clave} className="border-b border-surface-100 bg-blue-50/50 px-4 py-3">
                           <div className="flex items-start justify-between gap-2"><div><span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">LIMPIEZA · 4 MESES</span><p className="mt-1 text-sm font-semibold text-gray-900">{notificacion.nombre} {notificacion.apellido}</p><p className="text-xs text-surface-500">Última visita: {new Date(`${notificacion.ultima_visita}T12:00:00`).toLocaleDateString('es-MX')}</p></div><FiPhone className="mt-1 text-blue-600" /></div>
