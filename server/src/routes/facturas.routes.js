@@ -1,18 +1,12 @@
 const express = require('express');
 const multer = require('multer');
-const { v2: cloudinary } = require('cloudinary');
+const { almacenamientoConfigurado, subirPrivado, urlPrivadaTemporal, eliminarPrivado } = require('../services/storage');
 const { Op } = require('sequelize');
 const { Factura, Pago, Paciente, Usuario, sequelize } = require('../models');
 const { auth, esAdmin } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 
 const router = express.Router();
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
 
 const esFacturacion = (req, res, next) => {
   if (!['administrador', 'recepcionista'].includes(req.usuario.rol)) {
@@ -31,36 +25,28 @@ const upload = multer({
   }
 });
 
-const subirComprobante = (file, pacienteId) => new Promise((resolve, reject) => {
-  const extension = file.mimetype === 'application/pdf' ? 'pdf' : 'xml';
-  const nombreBase = file.originalname.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80) || extension;
-  const stream = cloudinary.uploader.upload_stream({
-    folder: `clinica-almar/pacientes/${pacienteId}/facturas`,
-    resource_type: 'raw',
-    type: 'authenticated',
-    public_id: `${nombreBase}-${Date.now()}.${extension}`,
-    overwrite: false
-  }, (error, result) => error ? reject(error) : resolve(result));
-  stream.end(file.buffer);
+const subirComprobante = (file, pacienteId) => subirPrivado(file, {
+  carpeta: `clinica-almar/pacientes/${pacienteId}/facturas`,
+  resourceType: 'raw'
 });
 
-const urlTemporal = (factura, tipo) => {
+const urlTemporal = async (factura, tipo) => {
   const publicId = factura[`${tipo}_public_id`];
   if (!publicId) return null;
-  return cloudinary.utils.private_download_url(publicId, factura[`${tipo}_formato`] || undefined, {
+  return urlPrivadaTemporal({
+    public_id: publicId,
+    formato: factura[`${tipo}_formato`] || undefined,
     resource_type: factura[`${tipo}_resource_type`] || 'raw',
-    type: factura[`${tipo}_delivery_type`] || 'authenticated',
-    expires_at: Math.floor(Date.now() / 1000) + (10 * 60),
-    attachment: false
+    delivery_type: factura[`${tipo}_delivery_type`] || 'authenticated'
   });
 };
 
-const serializar = registro => {
+const serializar = async registro => {
   const factura = registro.toJSON ? registro.toJSON() : registro;
   return {
     ...factura,
-    xml_url: urlTemporal(factura, 'xml'),
-    pdf_url: urlTemporal(factura, 'pdf'),
+    xml_url: await urlTemporal(factura, 'xml'),
+    pdf_url: await urlTemporal(factura, 'pdf'),
     xml_public_id: undefined,
     pdf_public_id: undefined
   };
@@ -106,7 +92,7 @@ router.get('/', auth, esFacturacion, registrarActividad('consultar', 'factura'),
       order: [['fecha_timbrado', 'DESC'], ['id', 'DESC']],
       limit: 500
     });
-    res.json(facturas.map(serializar));
+    res.json(await Promise.all(facturas.map(serializar)));
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
@@ -119,10 +105,11 @@ router.post('/pago/:pagoId', auth, esFacturacion, upload.fields([
 }), async (req, res) => {
   const subidos = [];
   let transaction;
+  let confirmado = false;
   try {
     const xmlFile = req.files?.xml?.[0];
     const pdfFile = req.files?.pdf?.[0];
-    if ((xmlFile || pdfFile) && (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET)) {
+    if ((xmlFile || pdfFile) && !almacenamientoConfigurado()) {
       return res.status(503).json({ error: 'El almacenamiento privado de comprobantes no está configurado.' });
     }
     const pago = await Pago.findByPk(req.params.pagoId);
@@ -176,13 +163,18 @@ router.post('/pago/:pagoId', auth, esFacturacion, upload.fields([
       ...datosArchivos
     }, { transaction });
     await pago.update({ factura_emitida: true, fecha_factura: fechaTimbrado }, { transaction });
-    await transaction.commit(); transaction = null;
-    res.status(201).json(serializar(factura));
+    const respuestaFactura = await serializar(factura);
+    await transaction.commit(); transaction = null; confirmado = true;
+    res.status(201).json(respuestaFactura);
   } catch (error) {
     if (transaction) await transaction.rollback();
-    await Promise.allSettled(subidos.map(({ resultado }) => cloudinary.uploader.destroy(resultado.public_id, {
-      resource_type: resultado.resource_type || 'raw', type: resultado.type || 'authenticated'
-    })));
+    if (!confirmado) {
+      await Promise.allSettled(subidos.map(({ resultado }) => eliminarPrivado({
+        public_id: resultado.public_id,
+        resource_type: resultado.resource_type || 'raw',
+        delivery_type: resultado.type || 'authenticated'
+      })));
+    }
     res.status(400).json({ error: error.message || 'No fue posible registrar la factura.' });
   }
 });

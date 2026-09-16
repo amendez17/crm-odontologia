@@ -1,7 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const multer = require('multer');
-const { v2: cloudinary } = require('cloudinary');
+const { almacenamientoConfigurado, subirPrivado, urlPrivadaTemporal, eliminarPrivado } = require('../services/storage');
 const { sequelize, HistoriaClinica, ArchivoHistoria, ArchivoInterpretacion, Usuario, Cita, Paciente } = require('../models');
 const { auth, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
@@ -136,12 +136,6 @@ const crearRegistroInmutable = async ({ body, usuario, origen = null }) => {
   return HistoriaClinica.create(data);
 };
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -153,28 +147,6 @@ const upload = multer({
     cb(null, true);
   }
 });
-
-const subirCloudinary = (file, pacienteId) => new Promise((resolve, reject) => {
-  const stream = cloudinary.uploader.upload_stream({
-    folder: `clinica-almar/pacientes/${pacienteId}/historia-clinica`,
-    resource_type: 'auto',
-    type: 'authenticated',
-    use_filename: true,
-    unique_filename: true
-  }, (error, result) => error ? reject(error) : resolve(result));
-  stream.end(file.buffer);
-});
-
-const urlTemporal = (archivo) => cloudinary.utils.private_download_url(
-  archivo.public_id,
-  archivo.formato || undefined,
-  {
-    resource_type: archivo.resource_type,
-    type: archivo.delivery_type || 'authenticated',
-    expires_at: Math.floor(Date.now() / 1000) + (10 * 60),
-    attachment: false
-  }
-);
 
 // GET /api/historia/:pacienteId
 router.get('/:pacienteId', auth, registrarActividad('consultar', 'expediente_clinico', {
@@ -194,10 +166,10 @@ router.get('/:pacienteId', auth, registrarActividad('consultar', 'expediente_cli
       ],
       order: [['fecha', 'DESC']]
     });
-    const respuesta = historias.map(historia => {
+    const respuesta = await Promise.all(historias.map(async historia => {
       const data = historia.toJSON();
       data.integridad_valida = data.firma_hash ? firmarRegistro(data) === data.firma_hash : null;
-      data.archivos = (data.archivos || []).map(archivo => {
+      data.archivos = await Promise.all((data.archivos || []).map(async archivo => {
         const interpretaciones = (archivo.interpretaciones || []).map(item => ({
           ...item,
           integridad_valida: firmarInterpretacionMultiple(item) === item.firma_hash
@@ -211,10 +183,10 @@ router.get('/:pacienteId', auth, registrarActividad('consultar', 'expediente_cli
           integridad_valida: archivo.interpretacion_hash ? firmarInterpretacion(archivo) === archivo.interpretacion_hash : null,
           legado: true
         });
-        return { ...archivo, interpretaciones, url: urlTemporal(archivo), public_id: undefined };
-      });
+        return { ...archivo, interpretaciones, url: await urlPrivadaTemporal(archivo), public_id: undefined };
+      }));
       return data;
-    });
+    }));
     res.json(respuesta);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -253,7 +225,7 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
   const subidos = [];
   let transaction;
   try {
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    if (!almacenamientoConfigurado()) {
       return res.status(503).json({ error: 'El almacenamiento de archivos no está configurado.' });
     }
     const historia = await HistoriaClinica.findByPk(req.params.historiaId);
@@ -268,9 +240,18 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
     if (interpretaciones.some(texto => texto && (texto.length < 5 || texto.length > 5000))) {
       return res.status(400).json({ error: 'Las interpretaciones escritas deben contener entre 5 y 5000 caracteres.' });
     }
+    let nombresOriginales;
+    try { nombresOriginales = JSON.parse(req.body.nombres_originales || '[]'); } catch { nombresOriginales = []; }
+    if (!Array.isArray(nombresOriginales) || nombresOriginales.length !== req.files.length) {
+      nombresOriginales = req.files.map(file => file.originalname);
+    }
+    nombresOriginales = nombresOriginales.map((nombre, indice) => String(nombre || req.files[indice].originalname).slice(0, 255));
 
     for (const file of req.files) {
-      const resultado = await subirCloudinary(file, historia.paciente_id);
+      const resultado = await subirPrivado(file, {
+        carpeta: `clinica-almar/pacientes/${historia.paciente_id}/historia-clinica`,
+        resourceType: 'auto'
+      });
       subidos.push({ resultado, file });
     }
 
@@ -282,7 +263,7 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
       const archivo = await ArchivoHistoria.create({
         historia_id: historia.id,
         usuario_id: req.usuario.id,
-        nombre_original: file.originalname,
+        nombre_original: nombresOriginales[indice],
         tipo: file.mimetype === 'application/pdf' ? 'pdf' : 'imagen',
         mime_type: file.mimetype,
         tamano: file.size,
@@ -310,9 +291,11 @@ router.post('/:historiaId/archivos', auth, esDoctor, registrarActividad('anexar_
     res.status(201).json({ mensaje: 'Archivos guardados correctamente.', total: archivos.length });
   } catch (error) {
     if (transaction) await transaction.rollback();
-    await Promise.allSettled(subidos.map(({ resultado }) =>
-      cloudinary.uploader.destroy(resultado.public_id, { resource_type: resultado.resource_type, type: resultado.type || 'authenticated' })
-    ));
+    await Promise.allSettled(subidos.map(({ resultado }) => eliminarPrivado({
+      public_id: resultado.public_id,
+      resource_type: resultado.resource_type,
+      delivery_type: resultado.type || 'authenticated'
+    })));
     res.status(400).json({ error: error.message || 'No fue posible subir los archivos.' });
   }
 });

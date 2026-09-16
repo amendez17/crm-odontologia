@@ -7,6 +7,7 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import { FiArrowLeft, FiPlus, FiPrinter, FiCalendar, FiMapPin, FiPhone, FiAlertTriangle, FiAward,FiEdit2, FiTrash2, FiFileText, FiUser, FiClock, FiUploadCloud, FiImage, FiExternalLink } from 'react-icons/fi';
 import { fechaHoy } from '../utils/fecha';
+import { optimizarImagenes } from '../utils/optimizarImagen';
 import socket from '../socket';
 import { useAuth } from '../context/AuthContext';
 
@@ -225,11 +226,13 @@ useEffect(() => {
       toast.error('Las interpretaciones escritas deben contener entre 5 y 5000 caracteres');
       return false;
     }
-    const data = new FormData();
-    seleccionados.forEach(file => data.append('archivos', file));
-    data.append('interpretaciones', JSON.stringify(adjuntos.map(adjunto => adjunto.interpretacion.trim())));
     setSubiendoArchivos(historiaId);
     try {
+      const optimizados = await optimizarImagenes(seleccionados);
+      const data = new FormData();
+      optimizados.forEach(file => data.append('archivos', file));
+      data.append('nombres_originales', JSON.stringify(seleccionados.map(file => file.name)));
+      data.append('interpretaciones', JSON.stringify(adjuntos.map(adjunto => adjunto.interpretacion.trim())));
       await api.post(`/historia/${historiaId}/archivos`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
       const { data: historiasActualizadas } = await api.get(`/historia/${id}`);
       setHistorias(historiasActualizadas);
