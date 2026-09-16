@@ -92,7 +92,65 @@ router.get('/', auth, esFacturacion, registrarActividad('consultar', 'factura'),
       order: [['fecha_timbrado', 'DESC'], ['id', 'DESC']],
       limit: 500
     });
-    res.json(await Promise.all(facturas.map(serializar)));
+    const pagosConRegistro = new Set((await Factura.findAll({ attributes: ['pago_id'] }))
+      .map(factura => Number(factura.pago_id)));
+    const pagosHistoricos = estado === 'cancelada' ? [] : await Pago.findAll({
+      where: { factura_emitida: true },
+      include: [{ model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido', 'dni'] }],
+      order: [['fecha_factura', 'DESC'], ['id', 'DESC']]
+    });
+
+    const inicio = desde ? new Date(`${desde}T00:00:00`) : null;
+    const fin = hasta ? new Date(`${hasta}T23:59:59`) : null;
+    const busqueda = String(buscar || '').trim().toLowerCase();
+    const historicas = pagosHistoricos
+      .filter(pago => !pagosConRegistro.has(Number(pago.id)))
+      .map(registro => {
+        const pago = registro.toJSON();
+        const fechaTimbrado = pago.fecha_factura || `${pago.fecha}T12:00:00`;
+        return {
+          id: `historica-${pago.id}`,
+          pago_id: pago.id,
+          paciente_id: pago.paciente_id,
+          paciente: pago.paciente,
+          pago: {
+            id: pago.id,
+            fecha: pago.fecha,
+            monto: pago.monto,
+            numero_recibo: pago.numero_recibo
+          },
+          uuid_fiscal: null,
+          serie: null,
+          folio: null,
+          rfc_receptor: null,
+          razon_social: null,
+          fecha_timbrado: fechaTimbrado,
+          total: pago.monto,
+          estado: 'timbrada',
+          es_historica: true,
+          notas: 'Factura emitida antes de habilitar el registro fiscal detallado.',
+          xml_url: null,
+          pdf_url: null
+        };
+      })
+      .filter(factura => {
+        const fecha = new Date(factura.fecha_timbrado);
+        if (inicio && fecha < inicio) return false;
+        if (fin && fecha > fin) return false;
+        if (!busqueda) return true;
+        const texto = [
+          factura.paciente?.nombre,
+          factura.paciente?.apellido,
+          factura.paciente?.dni,
+          factura.pago?.numero_recibo
+        ].filter(Boolean).join(' ').toLowerCase();
+        return texto.includes(busqueda);
+      });
+
+    const actuales = await Promise.all(facturas.map(serializar));
+    res.json([...actuales, ...historicas]
+      .sort((a, b) => new Date(b.fecha_timbrado) - new Date(a.fecha_timbrado))
+      .slice(0, 500));
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 

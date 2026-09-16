@@ -101,7 +101,7 @@ export default function Facturas() {
   const filtradas = useMemo(() => facturas.filter(factura => {
     if (estado !== 'todas' && factura.estado !== estado) return false;
     if (!busqueda.trim()) return true;
-    const texto = `${factura.uuid_fiscal} ${factura.rfc_receptor} ${factura.razon_social} ${factura.folio || ''} ${factura.paciente?.nombre || ''} ${factura.paciente?.apellido || ''}`.toLowerCase();
+    const texto = `${factura.uuid_fiscal || ''} ${factura.rfc_receptor || ''} ${factura.razon_social || ''} ${factura.folio || ''} ${factura.pago?.numero_recibo || ''} ${factura.paciente?.nombre || ''} ${factura.paciente?.apellido || ''}`.toLowerCase();
     return texto.includes(busqueda.trim().toLowerCase());
   }), [facturas, estado, busqueda]);
 
@@ -146,20 +146,20 @@ export default function Facturas() {
               <table className="table-modern"><thead><tr><th>Timbrado</th><th>Paciente / receptor</th><th>UUID / folio</th><th>Total</th><th>Estado</th><th>Archivos</th><th></th></tr></thead>
                 <tbody>{filtradas.map(factura => <tr key={factura.id}>
                   <td className="text-sm text-surface-600">{fechaMx(factura.fecha_timbrado)}</td>
-                  <td><p className="font-semibold text-primary-900">{factura.paciente?.nombre} {factura.paciente?.apellido}</p><p className="text-xs text-surface-500">{factura.razon_social} · {factura.rfc_receptor}</p></td>
-                  <td><p className="max-w-[220px] truncate font-mono text-xs" title={factura.uuid_fiscal}>{factura.uuid_fiscal}</p><p className="text-xs text-surface-500">{[factura.serie, factura.folio].filter(Boolean).join('-') || 'Sin folio interno'}</p></td>
+                  <td><p className="font-semibold text-primary-900">{factura.paciente?.nombre} {factura.paciente?.apellido}</p><p className="text-xs text-surface-500">{factura.es_historica ? 'Datos fiscales no capturados' : `${factura.razon_social} · ${factura.rfc_receptor}`}</p></td>
+                  <td><p className="max-w-[220px] truncate font-mono text-xs" title={factura.uuid_fiscal || undefined}>{factura.es_historica ? 'Registro anterior' : factura.uuid_fiscal}</p><p className="text-xs text-surface-500">{factura.es_historica ? `Recibo: ${factura.pago?.numero_recibo || 'sin número'}` : ([factura.serie, factura.folio].filter(Boolean).join('-') || 'Sin folio interno')}</p></td>
                   <td className="font-semibold text-dental-600">{dinero(factura.total)}</td>
-                  <td><span className={`badge ${factura.estado === 'timbrada' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{factura.estado}</span></td>
+                  <td><span className={`badge ${factura.estado === 'timbrada' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{factura.es_historica ? 'Histórica' : factura.estado}</span></td>
                   <td><div className="flex gap-2">{factura.xml_url && <a href={factura.xml_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-primary-700"><FiDownload className="inline" /> XML</a>}{factura.pdf_url && <a href={factura.pdf_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-primary-700"><FiDownload className="inline" /> PDF</a>}{!factura.xml_url && !factura.pdf_url && <span className="text-xs text-surface-400">Sin archivos</span>}</div></td>
-                  <td>{usuario?.rol === 'administrador' && factura.estado === 'timbrada' && <button onClick={() => setFacturaCancelar(factura)} className="p-2 text-red-600" title="Registrar cancelación"><FiSlash /></button>}</td>
+                  <td>{usuario?.rol === 'administrador' && factura.estado === 'timbrada' && !factura.es_historica && <button onClick={() => setFacturaCancelar(factura)} className="p-2 text-red-600" title="Registrar cancelación"><FiSlash /></button>}</td>
                 </tr>)}</tbody>
               </table>
             </div>
 
             <div className="space-y-3 md:hidden">{filtradas.map(factura => <article key={factura.id} className="card space-y-3">
-              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-primary-900">{factura.paciente?.nombre} {factura.paciente?.apellido}</p><p className="text-xs text-surface-500">{fechaMx(factura.fecha_timbrado)}</p></div><span className={`badge ${factura.estado === 'timbrada' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{factura.estado}</span></div>
-              <div className="rounded-xl bg-surface-50 p-3 text-sm"><p>{factura.razon_social}</p><p className="text-surface-500">RFC: {factura.rfc_receptor}</p><p className="mt-1 break-all font-mono text-xs text-surface-500">UUID: {factura.uuid_fiscal}</p></div>
-              <div className="flex items-center justify-between"><strong className="text-dental-600">{dinero(factura.total)}</strong><div className="flex gap-3">{factura.xml_url && <a href={factura.xml_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary-700">XML</a>}{factura.pdf_url && <a href={factura.pdf_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary-700">PDF</a>}{usuario?.rol === 'administrador' && factura.estado === 'timbrada' && <button onClick={() => setFacturaCancelar(factura)} className="text-sm font-semibold text-red-600">Cancelar</button>}</div></div>
+              <div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-primary-900">{factura.paciente?.nombre} {factura.paciente?.apellido}</p><p className="text-xs text-surface-500">{fechaMx(factura.fecha_timbrado)}</p></div><span className={`badge ${factura.estado === 'timbrada' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{factura.es_historica ? 'Histórica' : factura.estado}</span></div>
+              <div className="rounded-xl bg-surface-50 p-3 text-sm">{factura.es_historica ? <><p className="font-medium">Registro anterior</p><p className="text-surface-500">Los datos fiscales detallados no fueron capturados.</p><p className="mt-1 text-xs text-surface-500">Recibo: {factura.pago?.numero_recibo || 'sin número'}</p></> : <><p>{factura.razon_social}</p><p className="text-surface-500">RFC: {factura.rfc_receptor}</p><p className="mt-1 break-all font-mono text-xs text-surface-500">UUID: {factura.uuid_fiscal}</p></>}</div>
+              <div className="flex items-center justify-between"><strong className="text-dental-600">{dinero(factura.total)}</strong><div className="flex gap-3">{factura.xml_url && <a href={factura.xml_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary-700">XML</a>}{factura.pdf_url && <a href={factura.pdf_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-primary-700">PDF</a>}{!factura.xml_url && !factura.pdf_url && <span className="text-xs text-surface-400">Sin archivos</span>}{usuario?.rol === 'administrador' && factura.estado === 'timbrada' && !factura.es_historica && <button onClick={() => setFacturaCancelar(factura)} className="text-sm font-semibold text-red-600">Cancelar</button>}</div></div>
               {factura.estado === 'cancelada' && <p className="rounded-lg bg-red-50 p-2 text-xs text-red-700">Motivo: {factura.motivo_cancelacion}</p>}
             </article>)}</div>
           </>}
