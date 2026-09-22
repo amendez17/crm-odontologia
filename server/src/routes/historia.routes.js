@@ -1,9 +1,10 @@
 const express = require('express');
 const crypto = require('crypto');
 const multer = require('multer');
+const { Op } = require('sequelize');
 const { almacenamientoConfigurado, subirPrivado, urlPrivadaTemporal, eliminarPrivado } = require('../services/storage');
 const { sequelize, HistoriaClinica, ArchivoHistoria, ArchivoInterpretacion, Usuario, Cita, Paciente } = require('../models');
-const { auth, esDoctor } = require('../middleware/auth');
+const { auth, esAdmin, esDoctor } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 const router = express.Router();
 
@@ -332,6 +333,129 @@ router.use((error, _req, res, next) => {
     return res.status(400).json({ error: error.code === 'LIMIT_FILE_SIZE' ? 'Cada archivo debe pesar máximo 10 MB.' : error.message });
   }
   next(error);
+});
+
+// POST /api/historia/:id/regularizar-integridad
+// Uso excepcional cuando el paciente ya fue corregido directamente en la BD.
+// No altera el contenido clínico: únicamente vuelve a sellar el registro actual
+// y conserva la razón en la bitácora de actividad.
+router.post('/:id/regularizar-integridad', auth, esAdmin, registrarActividad('regularizar_integridad', 'historia_clinica', {
+  contexto: (req, respuesta) => ({
+    paciente_id: Number(respuesta?.paciente_id) || null,
+    motivo: String(req.body?.motivo || '').trim().slice(0, 1000),
+    firma_anterior: respuesta?.firma_anterior || null,
+    firma_nueva: respuesta?.firma_nueva || null
+  })
+}), async (req, res) => {
+  try {
+    const motivo = String(req.body.motivo || '').trim();
+    if (motivo.length < 10 || motivo.length > 1000) {
+      return res.status(400).json({ error: 'Describe el motivo de la regularización (10 a 1000 caracteres).' });
+    }
+    const historia = await HistoriaClinica.findByPk(req.params.id);
+    if (!historia) return res.status(404).json({ error: 'Registro de historia clínica no encontrado.' });
+    const paciente = await Paciente.findByPk(historia.paciente_id, { attributes: ['id', 'nombre', 'apellido', 'dni'] });
+    if (!paciente) return res.status(409).json({ error: 'El paciente actual del registro no existe.' });
+    if (String(req.body.confirmacion || '').trim().toUpperCase() !== String(paciente.dni || '').trim().toUpperCase()) {
+      return res.status(400).json({ error: 'La confirmación no coincide con el número de paciente.' });
+    }
+    const firmaAnterior = historia.firma_hash;
+    const firmaNueva = firmarRegistro(historia.toJSON());
+    if (firmaAnterior && firmaAnterior === firmaNueva) {
+      return res.status(409).json({ error: 'La integridad de este registro ya está verificada.' });
+    }
+    await historia.update({ firma_hash: firmaNueva });
+    res.json({
+      mensaje: 'Integridad regularizada y registrada en auditoría.',
+      id: historia.id,
+      paciente_id: paciente.id,
+      firma_anterior: firmaAnterior,
+      firma_nueva: firmaNueva
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'No fue posible regularizar la integridad.' });
+  }
+});
+
+// POST /api/historia/:id/transferir
+// Corrige una asignación equivocada sin editar la BD manualmente. Los anexos e
+// interpretaciones conservan sus IDs y permanecen unidos a la misma historia.
+router.post('/:id/transferir', auth, esAdmin, registrarActividad('transferir', 'historia_clinica', {
+  contexto: (req, respuesta) => ({
+    paciente_origen_id: Number(respuesta?.paciente_origen_id) || null,
+    paciente_destino_id: Number(respuesta?.paciente_destino_id || req.body?.paciente_destino_id) || null,
+    motivo: String(req.body?.motivo || '').trim().slice(0, 1000),
+    firma_anterior: respuesta?.firma_anterior || null,
+    firma_nueva: respuesta?.firma_nueva || null
+  })
+}), async (req, res) => {
+  let transaction = await sequelize.transaction();
+  try {
+    const destinoId = Number(req.body.paciente_destino_id);
+    const motivo = String(req.body.motivo || '').trim();
+    if (!Number.isInteger(destinoId) || destinoId <= 0) {
+      await transaction.rollback();
+      return res.status(400).json({ error: 'Selecciona el paciente correcto.' });
+    }
+    if (motivo.length < 10 || motivo.length > 1000) {
+      await transaction.rollback();
+      return res.status(400).json({ error: 'Describe el motivo de la transferencia (10 a 1000 caracteres).' });
+    }
+    const historia = await HistoriaClinica.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE });
+    if (!historia) {
+      await transaction.rollback();
+      return res.status(404).json({ error: 'Registro de historia clínica no encontrado.' });
+    }
+    if (Number(historia.paciente_id) === destinoId) {
+      await transaction.rollback();
+      return res.status(409).json({ error: 'La historia ya pertenece a ese paciente. Usa Regularizar integridad si fue cambiada en la BD.' });
+    }
+    const [origen, destino] = await Promise.all([
+      Paciente.findByPk(historia.paciente_id, { attributes: ['id', 'nombre', 'apellido', 'dni'], transaction }),
+      Paciente.findOne({ where: { id: destinoId, activo: true }, attributes: ['id', 'nombre', 'apellido', 'dni'], transaction })
+    ]);
+    if (!destino) {
+      await transaction.rollback();
+      return res.status(404).json({ error: 'El paciente destino no existe o está inactivo.' });
+    }
+    if (String(req.body.confirmacion || '').trim().toUpperCase() !== String(destino.dni || '').trim().toUpperCase()) {
+      await transaction.rollback();
+      return res.status(400).json({ error: 'La confirmación no coincide con el número del paciente destino.' });
+    }
+
+    const previoDestino = await HistoriaClinica.findOne({
+      where: { paciente_id: destinoId, id: { [Op.ne]: historia.id } },
+      order: [['fecha_hora', 'DESC'], ['id', 'DESC']],
+      transaction
+    });
+    let citaId = historia.cita_id;
+    if (citaId) {
+      const cita = await Cita.findByPk(citaId, { attributes: ['id', 'paciente_id'], transaction });
+      if (!cita || Number(cita.paciente_id) !== destinoId) citaId = null;
+    }
+    const valores = {
+      paciente_id: destinoId,
+      cita_id: citaId,
+      registro_previo_hash: previoDestino?.firma_hash || null
+    };
+    const firmaAnterior = historia.firma_hash;
+    const firmaNueva = firmarRegistro({ ...historia.toJSON(), ...valores });
+    await historia.update({ ...valores, firma_hash: firmaNueva }, { transaction });
+    await transaction.commit();
+    transaction = null;
+    res.json({
+      mensaje: 'Historia transferida y sellada correctamente.',
+      id: historia.id,
+      paciente_origen_id: Number(origen?.id || historia.paciente_id),
+      paciente_destino_id: destino.id,
+      paciente_destino: `${destino.nombre} ${destino.apellido}`.trim(),
+      firma_anterior: firmaAnterior,
+      firma_nueva: firmaNueva
+    });
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    res.status(400).json({ error: error.message || 'No fue posible transferir la historia.' });
+  }
 });
 
 // POST /api/historia

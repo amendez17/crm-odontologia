@@ -53,6 +53,14 @@ export default function PacienteDetalle() {
   const [pasoHistoria, setPasoHistoria] = useState(1);
   const [modalAdenda, setModalAdenda] = useState(false);
   const [historiaOrigen, setHistoriaOrigen] = useState(null);
+  const [gestionHistoria, setGestionHistoria] = useState(null);
+  const [modoGestionHistoria, setModoGestionHistoria] = useState('transferir');
+  const [busquedaDestino, setBusquedaDestino] = useState('');
+  const [pacientesDestino, setPacientesDestino] = useState([]);
+  const [destinoSeleccionado, setDestinoSeleccionado] = useState(null);
+  const [motivoGestion, setMotivoGestion] = useState('');
+  const [confirmacionGestion, setConfirmacionGestion] = useState('');
+  const [guardandoGestion, setGuardandoGestion] = useState(false);
   const [modalPago, setModalPago] = useState(false);
   const [modalCita, setModalCita] = useState(false);
   const [doctores, setDoctores] = useState([]);
@@ -347,6 +355,65 @@ useEffect(() => {
       toast.success('Adenda registrada sin modificar la nota original');
     } catch (error) {
       toast.error(error.response?.data?.error || 'Error al guardar la adenda');
+    }
+  };
+
+  const abrirGestionHistoria = (historia, modo) => {
+    setGestionHistoria(historia);
+    setModoGestionHistoria(modo);
+    setBusquedaDestino('');
+    setPacientesDestino([]);
+    setDestinoSeleccionado(null);
+    setMotivoGestion('');
+    setConfirmacionGestion('');
+  };
+
+  const cerrarGestionHistoria = () => {
+    if (guardandoGestion) return;
+    setGestionHistoria(null);
+    setDestinoSeleccionado(null);
+    setPacientesDestino([]);
+  };
+
+  const buscarPacienteDestino = async () => {
+    if (busquedaDestino.trim().length < 2) return toast.error('Escribe al menos 2 caracteres');
+    try {
+      const { data } = await api.get('/pacientes', { params: { buscar: busquedaDestino.trim(), limit: 10 } });
+      setPacientesDestino((data.pacientes || []).filter(item => Number(item.id) !== Number(id)));
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'No fue posible buscar pacientes');
+    }
+  };
+
+  const confirmarGestionHistoria = async (e) => {
+    e.preventDefault();
+    if (!gestionHistoria) return;
+    if (modoGestionHistoria === 'transferir' && !destinoSeleccionado) return toast.error('Selecciona el paciente correcto');
+    setGuardandoGestion(true);
+    try {
+      if (modoGestionHistoria === 'regularizar') {
+        await api.post(`/historia/${gestionHistoria.id}/regularizar-integridad`, {
+          motivo: motivoGestion,
+          confirmacion: confirmacionGestion
+        });
+        toast.success('Integridad regularizada correctamente');
+      } else {
+        await api.post(`/historia/${gestionHistoria.id}/transferir`, {
+          paciente_destino_id: destinoSeleccionado.id,
+          motivo: motivoGestion,
+          confirmacion: confirmacionGestion
+        });
+        toast.success(`Historia transferida a ${destinoSeleccionado.nombre} ${destinoSeleccionado.apellido}`);
+      }
+      setGestionHistoria(null);
+      setDestinoSeleccionado(null);
+      setPacientesDestino([]);
+      const { data } = await api.get(`/historia/${id}`);
+      setHistorias(data);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'No fue posible completar la operación');
+    } finally {
+      setGuardandoGestion(false);
     }
   };
 
@@ -1538,6 +1605,12 @@ window.onload = () => window.print();
               {puedeModificarClinico && <button type="button" onClick={() => { setHistoriaOrigen(h); setFormAdenda({ motivo_adenda: '', diagnostico: '', tratamiento_realizado: '', piezas_tratadas: '', receta: '', notas: '' }); setModalAdenda(true); }} className="mt-3 ml-4 text-sm font-medium text-amber-700 hover:text-amber-800">
                 Agregar adenda
               </button>}
+              {usuario?.rol === 'administrador' && <button type="button" onClick={() => abrirGestionHistoria(h, 'transferir')} className="mt-3 ml-4 text-sm font-medium text-primary-700 hover:text-primary-800">
+                Transferir a otro paciente
+              </button>}
+              {usuario?.rol === 'administrador' && h.integridad_valida === false && <button type="button" onClick={() => abrirGestionHistoria(h, 'regularizar')} className="mt-3 ml-4 text-sm font-medium text-red-700 hover:text-red-800">
+                Regularizar integridad
+              </button>}
             </div>
           ))}
 
@@ -1757,6 +1830,41 @@ window.onload = () => window.print();
                 <button type="submit" className="btn-primary">Registrar adenda</button>
               </div>
             </form>
+          </Modal>
+
+          <Modal isOpen={Boolean(gestionHistoria)} onClose={cerrarGestionHistoria} title={modoGestionHistoria === 'regularizar' ? 'Regularizar integridad de la historia' : 'Transferir historia a otro paciente'} size="lg">
+            {gestionHistoria && <form onSubmit={confirmarGestionHistoria} className="space-y-4">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                {modoGestionHistoria === 'regularizar'
+                  ? <>Esta acción es únicamente para el registro #{gestionHistoria.id}, cuyo paciente ya fue corregido directamente en la base de datos. No cambia el contenido clínico; genera un nuevo sello y deja auditoría.</>
+                  : <>Se moverá únicamente el registro #{gestionHistoria.id} con sus imágenes, documentos e interpretaciones. El contenido clínico no será modificado y la operación quedará auditada.</>}
+              </div>
+              {modoGestionHistoria === 'transferir' && <>
+                <div className="flex gap-2">
+                  <input value={busquedaDestino} onChange={e => setBusquedaDestino(e.target.value)} className="input-field flex-1" placeholder="Nombre, apellido o número de paciente" />
+                  <button type="button" onClick={buscarPacienteDestino} className="btn-secondary">Buscar</button>
+                </div>
+                {pacientesDestino.length > 0 && <div className="max-h-48 space-y-2 overflow-y-auto rounded-xl border border-surface-200 p-2">
+                  {pacientesDestino.map(item => <button key={item.id} type="button" onClick={() => { setDestinoSeleccionado(item); setConfirmacionGestion(''); }} className={`w-full rounded-lg border p-3 text-left text-sm ${destinoSeleccionado?.id === item.id ? 'border-primary-500 bg-primary-50' : 'border-surface-200 hover:bg-surface-50'}`}>
+                    <span className="block font-semibold text-primary-900">{item.nombre} {item.apellido}</span>
+                    <span className="text-surface-500">Número de paciente: {item.dni}</span>
+                  </button>)}
+                </div>}
+              </>}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-surface-600">Motivo de la corrección *</label>
+                <textarea required minLength={10} maxLength={1000} rows={3} value={motivoGestion} onChange={e => setMotivoGestion(e.target.value)} className="input-field" placeholder="Ej. La nota fue capturada por error en el expediente de otro paciente." />
+              </div>
+              {(modoGestionHistoria === 'regularizar' || destinoSeleccionado) && <div>
+                <label className="mb-1 block text-sm font-medium text-surface-600">Escribe el número de paciente para confirmar *</label>
+                <input required value={confirmacionGestion} onChange={e => setConfirmacionGestion(e.target.value)} className="input-field font-mono uppercase" placeholder={modoGestionHistoria === 'regularizar' ? paciente?.dni : destinoSeleccionado?.dni} />
+                <p className="mt-1 text-xs text-surface-500">Debe coincidir con: <strong>{modoGestionHistoria === 'regularizar' ? paciente?.dni : destinoSeleccionado?.dni}</strong></p>
+              </div>}
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={cerrarGestionHistoria} className="btn-secondary">Cancelar</button>
+                <button type="submit" disabled={guardandoGestion || (modoGestionHistoria === 'transferir' && !destinoSeleccionado)} className="btn-primary disabled:opacity-50">{guardandoGestion ? 'Procesando...' : modoGestionHistoria === 'regularizar' ? 'Regularizar integridad' : 'Confirmar transferencia'}</button>
+              </div>
+            </form>}
           </Modal>
         </div>
       )}
