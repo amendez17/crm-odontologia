@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const {
-  sequelize, Usuario, Paciente, Cita, Presupuesto, Pago
+  sequelize, Usuario, Paciente, Cita, Presupuesto, Pago, CrmEtapa, CrmOportunidad, CrmTarea
 } = require('./models');
 
 const fecha = dias => {
@@ -143,8 +143,74 @@ async function ejecutar() {
       });
     }
 
+    const etapasBase = [
+      { clave: 'interesado', nombre: 'Interesado', color: '#64748b', probabilidad: 10, tipo: 'ABIERTA', orden: 1 },
+      { clave: 'contactado', nombre: 'Contactado', color: '#0ea5e9', probabilidad: 25, tipo: 'ABIERTA', orden: 2 },
+      { clave: 'presupuesto', nombre: 'Presupuesto', color: '#8b5cf6', probabilidad: 50, tipo: 'ABIERTA', orden: 3 },
+      { clave: 'seguimiento', nombre: 'Seguimiento', color: '#f59e0b', probabilidad: 70, tipo: 'ABIERTA', orden: 4 },
+      { clave: 'ganado', nombre: 'Aceptado', color: '#10b981', probabilidad: 100, tipo: 'GANADA', orden: 5 },
+      { clave: 'perdido', nombre: 'No concretado', color: '#ef4444', probabilidad: 0, tipo: 'PERDIDA', orden: 6 }
+    ];
+    const etapas = new Map();
+    for (const datos of etapasBase) {
+      const [etapa] = await CrmEtapa.findOrCreate({ where: { clave: datos.clave }, defaults: datos });
+      etapas.set(datos.clave, etapa);
+    }
+
+    const oportunidadesCrm = [
+      { dni: 'DEMO-CRM-009', etapa: 'interesado', titulo: 'Primera valoración', tratamiento: 'Consulta y diagnóstico', valor: 500, dias: 9 },
+      { dni: 'DEMO-CRM-006', etapa: 'contactado', titulo: 'Reactivar limpieza preventiva', tratamiento: 'Limpieza dental', valor: 500, dias: 5 },
+      { dni: 'DEMO-CRM-004', etapa: 'presupuesto', titulo: 'Tratamiento restaurador', tratamiento: 'Resinas estéticas', valor: 1800, dias: 14 },
+      { dni: 'DEMO-CRM-007', etapa: 'seguimiento', titulo: 'Inicio de ortodoncia', tratamiento: 'Ortodoncia', valor: 3000, dias: 20 },
+      { dni: 'DEMO-CRM-003', etapa: 'ganado', titulo: 'Blanqueamiento aceptado', tratamiento: 'Blanqueamiento dental', valor: 1000, dias: -2 }
+    ];
+    for (let i = 0; i < oportunidadesCrm.length; i += 1) {
+      const datos = oportunidadesCrm[i];
+      const paciente = pacientes.get(datos.dni);
+      const etapa = etapas.get(datos.etapa);
+      await CrmOportunidad.findOrCreate({
+        where: { paciente_id: paciente.id, titulo: datos.titulo },
+        defaults: {
+          etapa_id: etapa.id,
+          responsable_id: doctores[i % doctores.length].id,
+          creado_por_id: doctores[i % doctores.length].id,
+          tratamiento_interes: datos.tratamiento,
+          valor: datos.valor,
+          origen: i % 2 ? 'WhatsApp' : 'Facebook',
+          cierre_estimado: fecha(datos.dias),
+          estado: etapa.tipo,
+          orden: 1,
+          cerrado_en: etapa.tipo === 'ABIERTA' ? null : new Date(),
+          notas: 'Oportunidad ficticia para probar el pipeline CRM.'
+        }
+      });
+    }
+
+    const tareasDemo = [
+      { dni: 'DEMO-CRM-006', titulo: 'Enviar recordatorio de limpieza', tipo: 'WHATSAPP', prioridad: 'ALTA', dias: 1 },
+      { dni: 'DEMO-CRM-004', titulo: 'Dar seguimiento al presupuesto', tipo: 'LLAMADA', prioridad: 'MEDIA', dias: 2 },
+      { dni: 'DEMO-CRM-007', titulo: 'Confirmar decisión sobre ortodoncia', tipo: 'SEGUIMIENTO', prioridad: 'ALTA', dias: 3 },
+      { dni: 'DEMO-CRM-001', titulo: 'Confirmar próxima cita', tipo: 'WHATSAPP', prioridad: 'MEDIA', dias: 1 }
+    ];
+    for (let i = 0; i < tareasDemo.length; i += 1) {
+      const datos = tareasDemo[i];
+      const paciente = pacientes.get(datos.dni);
+      await CrmTarea.findOrCreate({
+        where: { paciente_id: paciente.id, titulo: datos.titulo },
+        defaults: {
+          asignado_id: doctores[i % doctores.length].id,
+          creado_por_id: doctores[i % doctores.length].id,
+          tipo: datos.tipo,
+          prioridad: datos.prioridad,
+          vence: `${fecha(datos.dias)} 10:00:00`,
+          estado: 'PENDIENTE',
+          notas: 'Tarea ficticia para probar el seguimiento CRM.'
+        }
+      });
+    }
+
     console.log('\nDatos CRM de demostración creados correctamente.');
-    console.log('10 pacientes ficticios, visitas, citas futuras, pagos y oportunidades.');
+    console.log('10 pacientes ficticios, visitas, citas futuras, pagos, pipeline y tareas.');
     console.log('Puedes ejecutar este comando nuevamente sin duplicar los registros.');
     process.exit(0);
   } catch (error) {

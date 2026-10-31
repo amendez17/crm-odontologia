@@ -1,6 +1,6 @@
 const express = require('express');
 const { Op, fn, col } = require('sequelize');
-const { Paciente, Cita, Pago, Presupuesto, Usuario } = require('../models');
+const { Paciente, Cita, Pago, Presupuesto, Usuario, CrmOportunidad, CrmEtapa, CrmTarea } = require('../models');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -88,6 +88,19 @@ router.get('/resumen', auth, async (_req, res) => {
       })
     ]);
 
+    const [pipelineCrm, tareasCrm] = await Promise.all([
+      CrmOportunidad.findAll({
+        where: { estado: 'ABIERTA' },
+        include: [{ model: CrmEtapa, as: 'etapa', attributes: ['probabilidad'] }]
+      }),
+      CrmTarea.findAll({
+        where: { estado: 'PENDIENTE' },
+        include: [{ model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido', 'telefono'] }],
+        order: [['vence', 'ASC']],
+        limit: 6
+      })
+    ]);
+
     const visitaPorPaciente = new Map(visitas.map(v => [Number(v.paciente_id), {
       cantidad: Number(v.cantidad || 0),
       ultimaVisita: v.ultima_visita,
@@ -155,12 +168,15 @@ router.get('/resumen', auth, async (_req, res) => {
         valor_por_cliente: clientesConPago ? totalIngresos / clientesConPago : 0,
         ticket_promedio: totalPagos ? totalIngresos / totalPagos : 0,
         clientes_riesgo: clasificados.filter(p => p.segmento === 'riesgo').length,
-        pipeline_valor: pipeline.reduce((suma, oportunidad) => suma + Number(oportunidad.total || 0), 0),
-        pipeline_cantidad: pipeline.length
+        pipeline_valor: pipelineCrm.length
+          ? pipelineCrm.reduce((suma, oportunidad) => suma + Number(oportunidad.valor || 0) * Number(oportunidad.etapa?.probabilidad || 0) / 100, 0)
+          : pipeline.reduce((suma, oportunidad) => suma + Number(oportunidad.total || 0), 0),
+        pipeline_cantidad: pipelineCrm.length || pipeline.length
       },
       segmentos,
       requieren_atencion: requierenAtencion,
       agenda,
+      tareas: tareasCrm,
       cumpleanios,
       mejores_clientes: mejoresClientes
     });

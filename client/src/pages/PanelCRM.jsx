@@ -160,7 +160,7 @@ export default function PanelCRM() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-          <EncabezadoTarjeta titulo="Pipeline de atención" subtitulo="Presupuestos y tratamientos en curso" enlace="/presupuestos" textoEnlace="Abrir pipeline" />
+          <EncabezadoTarjeta titulo="Pipeline de atención" subtitulo="Pacientes y tratamientos en seguimiento" enlace="/crm/pipeline" textoEnlace="Abrir pipeline" />
           <div className="grid grid-cols-2 gap-3"><div className="rounded-xl bg-primary-50 p-4 text-center"><p className="text-2xl font-extrabold text-primary-800">{metricas.pipeline_cantidad}</p><p className="text-[10px] uppercase tracking-wide text-primary-500">Oportunidades</p></div><div className="rounded-xl bg-emerald-50 p-4 text-center"><p className="truncate text-lg font-extrabold text-emerald-800">{moneda.format(metricas.pipeline_valor)}</p><p className="text-[10px] uppercase tracking-wide text-emerald-600">Valor total</p></div></div>
         </section>
 

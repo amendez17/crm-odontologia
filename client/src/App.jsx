@@ -17,6 +17,8 @@ import Actividad from './pages/Actividad';
 import Mantenimiento from './pages/Mantenimiento';
 import Facturas from './pages/Facturas';
 import PanelCRM from './pages/PanelCRM';
+import PipelineCRM from './pages/PipelineCRM';
+import TareasCRM from './pages/TareasCRM';
 
 /*function PrivateRoute({ children }) {
   const { usuario, loading } = useAuth();
@@ -58,6 +60,8 @@ export default function App() {
 
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="crm" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><PanelCRM /></PrivateRoute>} />
+          <Route path="crm/pipeline" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><PipelineCRM /></PrivateRoute>} />
+          <Route path="crm/tareas" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><TareasCRM /></PrivateRoute>} />
           <Route path="pacientes" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <Pacientes /> </PrivateRoute> }/>
           <Route path="pacientes/:id" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <PacienteDetalle /> </PrivateRoute>}/>
           <Route path="citas" element={  <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}>    <Citas />  </PrivateRoute> }/>  

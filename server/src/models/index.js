@@ -18,6 +18,11 @@ const Receta = require('./Receta')(sequelize, require('sequelize').DataTypes);
 const Periodontograma = require('./Periodontograma');
 const EntregaExpediente = require('./EntregaExpediente');
 const Factura = require('./Factura');
+const CrmEtapa = require('./CrmEtapa');
+const CrmOportunidad = require('./CrmOportunidad');
+const CrmTarea = require('./CrmTarea');
+const CrmNota = require('./CrmNota');
+const CrmPerfil = require('./CrmPerfil');
 
 // --- Asociaciones ---
 
@@ -120,6 +125,29 @@ Receta.belongsTo(Usuario, {
   foreignKey: 'usuarioId',
   as: 'doctor'
 });
+
+// CRM: datos comerciales separados del expediente clínico
+Paciente.hasOne(CrmPerfil, { foreignKey: 'paciente_id', as: 'crmPerfil', onDelete: 'CASCADE' });
+CrmPerfil.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+CrmPerfil.belongsTo(Usuario, { foreignKey: 'responsable_id', as: 'responsable' });
+
+Paciente.hasMany(CrmOportunidad, { foreignKey: 'paciente_id', as: 'crmOportunidades' });
+CrmOportunidad.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+CrmEtapa.hasMany(CrmOportunidad, { foreignKey: 'etapa_id', as: 'oportunidades' });
+CrmOportunidad.belongsTo(CrmEtapa, { foreignKey: 'etapa_id', as: 'etapa' });
+CrmOportunidad.belongsTo(Usuario, { foreignKey: 'responsable_id', as: 'responsable' });
+CrmOportunidad.belongsTo(Usuario, { foreignKey: 'creado_por_id', as: 'creadoPor' });
+
+Paciente.hasMany(CrmTarea, { foreignKey: 'paciente_id', as: 'crmTareas' });
+CrmTarea.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+CrmOportunidad.hasMany(CrmTarea, { foreignKey: 'oportunidad_id', as: 'tareas' });
+CrmTarea.belongsTo(CrmOportunidad, { foreignKey: 'oportunidad_id', as: 'oportunidad' });
+CrmTarea.belongsTo(Usuario, { foreignKey: 'asignado_id', as: 'asignado' });
+CrmTarea.belongsTo(Usuario, { foreignKey: 'creado_por_id', as: 'creadoPor' });
+
+Paciente.hasMany(CrmNota, { foreignKey: 'paciente_id', as: 'crmNotas' });
+CrmNota.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+CrmNota.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
 module.exports = {
   sequelize,
   Usuario,
@@ -140,5 +168,10 @@ module.exports = {
   Receta,
   Periodontograma,
   EntregaExpediente,
-  Factura
+  Factura,
+  CrmEtapa,
+  CrmOportunidad,
+  CrmTarea,
+  CrmNota,
+  CrmPerfil
 };

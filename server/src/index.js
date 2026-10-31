@@ -78,6 +78,7 @@ app.use('/api/pagos', require('./routes/pagos.routes'));
 app.use('/api/historia', require('./routes/historia.routes'));
 app.use('/api/dashboard', require('./routes/dashboard.routes'));
 app.use('/api/crm', require('./routes/crm.routes'));
+app.use('/api/crm', require('./routes/crm-operaciones.routes'));
 app.use('/api/reportes', require('./routes/reportes.routes'));
 app.use('/api/configuracion', require('./routes/configuracion.routes'));
 app.use('/api/exportar', require('./routes/exportar.routes'));

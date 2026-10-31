@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import socket from '../socket';
@@ -9,13 +9,17 @@ import {
   FiHome, FiUsers, FiCalendar, FiClipboard, FiFileText, FiDollarSign,
   FiSettings, FiLogOut, FiMenu, FiX, FiBarChart2, FiBell, FiLock,
   FiSliders, FiSearch, FiActivity, FiChevronsLeft, FiChevronsRight, FiShield,
-  FiPhone, FiTarget
+  FiPhone, FiTarget, FiChevronDown, FiCircle
 } from 'react-icons/fi';
 
 const navItems = [
   { to: '/dashboard', icon: FiHome, label: 'Dashboard', end: true, roles: ["administrador", "doctor", "recepcionista"] },
   { to: '/pacientes', icon: FiUsers, label: 'Pacientes', roles: ["administrador", "doctor", "recepcionista"] },
-  { to: '/crm', icon: FiTarget, label: 'CRM', roles: ["administrador", "doctor", "recepcionista"] },
+  { icon: FiTarget, label: 'CRM', roles: ["administrador", "doctor", "recepcionista"], children: [
+    { to: '/crm', label: 'Panel CRM', end: true },
+    { to: '/crm/pipeline', label: 'Pipeline de atención' },
+    { to: '/crm/tareas', label: 'Tareas y seguimiento' }
+  ] },
   { to: '/citas', icon: FiCalendar, label: 'Citas', roles: ["administrador", "doctor", "recepcionista"] },
   { to: '/tratamientos', icon: FiClipboard, label: 'Tratamientos', roles: ["administrador", "doctor"] },
   { to: '/presupuestos', icon: FiFileText, label: 'Presupuestos', roles: ["administrador", "doctor"] },
@@ -30,6 +34,7 @@ const navItems = [
 export default function Layout() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen]       = useState(false);
   const [collapsed, setCollapsed]           = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
   const [notificaciones, setNotificaciones] = useState([]);
@@ -39,6 +44,11 @@ export default function Layout() {
   const [busqueda, setBusqueda]             = useState('');
   const [resultados, setResultados]         = useState([]);
   const [showBusqueda, setShowBusqueda]     = useState(false);
+  const [crmOpen, setCrmOpen]               = useState(() => location.pathname.startsWith('/crm'));
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/crm')) setCrmOpen(true);
+  }, [location.pathname]);
 
   const toggleCollapse = () => {
     const next = !collapsed;
@@ -207,21 +217,43 @@ export default function Layout() {
 </div>
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
-          {navItems.filter(item => item.roles.includes(usuario?.rol)) .map(({ to, icon: Icon, label, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
+          {navItems.filter(item => item.roles.includes(usuario?.rol)).map(item => {
+            const Icon = item.icon;
+            if (item.children) {
+              const activo = location.pathname.startsWith('/crm');
+              return <div key={item.label}>
+                <button
+                  onClick={() => { if (collapsed) navigate('/crm'); else setCrmOpen(abierto => !abierto); }}
+                  title={collapsed ? item.label : undefined}
+                  className={`nav-item w-full ${activo ? 'nav-item-active' : 'nav-item-inactive'} ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
+                >
+                  <Icon size={19} className="flex-shrink-0" />
+                  <span className={`flex-1 truncate text-left ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
+                  <FiChevronDown size={15} className={`${collapsed ? 'lg:hidden' : ''} transition-transform ${crmOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {crmOpen && <div className={`ml-5 mt-1 space-y-0.5 border-l border-white/15 pl-2 ${collapsed ? 'lg:hidden' : ''}`}>
+                  {item.children.map(child => <NavLink
+                    key={child.to}
+                    to={child.to}
+                    end={child.end}
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) => `flex items-center gap-2 rounded-xl px-3 py-2 text-xs transition ${isActive ? 'bg-white/15 font-semibold text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'}`}
+                  ><FiCircle size={7} className="fill-current" /><span className="truncate">{child.label}</span></NavLink>)}
+                </div>}
+              </div>;
+            }
+            return <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
               onClick={() => setSidebarOpen(false)}
-              title={collapsed ? label : undefined}
-              className={({ isActive }) =>
-                `nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${collapsed ? 'lg:justify-center lg:px-0' : ''}`
-              }
+              title={collapsed ? item.label : undefined}
+              className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : 'nav-item-inactive'} ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
             >
               <Icon size={19} className="flex-shrink-0" />
-              <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>{label}</span>
-            </NavLink>
-          ))}
+              <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
+            </NavLink>;
+          })}
         </nav>
 
         {/* Bottom: cambiar clave + logout + collapse toggle */}
