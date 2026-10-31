@@ -16,6 +16,7 @@ import Configuracion from './pages/Configuracion';
 import Actividad from './pages/Actividad';
 import Mantenimiento from './pages/Mantenimiento';
 import Facturas from './pages/Facturas';
+import PanelCRM from './pages/PanelCRM';
 
 /*function PrivateRoute({ children }) {
   const { usuario, loading } = useAuth();
@@ -56,6 +57,7 @@ export default function App() {
           <Route index element={<Navigate to="/citas" replace />} />
 
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="crm" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><PanelCRM /></PrivateRoute>} />
           <Route path="pacientes" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <Pacientes /> </PrivateRoute> }/>
           <Route path="pacientes/:id" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <PacienteDetalle /> </PrivateRoute>}/>
           <Route path="citas" element={  <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}>    <Citas />  </PrivateRoute> }/>  

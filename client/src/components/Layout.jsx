@@ -9,12 +9,13 @@ import {
   FiHome, FiUsers, FiCalendar, FiClipboard, FiFileText, FiDollarSign,
   FiSettings, FiLogOut, FiMenu, FiX, FiBarChart2, FiBell, FiLock,
   FiSliders, FiSearch, FiActivity, FiChevronsLeft, FiChevronsRight, FiShield,
-  FiPhone
+  FiPhone, FiTarget
 } from 'react-icons/fi';
 
 const navItems = [
   { to: '/dashboard', icon: FiHome, label: 'Dashboard', end: true, roles: ["administrador", "doctor", "recepcionista"] },
   { to: '/pacientes', icon: FiUsers, label: 'Pacientes', roles: ["administrador", "doctor", "recepcionista"] },
+  { to: '/crm', icon: FiTarget, label: 'CRM', roles: ["administrador", "doctor", "recepcionista"] },
   { to: '/citas', icon: FiCalendar, label: 'Citas', roles: ["administrador", "doctor", "recepcionista"] },
   { to: '/tratamientos', icon: FiClipboard, label: 'Tratamientos', roles: ["administrador", "doctor"] },
   { to: '/presupuestos', icon: FiFileText, label: 'Presupuestos', roles: ["administrador", "doctor"] },

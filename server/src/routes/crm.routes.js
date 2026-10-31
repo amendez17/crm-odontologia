@@ -1,0 +1,172 @@
+const express = require('express');
+const { Op, fn, col } = require('sequelize');
+const { Paciente, Cita, Pago, Presupuesto, Usuario } = require('../models');
+const { auth } = require('../middleware/auth');
+
+const router = express.Router();
+
+const fechaLocal = (date = new Date()) => new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Mazatlan'
+}).format(date);
+
+const sumarDias = (date, dias) => {
+  const copia = new Date(date);
+  copia.setDate(copia.getDate() + dias);
+  return copia;
+};
+
+const diasDesde = (fecha) => {
+  if (!fecha) return null;
+  const hoy = new Date(`${fechaLocal()}T12:00:00`);
+  const anterior = new Date(`${fecha}T12:00:00`);
+  return Math.max(0, Math.floor((hoy - anterior) / 86400000));
+};
+
+const proximoCumpleanios = (fechaNacimiento) => {
+  if (!fechaNacimiento) return null;
+  const hoy = new Date(`${fechaLocal()}T12:00:00`);
+  const nacimiento = new Date(`${fechaNacimiento}T12:00:00`);
+  let proximo = new Date(hoy.getFullYear(), nacimiento.getMonth(), nacimiento.getDate(), 12);
+  if (proximo < hoy) proximo = new Date(hoy.getFullYear() + 1, nacimiento.getMonth(), nacimiento.getDate(), 12);
+  return { fecha: fechaLocal(proximo), dias: Math.ceil((proximo - hoy) / 86400000) };
+};
+
+router.get('/resumen', auth, async (_req, res) => {
+  try {
+    const hoy = fechaLocal();
+    const hasta = fechaLocal(sumarDias(new Date(), 30));
+
+    const [pacientes, visitas, pagos, futuras, agenda, pipeline] = await Promise.all([
+      Paciente.findAll({
+        where: { activo: true },
+        attributes: ['id', 'nombre', 'apellido', 'telefono', 'fecha_nacimiento', 'createdAt'],
+        raw: true
+      }),
+      Cita.findAll({
+        where: { estado: 'completada' },
+        attributes: [
+          'paciente_id',
+          [fn('COUNT', col('id')), 'cantidad'],
+          [fn('MAX', col('fecha')), 'ultima_visita']
+        ],
+        group: ['paciente_id'],
+        raw: true
+      }),
+      Pago.findAll({
+        attributes: [
+          'paciente_id',
+          [fn('COUNT', col('id')), 'cantidad'],
+          [fn('SUM', col('monto')), 'total']
+        ],
+        group: ['paciente_id'],
+        raw: true
+      }),
+      Cita.findAll({
+        where: {
+          fecha: { [Op.gte]: hoy },
+          estado: { [Op.in]: ['programada', 'confirmada', 'en_curso'] }
+        },
+        attributes: ['paciente_id'],
+        raw: true
+      }),
+      Cita.findAll({
+        where: {
+          fecha: { [Op.between]: [hoy, hasta] },
+          estado: { [Op.in]: ['programada', 'confirmada', 'en_curso'] }
+        },
+        include: [
+          { model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido', 'telefono'] },
+          { model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] }
+        ],
+        order: [['fecha', 'ASC'], ['hora_inicio', 'ASC']],
+        limit: 8
+      }),
+      Presupuesto.findAll({
+        where: { estado: { [Op.in]: ['pendiente', 'aceptado', 'en_curso'] } },
+        attributes: ['id', 'estado', 'total'],
+        raw: true
+      })
+    ]);
+
+    const visitaPorPaciente = new Map(visitas.map(v => [Number(v.paciente_id), {
+      cantidad: Number(v.cantidad || 0),
+      ultimaVisita: v.ultima_visita,
+      dias: diasDesde(v.ultima_visita)
+    }]));
+    const pagoPorPaciente = new Map(pagos.map(p => [Number(p.paciente_id), {
+      cantidad: Number(p.cantidad || 0),
+      total: Number(p.total || 0)
+    }]));
+    const conCitaFutura = new Set(futuras.map(c => Number(c.paciente_id)));
+
+    const pacientesConVisita = visitas.length;
+    const pacientesRecurrentes = visitas.filter(v => Number(v.cantidad) >= 2).length;
+    const totalIngresos = pagos.reduce((suma, pago) => suma + Number(pago.total || 0), 0);
+    const totalPagos = pagos.reduce((suma, pago) => suma + Number(pago.cantidad || 0), 0);
+    const clientesConPago = pagos.length;
+
+    const clasificados = pacientes.map(paciente => {
+      const visita = visitaPorPaciente.get(Number(paciente.id));
+      const pago = pagoPorPaciente.get(Number(paciente.id));
+      const riesgo = Boolean(visita && visita.dias >= 120 && !conCitaFutura.has(Number(paciente.id)));
+      let segmento = 'activos';
+      if (!visita) segmento = 'prospectos';
+      else if (riesgo) segmento = 'riesgo';
+      else if (visita.cantidad >= 3 && visita.dias <= 180) segmento = 'frecuentes';
+      return { ...paciente, visita, pago, segmento };
+    });
+
+    const segmentos = ['frecuentes', 'activos', 'riesgo', 'prospectos'].map(nombre => ({
+      nombre,
+      cantidad: clasificados.filter(p => p.segmento === nombre).length
+    }));
+
+    const requierenAtencion = clasificados
+      .filter(p => p.segmento === 'riesgo')
+      .sort((a, b) => (b.visita?.dias || 0) - (a.visita?.dias || 0))
+      .slice(0, 6)
+      .map(p => ({
+        id: p.id,
+        nombre: p.nombre,
+        apellido: p.apellido,
+        telefono: p.telefono,
+        dias_sin_visita: p.visita.dias,
+        ultima_visita: p.visita.ultimaVisita,
+        valor_historico: p.pago?.total || 0
+      }));
+
+    const mejoresClientes = clasificados
+      .filter(p => p.pago?.total > 0)
+      .sort((a, b) => b.pago.total - a.pago.total)
+      .slice(0, 5)
+      .map(p => ({ id: p.id, nombre: p.nombre, apellido: p.apellido, total: p.pago.total, visitas: p.visita?.cantidad || 0 }));
+
+    const cumpleanios = pacientes
+      .map(p => ({ ...p, proximo: proximoCumpleanios(p.fecha_nacimiento) }))
+      .filter(p => p.proximo && p.proximo.dias <= 14)
+      .sort((a, b) => a.proximo.dias - b.proximo.dias)
+      .slice(0, 6)
+      .map(p => ({ id: p.id, nombre: p.nombre, apellido: p.apellido, fecha: p.proximo.fecha, dias: p.proximo.dias }));
+
+    res.json({
+      metricas: {
+        clientes_activos: pacientes.length,
+        tasa_recompra: pacientesConVisita ? Math.round((pacientesRecurrentes / pacientesConVisita) * 100) : 0,
+        valor_por_cliente: clientesConPago ? totalIngresos / clientesConPago : 0,
+        ticket_promedio: totalPagos ? totalIngresos / totalPagos : 0,
+        clientes_riesgo: clasificados.filter(p => p.segmento === 'riesgo').length,
+        pipeline_valor: pipeline.reduce((suma, oportunidad) => suma + Number(oportunidad.total || 0), 0),
+        pipeline_cantidad: pipeline.length
+      },
+      segmentos,
+      requieren_atencion: requierenAtencion,
+      agenda,
+      cumpleanios,
+      mejores_clientes: mejoresClientes
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+module.exports = router;
