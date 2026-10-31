@@ -20,7 +20,8 @@ const navItems = [
     { to: '/crm/pacientes', label: 'Pacientes 360°' },
     { to: '/crm/segmentos', label: 'Segmentos RFM' },
     { to: '/crm/pipeline', label: 'Pipeline de atención' },
-    { to: '/crm/tareas', label: 'Tareas y seguimiento' }
+    { to: '/crm/tareas', label: 'Tareas y seguimiento' },
+    { to: '/crm/campanas', label: 'Campañas' }
   ] },
   { to: '/citas', icon: FiCalendar, label: 'Citas', roles: ["administrador", "doctor", "recepcionista"] },
   { to: '/tratamientos', icon: FiClipboard, label: 'Tratamientos', roles: ["administrador", "doctor"] },

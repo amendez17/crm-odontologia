@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const {
-  sequelize, Usuario, Paciente, Cita, Presupuesto, Pago, CrmEtapa, CrmOportunidad, CrmTarea
+  sequelize, Usuario, Paciente, Cita, Presupuesto, Pago, CrmEtapa, CrmOportunidad, CrmTarea, CrmPerfil
 } = require('./models');
 
 const fecha = dias => {
@@ -68,6 +68,12 @@ async function ejecutar() {
         defaults: { ...datos, genero: 'otro', direccion: 'Registro ficticio para pruebas CRM', activo: true }
       });
       pacientes.set(datos.dni, paciente);
+      const [perfil] = await CrmPerfil.findOrCreate({ where: { paciente_id: paciente.id }, defaults: { paciente_id: paciente.id } });
+      await perfil.update({
+        acepta_marketing: !['DEMO-CRM-009', 'DEMO-CRM-010'].includes(datos.dni),
+        origen: Number(datos.dni.slice(-1)) % 2 ? 'Recomendación' : 'Redes sociales',
+        responsable_id: doctores[Number(datos.dni.slice(-1)) % doctores.length].id
+      });
     }
 
     let indiceDoctor = 0;

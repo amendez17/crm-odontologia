@@ -2,7 +2,8 @@ const express = require('express');
 const { Op } = require('sequelize');
 const {
   sequelize, Paciente, Usuario, Cita, Pago, Presupuesto,
-  CrmEtapa, CrmOportunidad, CrmTarea, CrmNota, CrmPerfil
+  CrmEtapa, CrmOportunidad, CrmTarea, CrmNota, CrmPerfil,
+  CrmCampana, CrmCampanaDestinatario, CrmPlantillaCampana
 } = require('../models');
 const { auth } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
@@ -99,6 +100,35 @@ async function construirPacientes360() {
   });
 }
 
+const PLANTILLAS_BASE = [
+  { nombre: 'Reactivación', mensaje: 'Hola {nombre}, en Clínica Dental Almar queremos ayudarte a retomar el cuidado de tu salud dental. ¿Te gustaría agendar una valoración?' },
+  { nombre: 'Limpieza preventiva', mensaje: 'Hola {nombre}, te recordamos que es buen momento para programar tu limpieza dental preventiva en Clínica Dental Almar. ¿Deseas que te ayudemos a agendar?' },
+  { nombre: 'Seguimiento de presupuesto', mensaje: 'Hola {nombre}, damos seguimiento a tu propuesta de tratamiento en Clínica Dental Almar. Si tienes dudas, con gusto podemos ayudarte.' },
+  { nombre: 'Cumpleaños', mensaje: '¡Hola {nombre}! Clínica Dental Almar te desea un feliz cumpleaños. Esperamos que disfrutes mucho tu día.' }
+];
+
+async function asegurarPlantillas() {
+  for (const plantilla of PLANTILLAS_BASE) {
+    await CrmPlantillaCampana.findOrCreate({ where: { nombre: plantilla.nombre }, defaults: plantilla });
+  }
+  return CrmPlantillaCampana.findAll({ where: { activo: true }, order: [['nombre', 'ASC']] });
+}
+
+function resumenCampana(campana) {
+  const datos = campana.toJSON ? campana.toJSON() : campana;
+  const destinatarios = datos.destinatarios || [];
+  return {
+    ...datos,
+    metricas: {
+      destinatarios: destinatarios.length,
+      enviados: destinatarios.filter(d => ['ENVIADO', 'RESPONDIO', 'CITA'].includes(d.estado)).length,
+      respuestas: destinatarios.filter(d => ['RESPONDIO', 'CITA'].includes(d.estado)).length,
+      citas: destinatarios.filter(d => d.estado === 'CITA').length,
+      ingresos: destinatarios.reduce((suma, d) => suma + Number(d.ingreso_atribuido || 0), 0)
+    }
+  };
+}
+
 const ETAPAS = [
   { clave: 'interesado', nombre: 'Interesado', color: '#64748b', probabilidad: 10, tipo: 'ABIERTA', orden: 1 },
   { clave: 'contactado', nombre: 'Contactado', color: '#0ea5e9', probabilidad: 25, tipo: 'ABIERTA', orden: 2 },
@@ -120,6 +150,160 @@ const incluirOportunidad = [
   { model: CrmEtapa, as: 'etapa' },
   { model: Usuario, as: 'responsable', attributes: ['id', 'nombre', 'apellido'] }
 ];
+
+router.get('/plantillas-campana', auth, async (_req, res) => {
+  try {
+    res.json(await asegurarPlantillas());
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/campanas', auth, async (_req, res) => {
+  try {
+    const campanas = await CrmCampana.findAll({
+      include: [
+        { model: Usuario, as: 'creadoPor', attributes: ['id', 'nombre', 'apellido'] },
+        { model: CrmCampanaDestinatario, as: 'destinatarios', attributes: ['id', 'estado', 'ingreso_atribuido'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(campanas.map(resumenCampana));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/campanas/:id', auth, async (req, res) => {
+  try {
+    const campana = await CrmCampana.findByPk(req.params.id, {
+      include: [
+        { model: Usuario, as: 'creadoPor', attributes: ['id', 'nombre', 'apellido'] },
+        {
+          model: CrmCampanaDestinatario,
+          as: 'destinatarios',
+          include: [{ model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido', 'telefono'] }]
+        }
+      ],
+      order: [[{ model: CrmCampanaDestinatario, as: 'destinatarios' }, 'id', 'ASC']]
+    });
+    if (!campana) return res.status(404).json({ error: 'Campaña no encontrada.' });
+    res.json(resumenCampana(campana));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/campanas/previsualizar', auth, async (req, res) => {
+  try {
+    const segmento = String(req.body.segmento || 'todos');
+    const pacientes = (await construirPacientes360()).filter(paciente =>
+      paciente.telefono && paciente.acepta_marketing && (segmento === 'todos' || paciente.segmento.clave === segmento)
+    );
+    res.json({
+      cantidad: pacientes.length,
+      pacientes: pacientes.slice(0, 10).map(p => ({ id: p.id, nombre: p.nombre, apellido: p.apellido, telefono: p.telefono, segmento: p.segmento }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/campanas', auth, registrarActividad('crear', 'crm_campana'), async (req, res) => {
+  const transaccion = await sequelize.transaction();
+  try {
+    const nombre = String(req.body.nombre || '').trim();
+    const mensaje = String(req.body.mensaje || '').trim();
+    const segmento = String(req.body.segmento || '').trim();
+    if (!nombre || !mensaje || !segmento) {
+      await transaccion.rollback();
+      return res.status(400).json({ error: 'Nombre, segmento y mensaje son obligatorios.' });
+    }
+    const segmentosValidos = ['todos', ...Object.keys(CATALOGO_SEGMENTOS)];
+    if (!segmentosValidos.includes(segmento)) {
+      await transaccion.rollback();
+      return res.status(400).json({ error: 'Segmento no válido.' });
+    }
+    const elegibles = (await construirPacientes360()).filter(paciente =>
+      paciente.telefono && paciente.acepta_marketing && (segmento === 'todos' || paciente.segmento.clave === segmento)
+    );
+    if (!elegibles.length) {
+      await transaccion.rollback();
+      return res.status(400).json({ error: 'No hay pacientes con teléfono y autorización de marketing en este segmento.' });
+    }
+    const campana = await CrmCampana.create({
+      creado_por_id: req.usuario.id,
+      plantilla_id: req.body.plantilla_id || null,
+      nombre: nombre.slice(0, 160),
+      segmento,
+      mensaje: mensaje.slice(0, 5000),
+      estado: 'BORRADOR'
+    }, { transaction: transaccion });
+    await CrmCampanaDestinatario.bulkCreate(elegibles.map(paciente => ({ campana_id: campana.id, paciente_id: paciente.id })), { transaction: transaccion });
+    await transaccion.commit();
+    res.status(201).json({ id: campana.id, destinatarios: elegibles.length });
+  } catch (error) {
+    await transaccion.rollback();
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put('/campanas/:id/lanzar', auth, registrarActividad('lanzar', 'crm_campana'), async (req, res) => {
+  try {
+    const campana = await CrmCampana.findByPk(req.params.id);
+    if (!campana) return res.status(404).json({ error: 'Campaña no encontrada.' });
+    if (campana.estado !== 'BORRADOR') return res.status(400).json({ error: 'Sólo se puede lanzar una campaña en borrador.' });
+    await campana.update({ estado: 'ACTIVA', lanzada_en: new Date() });
+    res.json(campana);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put('/campanas/:id/finalizar', auth, registrarActividad('finalizar', 'crm_campana'), async (req, res) => {
+  try {
+    const campana = await CrmCampana.findByPk(req.params.id);
+    if (!campana) return res.status(404).json({ error: 'Campaña no encontrada.' });
+    if (campana.estado !== 'ACTIVA') return res.status(400).json({ error: 'La campaña no está activa.' });
+    await campana.update({ estado: 'FINALIZADA', finalizada_en: new Date() });
+    res.json(campana);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put('/campanas/destinatarios/:id/estado', auth, registrarActividad('actualizar', 'crm_destinatario'), async (req, res) => {
+  try {
+    const destinatario = await CrmCampanaDestinatario.findByPk(req.params.id, { include: [{ model: CrmCampana, as: 'campana' }] });
+    if (!destinatario) return res.status(404).json({ error: 'Destinatario no encontrado.' });
+    if (destinatario.campana?.estado !== 'ACTIVA') return res.status(400).json({ error: 'La campaña debe estar activa.' });
+    const estado = String(req.body.estado || '');
+    if (!['ENVIADO', 'RESPONDIO', 'CITA', 'NO_CONTACTAR', 'ERROR'].includes(estado)) return res.status(400).json({ error: 'Estado no válido.' });
+    const ahora = new Date();
+    await destinatario.update({
+      estado,
+      enviado_en: ['ENVIADO', 'RESPONDIO', 'CITA'].includes(estado) ? destinatario.enviado_en || ahora : destinatario.enviado_en,
+      respondido_en: ['RESPONDIO', 'CITA'].includes(estado) ? destinatario.respondido_en || ahora : destinatario.respondido_en,
+      ingreso_atribuido: estado === 'CITA' ? Math.max(Number(req.body.ingreso_atribuido || destinatario.ingreso_atribuido || 0), 0) : destinatario.ingreso_atribuido,
+      notas: req.body.notas === undefined ? destinatario.notas : String(req.body.notas || '').slice(0, 500)
+    });
+    res.json(destinatario);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.delete('/campanas/:id', auth, registrarActividad('eliminar', 'crm_campana'), async (req, res) => {
+  try {
+    const campana = await CrmCampana.findByPk(req.params.id);
+    if (!campana) return res.status(404).json({ error: 'Campaña no encontrada.' });
+    if (campana.estado !== 'BORRADOR') return res.status(400).json({ error: 'Sólo se puede eliminar una campaña en borrador.' });
+    await campana.destroy();
+    res.json({ message: 'Campaña eliminada.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 router.get('/pacientes-360', auth, async (req, res) => {
   try {

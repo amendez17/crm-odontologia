@@ -1,6 +1,9 @@
 const express = require('express');
 const { Op, fn, col } = require('sequelize');
-const { Paciente, Cita, Pago, Presupuesto, Usuario, CrmOportunidad, CrmEtapa, CrmTarea } = require('../models');
+const {
+  Paciente, Cita, Pago, Presupuesto, Usuario, CrmOportunidad, CrmEtapa, CrmTarea,
+  CrmCampana, CrmCampanaDestinatario
+} = require('../models');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -88,7 +91,7 @@ router.get('/resumen', auth, async (_req, res) => {
       })
     ]);
 
-    const [pipelineCrm, tareasCrm] = await Promise.all([
+    const [pipelineCrm, tareasCrm, campanasCrm] = await Promise.all([
       CrmOportunidad.findAll({
         where: { estado: 'ABIERTA' },
         include: [{ model: CrmEtapa, as: 'etapa', attributes: ['probabilidad'] }]
@@ -98,6 +101,11 @@ router.get('/resumen', auth, async (_req, res) => {
         include: [{ model: Paciente, as: 'paciente', attributes: ['id', 'nombre', 'apellido', 'telefono'] }],
         order: [['vence', 'ASC']],
         limit: 6
+      }),
+      CrmCampana.findAll({
+        include: [{ model: CrmCampanaDestinatario, as: 'destinatarios', attributes: ['estado', 'ingreso_atribuido'] }],
+        order: [['createdAt', 'DESC']],
+        limit: 5
       })
     ]);
 
@@ -177,6 +185,19 @@ router.get('/resumen', auth, async (_req, res) => {
       };
     });
 
+    const campanas = campanasCrm.map(campana => {
+      const destinatarios = campana.destinatarios || [];
+      return {
+        id: campana.id,
+        nombre: campana.nombre,
+        segmento: campana.segmento,
+        estado: campana.estado,
+        enviados: destinatarios.filter(d => ['ENVIADO', 'RESPONDIO', 'CITA'].includes(d.estado)).length,
+        citas: destinatarios.filter(d => d.estado === 'CITA').length,
+        ingresos: destinatarios.reduce((suma, d) => suma + Number(d.ingreso_atribuido || 0), 0)
+      };
+    });
+
     res.json({
       metricas: {
         clientes_activos: pacientes.length,
@@ -196,8 +217,8 @@ router.get('/resumen', auth, async (_req, res) => {
       cumpleanios,
       mejores_clientes: mejoresClientes,
       nuevos_por_mes: nuevosPorMes,
-      campanas: [],
-      ventas_atribuidas_mes: 0
+      campanas,
+      ventas_atribuidas_mes: campanas.reduce((suma, campana) => suma + campana.ingresos, 0)
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

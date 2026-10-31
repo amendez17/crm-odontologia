@@ -23,6 +23,9 @@ const CrmOportunidad = require('./CrmOportunidad');
 const CrmTarea = require('./CrmTarea');
 const CrmNota = require('./CrmNota');
 const CrmPerfil = require('./CrmPerfil');
+const CrmCampana = require('./CrmCampana');
+const CrmCampanaDestinatario = require('./CrmCampanaDestinatario');
+const CrmPlantillaCampana = require('./CrmPlantillaCampana');
 
 // --- Asociaciones ---
 
@@ -148,6 +151,17 @@ CrmTarea.belongsTo(Usuario, { foreignKey: 'creado_por_id', as: 'creadoPor' });
 Paciente.hasMany(CrmNota, { foreignKey: 'paciente_id', as: 'crmNotas' });
 CrmNota.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
 CrmNota.belongsTo(Usuario, { foreignKey: 'usuario_id', as: 'usuario' });
+
+CrmPlantillaCampana.hasMany(CrmCampana, { foreignKey: 'plantilla_id', as: 'campanas' });
+CrmCampana.belongsTo(CrmPlantillaCampana, { foreignKey: 'plantilla_id', as: 'plantilla' });
+Usuario.hasMany(CrmCampana, { foreignKey: 'creado_por_id', as: 'crmCampanas' });
+CrmCampana.belongsTo(Usuario, { foreignKey: 'creado_por_id', as: 'creadoPor' });
+CrmCampana.hasMany(CrmCampanaDestinatario, { foreignKey: 'campana_id', as: 'destinatarios', onDelete: 'CASCADE' });
+CrmCampanaDestinatario.belongsTo(CrmCampana, { foreignKey: 'campana_id', as: 'campana' });
+Paciente.hasMany(CrmCampanaDestinatario, { foreignKey: 'paciente_id', as: 'crmCampanasRecibidas' });
+CrmCampanaDestinatario.belongsTo(Paciente, { foreignKey: 'paciente_id', as: 'paciente' });
+Cita.hasMany(CrmCampanaDestinatario, { foreignKey: 'cita_id', as: 'crmAtribuciones' });
+CrmCampanaDestinatario.belongsTo(Cita, { foreignKey: 'cita_id', as: 'cita' });
 module.exports = {
   sequelize,
   Usuario,
@@ -173,5 +187,8 @@ module.exports = {
   CrmOportunidad,
   CrmTarea,
   CrmNota,
-  CrmPerfil
+  CrmPerfil,
+  CrmCampana,
+  CrmCampanaDestinatario,
+  CrmPlantillaCampana
 };
