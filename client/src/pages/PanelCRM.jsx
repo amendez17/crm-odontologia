@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import {
   FiAlertTriangle, FiCalendar, FiCheckSquare, FiChevronRight, FiDollarSign,
-  FiGift, FiPhone, FiRefreshCw, FiTarget, FiTrendingUp, FiUsers
+  FiGift, FiPhone, FiRefreshCw, FiTarget, FiTrendingUp, FiUsers, FiVolume2
 } from 'react-icons/fi';
 
 const moneda = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 });
@@ -98,7 +98,8 @@ export default function PanelCRM() {
     </div>
   );
 
-  const { metricas, segmentos, requieren_atencion: atencion, agenda, cumpleanios, mejores_clientes: mejores } = data;
+  const { metricas, segmentos, requieren_atencion: atencion, agenda, cumpleanios, mejores_clientes: mejores, nuevos_por_mes: nuevos = [], campanas = [], ventas_atribuidas_mes: atribuidas = 0 } = data;
+  const maxNuevos = Math.max(...nuevos.map(mes => mes.cantidad), 1);
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -172,6 +173,20 @@ export default function PanelCRM() {
         <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm lg:col-span-2 xl:col-span-1">
           <EncabezadoTarjeta titulo="Mejores pacientes" subtitulo="Por valor histórico registrado" enlace="/pagos" textoEnlace="Ver pagos" />
           {mejores.length === 0 ? <EstadoVacio>Aún no hay pagos para calcular este ranking.</EstadoVacio> : <div className="space-y-1">{mejores.map((paciente, indice) => <Link to={`/pacientes/${paciente.id}`} key={paciente.id} className="flex items-center gap-3 rounded-xl p-2 hover:bg-slate-50"><span className="w-4 text-xs font-bold text-slate-400">{indice + 1}</span><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-[10px] font-bold text-white">{paciente.nombre?.[0]}{paciente.apellido?.[0]}</span><span className="min-w-0 flex-1"><b className="block truncate text-xs text-slate-800">{paciente.nombre} {paciente.apellido}</b><small className="text-[10px] text-slate-400">{paciente.visitas} visitas</small></span><b className="text-xs text-slate-900">{moneda.format(paciente.total)}</b><FiChevronRight className="text-slate-300" /></Link>)}</div>}
+        </section>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm xl:col-span-2">
+          <EncabezadoTarjeta titulo="Campañas recientes" subtitulo={`Citas y pagos atribuidos este mes: ${moneda.format(atribuidas)}`} />
+          {campanas.length === 0 ? <div className="flex min-h-44 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-4 text-center"><FiVolume2 size={30} className="mb-3 text-slate-300" /><p className="text-sm text-slate-500">Aún no has lanzado campañas.</p><p className="mt-1 text-[11px] text-slate-400">Próximamente podrás crear campañas por segmento y medir sus resultados.</p></div> : <div className="table-responsive"><table className="w-full text-left text-xs"><thead><tr className="border-b border-slate-100 text-slate-400"><th className="p-2">Campaña</th><th className="p-2">Segmento</th><th className="p-2 text-right">Enviados</th><th className="p-2 text-right">Citas</th><th className="p-2 text-right">Ingresos</th></tr></thead><tbody>{campanas.map(campana => <tr key={campana.id} className="border-b border-slate-50"><td className="p-2 font-semibold text-slate-800">{campana.nombre}</td><td className="p-2 text-slate-500">{campana.segmento}</td><td className="p-2 text-right">{campana.enviados}</td><td className="p-2 text-right">{campana.citas}</td><td className="p-2 text-right font-semibold">{moneda.format(campana.ingresos)}</td></tr>)}</tbody></table></div>}
+        </section>
+
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+          <EncabezadoTarjeta titulo="Pacientes nuevos" subtitulo="Registrados por mes" />
+          <div className="flex h-48 items-end gap-2 border-b border-l border-slate-200 px-2 pt-4">
+            {nuevos.map(mes => <div key={mes.clave} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-[10px] font-semibold text-primary-700">{mes.cantidad || ''}</span><div className="w-full max-w-8 rounded-t-lg bg-gradient-to-t from-primary-600 to-violet-500 transition-all duration-700" style={{ height: `${mes.cantidad ? Math.max((mes.cantidad / maxNuevos) * 80, 8) : 1}%`, opacity: mes.cantidad ? 1 : 0.15 }} /><span className="pb-2 text-[10px] text-slate-500">{mes.etiqueta}</span></div>)}
+          </div>
         </section>
       </div>
 

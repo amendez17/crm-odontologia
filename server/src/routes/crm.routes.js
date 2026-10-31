@@ -161,6 +161,22 @@ router.get('/resumen', auth, async (_req, res) => {
       .slice(0, 6)
       .map(p => ({ id: p.id, nombre: p.nombre, apellido: p.apellido, fecha: p.proximo.fecha, dias: p.proximo.dias }));
 
+    const mesesCortos = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const ahora = new Date();
+    const nuevosPorMes = Array.from({ length: 6 }, (_, indice) => {
+      const fechaMes = new Date(ahora.getFullYear(), ahora.getMonth() - (5 - indice), 1);
+      const anio = fechaMes.getFullYear();
+      const mes = fechaMes.getMonth();
+      return {
+        clave: `${anio}-${String(mes + 1).padStart(2, '0')}`,
+        etiqueta: mesesCortos[mes],
+        cantidad: pacientes.filter(paciente => {
+          const alta = new Date(paciente.createdAt);
+          return alta.getFullYear() === anio && alta.getMonth() === mes;
+        }).length
+      };
+    });
+
     res.json({
       metricas: {
         clientes_activos: pacientes.length,
@@ -178,7 +194,10 @@ router.get('/resumen', auth, async (_req, res) => {
       agenda,
       tareas: tareasCrm,
       cumpleanios,
-      mejores_clientes: mejoresClientes
+      mejores_clientes: mejoresClientes,
+      nuevos_por_mes: nuevosPorMes,
+      campanas: [],
+      ventas_atribuidas_mes: 0
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
