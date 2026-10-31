@@ -1,12 +1,103 @@
 const express = require('express');
 const { Op } = require('sequelize');
 const {
-  sequelize, Paciente, Usuario, CrmEtapa, CrmOportunidad, CrmTarea, CrmNota, CrmPerfil
+  sequelize, Paciente, Usuario, Cita, Pago, Presupuesto,
+  CrmEtapa, CrmOportunidad, CrmTarea, CrmNota, CrmPerfil
 } = require('../models');
 const { auth } = require('../middleware/auth');
 const { registrarActividad } = require('../middleware/logger');
 
 const router = express.Router();
+
+const DIAS = 86400000;
+const CATALOGO_SEGMENTOS = {
+  campeones: { clave: 'campeones', nombre: 'Campeones', color: '#10b981' },
+  leales: { clave: 'leales', nombre: 'Leales', color: '#6366f1' },
+  activos: { clave: 'activos', nombre: 'Activos', color: '#14b8a6' },
+  nuevos: { clave: 'nuevos', nombre: 'Nuevos', color: '#0ea5e9' },
+  en_riesgo: { clave: 'en_riesgo', nombre: 'En riesgo', color: '#f59e0b' },
+  dormidos: { clave: 'dormidos', nombre: 'Dormidos', color: '#ef4444' },
+  prospectos: { clave: 'prospectos', nombre: 'Prospectos', color: '#94a3b8' }
+};
+
+function diasDesde(fecha) {
+  if (!fecha) return null;
+  const valor = new Date(`${String(fecha).slice(0, 10)}T12:00:00`);
+  return Math.max(0, Math.floor((Date.now() - valor.getTime()) / DIAS));
+}
+
+function obtenerSegmento({ visitas, dias_sin_visita: dias, valor_historico: valor }) {
+  if (!visitas) return CATALOGO_SEGMENTOS.prospectos;
+  if (visitas >= 5 && dias <= 90 && valor >= 5000) return CATALOGO_SEGMENTOS.campeones;
+  if (visitas >= 3 && dias <= 120) return CATALOGO_SEGMENTOS.leales;
+  if (visitas === 1 && dias <= 60) return CATALOGO_SEGMENTOS.nuevos;
+  if (dias <= 180) return CATALOGO_SEGMENTOS.activos;
+  if (dias <= 365) return CATALOGO_SEGMENTOS.en_riesgo;
+  return CATALOGO_SEGMENTOS.dormidos;
+}
+
+function calcularSalud({ visitas, dias_sin_visita: dias, valor_historico: valor, tiene_cita_futura: futura }) {
+  const recencia = dias === null ? 0 : dias <= 60 ? 40 : dias <= 120 ? 32 : dias <= 180 ? 24 : dias <= 365 ? 12 : 4;
+  const frecuencia = Math.min(visitas * 7, 30);
+  const monetario = Math.min(Math.round(Number(valor || 0) / 500), 20);
+  return Math.min(recencia + frecuencia + monetario + (futura ? 10 : 0), 100);
+}
+
+async function construirPacientes360() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  const [pacientes, visitas, pagos, futuras, perfiles] = await Promise.all([
+    Paciente.findAll({
+      where: { activo: true },
+      attributes: ['id', 'nombre', 'apellido', 'dni', 'telefono', 'email', 'fecha_nacimiento', 'createdAt'],
+      order: [['apellido', 'ASC'], ['nombre', 'ASC']],
+      raw: true
+    }),
+    Cita.findAll({
+      where: { estado: 'completada' },
+      attributes: ['paciente_id', [sequelize.fn('COUNT', sequelize.col('id')), 'visitas'], [sequelize.fn('MAX', sequelize.col('fecha')), 'ultima_visita']],
+      group: ['paciente_id'], raw: true
+    }),
+    Pago.findAll({
+      attributes: ['paciente_id', [sequelize.fn('SUM', sequelize.col('monto')), 'valor_historico'], [sequelize.fn('COUNT', sequelize.col('id')), 'pagos']],
+      group: ['paciente_id'], raw: true
+    }),
+    Cita.findAll({
+      where: { fecha: { [Op.gte]: hoy }, estado: { [Op.in]: ['programada', 'confirmada'] } },
+      attributes: ['paciente_id', [sequelize.fn('MIN', sequelize.col('fecha')), 'proxima_cita']],
+      group: ['paciente_id'], raw: true
+    }),
+    CrmPerfil.findAll({ attributes: ['paciente_id', 'origen', 'responsable_id', 'acepta_marketing'], raw: true })
+  ]);
+  const mapaVisitas = new Map(visitas.map(item => [Number(item.paciente_id), item]));
+  const mapaPagos = new Map(pagos.map(item => [Number(item.paciente_id), item]));
+  const mapaFuturas = new Map(futuras.map(item => [Number(item.paciente_id), item]));
+  const mapaPerfiles = new Map(perfiles.map(item => [Number(item.paciente_id), item]));
+
+  return pacientes.map(paciente => {
+    const actividad = mapaVisitas.get(paciente.id) || {};
+    const cobros = mapaPagos.get(paciente.id) || {};
+    const futura = mapaFuturas.get(paciente.id) || {};
+    const perfil = mapaPerfiles.get(paciente.id) || {};
+    const resumen = {
+      visitas: Number(actividad.visitas || 0),
+      ultima_visita: actividad.ultima_visita || null,
+      dias_sin_visita: diasDesde(actividad.ultima_visita),
+      valor_historico: Number(cobros.valor_historico || 0),
+      pagos: Number(cobros.pagos || 0),
+      proxima_cita: futura.proxima_cita || null,
+      tiene_cita_futura: Boolean(futura.proxima_cita)
+    };
+    return {
+      ...paciente,
+      ...resumen,
+      origen: perfil.origen || null,
+      responsable_id: perfil.responsable_id || null,
+      acepta_marketing: Boolean(perfil.acepta_marketing),
+      segmento: obtenerSegmento(resumen),
+      salud: calcularSalud(resumen)
+    };
+  });
+}
 
 const ETAPAS = [
   { clave: 'interesado', nombre: 'Interesado', color: '#64748b', probabilidad: 10, tipo: 'ABIERTA', orden: 1 },
@@ -29,6 +120,137 @@ const incluirOportunidad = [
   { model: CrmEtapa, as: 'etapa' },
   { model: Usuario, as: 'responsable', attributes: ['id', 'nombre', 'apellido'] }
 ];
+
+router.get('/pacientes-360', auth, async (req, res) => {
+  try {
+    const buscar = String(req.query.buscar || '').trim().toLowerCase();
+    const segmento = String(req.query.segmento || '').trim();
+    const orden = String(req.query.orden || 'salud_asc');
+    let pacientes = await construirPacientes360();
+    if (buscar) pacientes = pacientes.filter(paciente =>
+      `${paciente.nombre} ${paciente.apellido} ${paciente.dni || ''} ${paciente.telefono || ''}`.toLowerCase().includes(buscar)
+    );
+    if (segmento) pacientes = pacientes.filter(paciente => paciente.segmento.clave === segmento);
+    const ordenadores = {
+      salud_asc: (a, b) => a.salud - b.salud,
+      salud_desc: (a, b) => b.salud - a.salud,
+      valor_desc: (a, b) => b.valor_historico - a.valor_historico,
+      visitas_desc: (a, b) => b.visitas - a.visitas,
+      nombre: (a, b) => `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`, 'es')
+    };
+    pacientes.sort(ordenadores[orden] || ordenadores.salud_asc);
+    const total = pacientes.length;
+    const pagina = Math.max(Number(req.query.pagina || 1), 1);
+    const limite = Math.min(Math.max(Number(req.query.limite || 30), 1), 100);
+    res.json({
+      pacientes: pacientes.slice((pagina - 1) * limite, pagina * limite),
+      total,
+      pagina,
+      paginas: Math.max(Math.ceil(total / limite), 1)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/segmentos-rfm', auth, async (_req, res) => {
+  try {
+    const pacientes = await construirPacientes360();
+    const grupos = new Map();
+    pacientes.forEach(paciente => {
+      const clave = paciente.segmento.clave;
+      if (!grupos.has(clave)) grupos.set(clave, { ...paciente.segmento, cantidad: 0, valor: 0, pacientes: [] });
+      const grupo = grupos.get(clave);
+      grupo.cantidad += 1;
+      grupo.valor += paciente.valor_historico;
+      grupo.pacientes.push(paciente);
+    });
+    const orden = ['campeones', 'leales', 'activos', 'nuevos', 'en_riesgo', 'dormidos', 'prospectos'];
+    const segmentos = orden.map(clave => grupos.get(clave) || { ...CATALOGO_SEGMENTOS[clave], cantidad: 0, valor: 0, pacientes: [] });
+    const valorTotal = pacientes.reduce((suma, paciente) => suma + paciente.valor_historico, 0);
+    res.json({
+      segmentos,
+      metricas: {
+        pacientes: pacientes.length,
+        valor_total: valorTotal,
+        riesgo: pacientes.filter(p => ['en_riesgo', 'dormidos'].includes(p.segmento.clave)).length,
+        recuperables: pacientes.filter(p => ['en_riesgo', 'dormidos'].includes(p.segmento.clave) && p.telefono).length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/pacientes/:id/360', auth, async (req, res) => {
+  try {
+    const pacienteId = Number(req.params.id);
+    const paciente = (await construirPacientes360()).find(item => item.id === pacienteId);
+    if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado.' });
+    const [perfil, responsable, citas, pagos, presupuestos, notas, tareas, oportunidades] = await Promise.all([
+      CrmPerfil.findOne({ where: { paciente_id: pacienteId } }),
+      CrmPerfil.findOne({
+        where: { paciente_id: pacienteId },
+        include: [{ model: Usuario, as: 'responsable', attributes: ['id', 'nombre', 'apellido'] }]
+      }),
+      Cita.findAll({
+        where: { paciente_id: pacienteId },
+        include: [{ model: Usuario, as: 'doctor', attributes: ['id', 'nombre', 'apellido'] }],
+        order: [['fecha', 'DESC'], ['hora_inicio', 'DESC']], limit: 20
+      }),
+      Pago.findAll({ where: { paciente_id: pacienteId }, order: [['fecha', 'DESC']], limit: 20 }),
+      Presupuesto.findAll({ where: { paciente_id: pacienteId }, order: [['createdAt', 'DESC']], limit: 20 }),
+      CrmNota.findAll({
+        where: { paciente_id: pacienteId },
+        include: [{ model: Usuario, as: 'usuario', attributes: ['id', 'nombre', 'apellido'] }],
+        order: [['createdAt', 'DESC']], limit: 50
+      }),
+      CrmTarea.findAll({
+        where: { paciente_id: pacienteId },
+        include: [{ model: Usuario, as: 'asignado', attributes: ['id', 'nombre', 'apellido'] }],
+        order: [['createdAt', 'DESC']], limit: 50
+      }),
+      CrmOportunidad.findAll({ where: { paciente_id: pacienteId }, include: incluirOportunidad, order: [['createdAt', 'DESC']] })
+    ]);
+    res.json({
+      paciente,
+      perfil: perfil ? { ...perfil.toJSON(), responsable: responsable?.responsable || null } : null,
+      actividad: { citas, pagos, presupuestos, notas, tareas, oportunidades }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/pacientes/:id/notas', auth, registrarActividad('crear', 'crm_nota'), async (req, res) => {
+  try {
+    const texto = String(req.body.texto || '').trim();
+    if (!texto) return res.status(400).json({ error: 'Escribe una nota.' });
+    const paciente = await Paciente.findByPk(req.params.id);
+    if (!paciente) return res.status(404).json({ error: 'Paciente no encontrado.' });
+    const nota = await CrmNota.create({
+      paciente_id: paciente.id,
+      usuario_id: req.usuario.id,
+      tipo: ['NOTA', 'LLAMADA', 'WHATSAPP', 'VISITA'].includes(req.body.tipo) ? req.body.tipo : 'NOTA',
+      texto: texto.slice(0, 5000)
+    });
+    res.status(201).json(nota);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.delete('/notas/:id', auth, registrarActividad('eliminar', 'crm_nota'), async (req, res) => {
+  try {
+    const nota = await CrmNota.findByPk(req.params.id);
+    if (!nota) return res.status(404).json({ error: 'Nota no encontrada.' });
+    if (nota.tipo === 'SISTEMA') return res.status(400).json({ error: 'Los registros automáticos no se pueden eliminar.' });
+    await nota.destroy();
+    res.json({ message: 'Nota eliminada.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 router.get('/catalogos', auth, async (req, res) => {
   try {

@@ -17,6 +17,8 @@ const navItems = [
   { to: '/pacientes', icon: FiUsers, label: 'Pacientes', roles: ["administrador", "doctor", "recepcionista"] },
   { icon: FiTarget, label: 'CRM', roles: ["administrador", "doctor", "recepcionista"], children: [
     { to: '/crm', label: 'Panel CRM', end: true },
+    { to: '/crm/pacientes', label: 'Pacientes 360°' },
+    { to: '/crm/segmentos', label: 'Segmentos RFM' },
     { to: '/crm/pipeline', label: 'Pipeline de atención' },
     { to: '/crm/tareas', label: 'Tareas y seguimiento' }
   ] },

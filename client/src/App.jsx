@@ -19,6 +19,9 @@ import Facturas from './pages/Facturas';
 import PanelCRM from './pages/PanelCRM';
 import PipelineCRM from './pages/PipelineCRM';
 import TareasCRM from './pages/TareasCRM';
+import PacientesCRM from './pages/PacientesCRM';
+import FichaPacienteCRM from './pages/FichaPacienteCRM';
+import SegmentosCRM from './pages/SegmentosCRM';
 
 /*function PrivateRoute({ children }) {
   const { usuario, loading } = useAuth();
@@ -62,6 +65,9 @@ export default function App() {
           <Route path="crm" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><PanelCRM /></PrivateRoute>} />
           <Route path="crm/pipeline" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><PipelineCRM /></PrivateRoute>} />
           <Route path="crm/tareas" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><TareasCRM /></PrivateRoute>} />
+          <Route path="crm/pacientes" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><PacientesCRM /></PrivateRoute>} />
+          <Route path="crm/pacientes/:id" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><FichaPacienteCRM /></PrivateRoute>} />
+          <Route path="crm/segmentos" element={<PrivateRoute roles={["administrador", "doctor", "recepcionista"]}><SegmentosCRM /></PrivateRoute>} />
           <Route path="pacientes" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <Pacientes /> </PrivateRoute> }/>
           <Route path="pacientes/:id" element={ <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}> <PacienteDetalle /> </PrivateRoute>}/>
           <Route path="citas" element={  <PrivateRoute roles={["administrador", "doctor", "recepcionista"]}>    <Citas />  </PrivateRoute> }/>  

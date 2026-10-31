@@ -110,7 +110,7 @@ export default function PanelCRM() {
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
           <Link to="/citas" className="btn-secondary whitespace-nowrap !px-3 !py-2 text-xs"><FiCalendar /> Nueva cita</Link>
-          <Link to="/pacientes" className="btn-primary whitespace-nowrap !px-3 !py-2 text-xs"><FiUsers /> Ver pacientes</Link>
+          <Link to="/crm/pacientes" className="btn-primary whitespace-nowrap !px-3 !py-2 text-xs"><FiUsers /> Pacientes 360°</Link>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ export default function PanelCRM() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
-          <EncabezadoTarjeta titulo="Salud de la cartera" subtitulo="Segmentación por visitas y recencia" enlace="/pacientes" textoEnlace="Ver pacientes" />
+          <EncabezadoTarjeta titulo="Salud de la cartera" subtitulo="Segmentación por visitas y recencia" enlace="/crm/segmentos" textoEnlace="Ver segmentos" />
           <div className="flex flex-col items-center gap-5 sm:flex-row xl:flex-col 2xl:flex-row">
             <div className="relative h-32 w-32 shrink-0 rounded-full" style={{ background: graficaSegmentos.fondo }}>
               <div className="absolute inset-6 flex flex-col items-center justify-center rounded-full bg-white"><span className="text-xl font-extrabold text-slate-900">{graficaSegmentos.total}</span><span className="text-[9px] text-slate-400">pacientes</span></div>
@@ -141,7 +141,7 @@ export default function PanelCRM() {
           {atencion.length === 0 ? <EstadoVacio>No hay pacientes en riesgo por ahora.</EstadoVacio> : <div className="space-y-2">{atencion.slice(0, 4).map(paciente => (
             <div key={paciente.id} className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-xs font-bold text-white">{paciente.nombre?.[0]}{paciente.apellido?.[0]}</div>
-              <Link to={`/pacientes/${paciente.id}`} className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-900">{paciente.nombre} {paciente.apellido}</p><p className="truncate text-[10px] text-slate-400">{paciente.dias_sin_visita} días · {moneda.format(paciente.valor_historico)} histórico</p></Link>
+              <Link to={`/crm/pacientes/${paciente.id}`} className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-900">{paciente.nombre} {paciente.apellido}</p><p className="truncate text-[10px] text-slate-400">{paciente.dias_sin_visita} días · {moneda.format(paciente.valor_historico)} histórico</p></Link>
               {paciente.telefono && <a href={whatsapp(paciente)} target="_blank" rel="noreferrer" aria-label={`Enviar WhatsApp a ${paciente.nombre}`} className="rounded-lg border border-emerald-200 bg-white p-2 text-emerald-600 hover:bg-emerald-50"><FiPhone size={14} /></a>}
             </div>
           ))}</div>}
@@ -167,12 +167,12 @@ export default function PanelCRM() {
 
         <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
           <EncabezadoTarjeta titulo="Cumpleaños próximos" subtitulo="Siguientes 14 días" />
-          {cumpleanios.length === 0 ? <EstadoVacio>No hay cumpleaños próximos.</EstadoVacio> : <div className="space-y-2">{cumpleanios.map(paciente => <Link to={`/pacientes/${paciente.id}`} key={paciente.id} className="flex items-center gap-3 rounded-xl p-2 hover:bg-amber-50"><span className="rounded-lg bg-amber-100 p-2 text-amber-600"><FiGift /></span><span className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-800">{paciente.nombre} {paciente.apellido}</span><span className="text-[10px] font-medium text-amber-700">{paciente.dias === 0 ? 'Hoy' : `En ${paciente.dias} días`}</span></Link>)}</div>}
+          {cumpleanios.length === 0 ? <EstadoVacio>No hay cumpleaños próximos.</EstadoVacio> : <div className="space-y-2">{cumpleanios.map(paciente => <Link to={`/crm/pacientes/${paciente.id}`} key={paciente.id} className="flex items-center gap-3 rounded-xl p-2 hover:bg-amber-50"><span className="rounded-lg bg-amber-100 p-2 text-amber-600"><FiGift /></span><span className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-800">{paciente.nombre} {paciente.apellido}</span><span className="text-[10px] font-medium text-amber-700">{paciente.dias === 0 ? 'Hoy' : `En ${paciente.dias} días`}</span></Link>)}</div>}
         </section>
 
         <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm lg:col-span-2 xl:col-span-1">
           <EncabezadoTarjeta titulo="Mejores pacientes" subtitulo="Por valor histórico registrado" enlace="/pagos" textoEnlace="Ver pagos" />
-          {mejores.length === 0 ? <EstadoVacio>Aún no hay pagos para calcular este ranking.</EstadoVacio> : <div className="space-y-1">{mejores.map((paciente, indice) => <Link to={`/pacientes/${paciente.id}`} key={paciente.id} className="flex items-center gap-3 rounded-xl p-2 hover:bg-slate-50"><span className="w-4 text-xs font-bold text-slate-400">{indice + 1}</span><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-[10px] font-bold text-white">{paciente.nombre?.[0]}{paciente.apellido?.[0]}</span><span className="min-w-0 flex-1"><b className="block truncate text-xs text-slate-800">{paciente.nombre} {paciente.apellido}</b><small className="text-[10px] text-slate-400">{paciente.visitas} visitas</small></span><b className="text-xs text-slate-900">{moneda.format(paciente.total)}</b><FiChevronRight className="text-slate-300" /></Link>)}</div>}
+          {mejores.length === 0 ? <EstadoVacio>Aún no hay pagos para calcular este ranking.</EstadoVacio> : <div className="space-y-1">{mejores.map((paciente, indice) => <Link to={`/crm/pacientes/${paciente.id}`} key={paciente.id} className="flex items-center gap-3 rounded-xl p-2 hover:bg-slate-50"><span className="w-4 text-xs font-bold text-slate-400">{indice + 1}</span><span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-[10px] font-bold text-white">{paciente.nombre?.[0]}{paciente.apellido?.[0]}</span><span className="min-w-0 flex-1"><b className="block truncate text-xs text-slate-800">{paciente.nombre} {paciente.apellido}</b><small className="text-[10px] text-slate-400">{paciente.visitas} visitas</small></span><b className="text-xs text-slate-900">{moneda.format(paciente.total)}</b><FiChevronRight className="text-slate-300" /></Link>)}</div>}
         </section>
       </div>
 
