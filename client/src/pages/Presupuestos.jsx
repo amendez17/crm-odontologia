@@ -618,7 +618,7 @@ print-color-adjust: exact;
       TOTAL: $${Number(Math.max(0, totalFinal)).toLocaleString()}
     </div>
     <div class="valido">
-      Este presupuesto es valido por 30 Días despues de su emisión.
+      Este presupuesto es valido por esta semana.
     </div>
   </div>
 
